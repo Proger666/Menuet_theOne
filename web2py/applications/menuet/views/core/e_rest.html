@@ -1,0 +1,202 @@
+{{extend "layout.html"}}
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-utensils"></i> {{=rest.name}}
+                </div>
+                <div class="card-block">
+                    <form name="new_rest" id="new_rest">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Имя ресторана</label>
+                            <input class="form-control" required name="rest_name" value="{{=rest.name}}" id="rest_name">
+                            <p class="text-muted"><em>Например: Чайхона №1</em></p>
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" id="is_network" {{=rest.is_network}}> Сетевой ?
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">Адрес ресторана</label>
+                            <div class="input-group">
+                                <span class="input-group-addon"><i
+                                        class="fas fa-map-marker-alt"></i></span>
+                                <input class="form-control" required name="rest_addr" id="rest_addr"
+                                       value="{{=rest.addr}}"
+                                       onchange="get_addr()"></div>
+                            <p class="text-muted"><em>Например: Москва, ул. </em></p>
+                        </div>
+                        <button type="submit" class="btn btn-primary" onclick="submitForm()">Сохранить!</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-utensils"></i> Текущее активное меню
+                </div>
+                <!-- /.panel-heading -->
+                <div class="card-block">
+                    <div class="list-group">
+                    {{i=0}}
+                    {{for menu in menu_disp:}}
+                    {{if i >= 10:
+                    break
+                    }}
+                        <a href="{{=URL('core', 'e_menu', vars=dict(r_id=rest.id,m_id=menu.id))}}"
+                           class="list-group-item-action">
+                            <i class="fas fa-utensils"></i> {{=menu.name}}
+                            <span class="float-right text-muted small"><em>{{=menu.created_on}}</em>
+                                    </span>
+                        </a>
+                    {{i+=1}}
+                    {{pass}}
+                    </div>
+                    <!-- /.list-group -->
+                {{if menu_disp.__len__() != 0:}}
+                    <a href="{{=URL('core', 'rests', vars=dict(r_id=rest.id,m_id=menu.id))}}"
+                       class="btn btn-default btn-block">Остальные...</a>
+                {{else:}}
+                    <input class="btn btn-block" type="button" value="Ничего нет :(">
+                {{pass}}
+                </div>
+                <!-- /.panel-body -->
+            </div>
+
+        </div>
+        <div class="col-sm-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-utensil-spoon"></i> Новое меню
+                </div>
+                <div class="card-block">
+                    <form name="new_menu" id="new_menu">
+                        <div class="form-group">
+                            <input class="form-control" required name="rest_id" value="{{=rest.id}}" id="rest_id"
+                                   type="hidden">
+                            <input class="form-control" required name="rest_name" value="{{=rest.name}}" id="rest_name"
+                                   type="hidden">
+                            <input class="form-control" required name="comment" placeholder="Необязательно" id="comment"
+                                   type="text">
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">Тип меню</label>
+                            <select class="form-control">
+                            {{for option_type in menu_types:}}
+                                <option>{{=option_type}}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">Сезонное?</label>
+                            <label class="checkbox"><input type="checkbox" name="seosanal_checkbox">
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">Тип меню</label>
+                            <select class="form-control">
+                            {{for option_seosanl in menu_seosanal:}}
+                                <option>{{=option_seosanal}}</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" onclick="add_menu()">Создать!</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/css/suggestions.min.css" type="text/css"
+      rel="stylesheet"/>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<!--[if lt IE 10]>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
+<![endif]-->
+<script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/js/jquery.suggestions.min.js"></script>
+<script type="text/javascript">
+
+    function submitForm() {
+        var rest = {};
+        rest.name = document.getElementById('rest_name').value;
+        rest.addr = document.getElementById('rest_addr').value;
+        rest.is_network = document.getElementById("is_network").checked;
+
+        var DTO = {'rest': rest};
+        var data = JSON.stringify(DTO);
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('default', 'save_rest')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json",
+            dataType: 'json',
+            data: data
+        });
+    }
+
+    $("#rest_addr").suggestions({
+        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
+        type: "ADDRESS",
+        count: 5,
+        onSelect: function (suggestion) {
+            console.log(suggestion);
+        }
+    });
+
+
+    function add_menu() {
+        var menu = {};
+        var rest = {};
+        rest.name = document.getElementById('rest_name').value;
+        rest.id = document.getElementById('rest_id').value;
+
+        var DTO = {'menu': menu, 'rest': rest};
+        var data = JSON.stringify(DTO);    //Using the toJSON plugin by Mark Gibson
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('default', 'save_menu')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json; charset=utf-8",
+            data: data,
+            dataType: 'json',
+            success: function (data) {
+                location.reload();
+            },
+            error: function (data) {
+                location.reload();
+            }
+        });
+    }
+
+    function delete_menu(menu) {
+        var rest = {};
+        rest.id = document.getElementById('rest_id').value;
+        var menu_t = {"menu": {"id": menu.id}, "rest": {"id": rest.id}};
+        var data = JSON.stringify(menu_t);
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('default', 'delete_menu')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json; charset=utf-8",
+            data: data,
+            dataType: 'json',
+            success: function (data) {
+                alert('Saved!');
+                location.reload();
+            },
+            error: function () {
+                alert('oh no, its failed again!');
+                location.reload();
+            }
+        });
+    }
+</script>

@@ -1,0 +1,27 @@
+{{extend "layout.html"}}
+
+<div class="container">
+    <div class="row">
+    {{for rest in rest_disp:}}
+    {{rest = Storage(rest)}}
+        <div class="col-sm-4">
+
+            <div class="card text-center">
+                <div class="card-block">
+                    <h4 class="card-title">{{=rest.name}}</h4>
+                    <p class="card-text">
+                    <em>{{=rest.addr}}</em><br/>
+                    <em class="text-muted">Создан: {{=rest.created_on}}</em><br/>
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <input type="submit" value="Править" onclick="window.location='{{=URL('core', 'e_rest', vars=dict(r_id=rest.id))}}'" class="btn btn-primary">
+                </div>
+            </div>
+
+
+        </div>
+    {{pass}}
+
+    </div>
+</div>

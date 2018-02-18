@@ -1,0 +1,198 @@
+{{extend "layout.html"}}
+
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-3">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-utensils"></i> Ваши рестораны
+                </div>
+                <!-- /.panel-heading -->
+                <div class="card-block">
+                    <div class="list-group">
+                    {{i=0}}
+                    {{for rest in rest_disp:}}
+                    {{if i >= 4:
+                    break
+                    }}
+                    {{rest = Storage(rest)}}
+                        <a href="{{=URL('core', 'e_rest', vars=dict(r_id=rest.id))}}" class="list-group-item-action">
+                            <i class="fas fa-utensils"></i> {{=rest.name}} <br>
+                            <em class="text-muted">{{=rest.addr}}</em>
+                            <span class="float-right text-muted small"><em>{{=rest.created_on}}</em>
+                                    </span>
+                        </a>
+                    {{i+=1}}
+                    {{pass}}
+                    </div>
+                    <!-- /.list-group -->
+                {{if rest_disp.__len__() != 0:}}
+                    <a href="{{=URL('core', 'rests')}}" class="btn btn-default btn-block">Остальные...</a>
+                {{else:}}
+                    <input href="#" class="btn btn-default btn-block" disabled value="Ничего нет :("> </input>
+                {{pass}}
+                </div>
+                <!-- /.panel-body -->
+            </div>
+
+        </div>
+        <div class="col-sm-5">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-utensil-spoon"></i> Найти ресторан
+                </div>
+                <div class="card-block">
+                    <form name="new_rest" id="new_rest">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Имя ресторана</label>
+                            <input class="form-control" required name="rest_name" id="rest_name">
+                            <p class="text-muted"><em>Например: Чайхона №1</em></p>
+                        </div>
+
+                    </form>
+                    <button type="submit" class="btn btn-primary" id="butt_check" onclick="CheckForm()">Найти!
+                    </button>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4" id="add_results">
+
+        </div>
+    </div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/css/suggestions.min.css" type="text/css"
+      rel="stylesheet"/>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<!--[if lt IE 10]>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
+<![endif]-->
+<script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/js/jquery.suggestions.min.js"></script>
+
+<script type="text/javascript">
+
+    $(document).keypress(function (e) {
+        if ((e.keyCode || e.which) === 13) {
+            // Enter key pressed
+            e.preventDefault();
+
+            $('#butt_check').trigger('click');
+        }
+    });
+
+
+    function CheckForm() {
+        var rest = {};
+        rest.name = document.getElementById('rest_name').value;
+
+        var DTO = {'rest': rest};
+        var data = JSON.stringify(DTO);
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('core', 'check_rest')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json",
+            dataType: 'json',
+            data: data,
+            success: function (data) {
+                $("#add_results").html('');
+
+                show_data(data);
+                return data
+            },
+            error: function (data) {
+                $("#add_results").html('');
+
+                show_data("error");
+                return data
+
+            }
+        });
+
+        function show_data(asd) {
+
+            $("#add_results").append('<div class="card">\n' +
+                    '                <div class="card-block"><table class="table table-hover table-striped">\n' +
+                    '                        <tbody  id="add_result">');
+
+            if ((asd === "error") || (asd == "")) {
+                $("#add_result").append('<tr> <td> Ничего не найдено </td></tr>');
+            } else {
+                asd.forEach(function (element) {
+                    var user = parseInt("{{=auth.user.id}}");
+                    var lock = "<i class=\"fas fa-lock\"></i>";
+                    var is_mine = ((element.modified_by !== user) ? lock : "");
+                    is_mine = ((element.modified_by === null) ? "" : is_mine);
+                    is_disabled = ((is_mine === "") ? "" : element.id = "#");
+                    $("#add_result").append('<tr ' + is_disabled + ' onclick="e_menu(' + element.id + ')"><td>' + element.f_name + is_mine + ' <p><em class="text-muted">' + element.f_address + '</em></p></td></tr>');
+                });
+            }
+
+
+            $("#add_results").append('</tbody>    </table>                </div>            </div>')
+        }
+    }
+
+    function e_menu(r_id) {
+        var rest = {};
+        rest.r_id = r_id;
+        var DTO = {'rest': rest};
+        var data = JSON.stringify(DTO);
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('core', 'lock_rest')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json",
+            dataType: 'json',
+            data: data,
+            success: function (data) {
+                window.location = '{{=URL('core','e_rest')}}' + "?r_id=" + r_id
+            },
+            error: function (data) {
+                window.location.reload()
+            }
+
+
+        });
+
+
+    }
+
+    function submitForm() {
+        var rest = {};
+        rest.name = document.getElementById('rest_name').value;
+        rest.addr = document.getElementById('rest_addr').value;
+        rest.is_network = document.getElementById("is_network").checked;
+        var DTO = {'rest': rest};
+        var data = JSON.stringify(DTO);
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('default', 'save_rest')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json",
+            dataType: 'json',
+            data: data,
+            success: function (data) {
+                location.reload();
+            },
+            error: function (data) {
+                location.reload();
+            }
+        });
+    }
+
+    $("#rest_addr").suggestions({
+        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
+        type: "ADDRESS",
+        count: 5,
+        onSelect: function (suggestion) {
+            console.log(suggestion);
+        }
+    });
+</script>

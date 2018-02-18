@@ -1,0 +1,321 @@
+{{extend 'layout.html'}}
+<div class="container">
+
+    <h1>Add New course to menu {{=menu_name}}</h1>
+    <input type="hidden" id="menu_id" value="{{=menu_id}}">
+    <input type="hidden" name="count" value="1"/>
+
+    <div class="row">
+        <div class="col-sm-4">
+            <br/>
+            <h2>Current courses:</h2>
+            <ul class="list-group">
+            {{for course in courses:}}
+                <div class="entry input-group col-sm-12">
+
+                    <li class="list-group-item"
+                        onclick="window.location='{{=URL('default', 'course_edit' + '?men_name=' + menu_name + '&item_name='+ course.f_name)}}'">{{=course.f_name}}</li>
+                    <span class="input-group-btn">
+                            <button class="btn btn-danger btn-add" onclick="delete_course(this)" id="{{=course.id}}"
+                                    type="button">-</button>
+                        </span>
+                </div>
+
+            {{pass}}
+            </ul>
+        </div>
+        <div class="col-sm-8" id="new_item">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th class="text-center">course Name</th>
+                    <th class="text-center">course Price</th>
+                    <th class="text-center">course weight</th>
+                    <th class="text-center">course unit</th>
+                    <th class="text-center">course tag(internal)</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>
+                        <input type="text" id="course_name" placeholder="{{=T('course Name')}}"
+                               class="form-control course"
+                               required>
+                    </td>
+                    <td>
+                        <input type="number" id="course_price" placeholder="{{=T('course Price')}}"
+                               class="form-control course"
+                               required>
+                    </td>
+                    <td>
+                        <input type="number" id="course_weight" placeholder="{{=T('course Weight')}}"
+                               class="form-control course"
+                               required>
+                    </td>
+                    <td>
+                        <select class="form-control" type="text" id="course_unit">
+                        {{for option in options:}}
+                            <option id= {{=option.id}}>{{=option.f_name}}</option>
+                        {{pass}}
+                        </select>
+                    </td>
+                    <td>
+                        <div class="example">
+                            <script type="text/javascript">
+                                $(document).ready(function () {
+                                    $('#example-clear-after-filter-selection').multiselect({
+                                        buttonContainer: '<div id="example-clear-after-filter-selection-container"></div>',
+                                        enableFiltering: true,
+                                        onChange: function ($option) {
+                                            // Check if the filter was used.
+                                            var query = $('#example-clear-after-filter-selection-container li.multiselect-filter input').val();
+
+                                            if (query) {
+                                                $('#example-clear-after-filter-selection-container li.multiselect-filter input').val('').trigger('keydown');
+                                            }
+                                        }
+                                    });
+                                });
+                            </script>
+                            <div class="btn-group">
+                            <span class="multiselect-native-select">
+                                <select id="example-clear-after-filter-selection"
+                                        multiple="multiple">
+                                    {{for tag in tags:}}
+                                        <option value="{{=tag.name}}">{{=tag.name}}</option>
+                                    {{pass}}
+                            </select>
+                                <div id="example-clear-after-filter-selection-container" class=""><button
+                                        type="button" class="multiselect dropdown-toggle btn btn-default"
+                                        data-toggle="dropdown"
+                                        title="123"
+                                        aria-expanded="false"><span
+                                        class="multiselect-selected-text">All selected (6)</span> <b
+                                        class="caret"></b></button><ul class="multiselect-container dropdown-menu"><li
+                                        class="multiselect-item multiselect-filter" value="0"><div
+                                        class="input-group"><span
+                                        class="input-group-addon"><i
+                                        class="fa fa-search"></i></span><input
+                                        class="form-control multiselect-search" type="text" placeholder="Search"><span
+                                        class="input-group-btn"><button class="btn btn-default multiselect-clear-filter"
+                                                                        type="button"><i
+                                        class="fa fa-minus-circle"></i></button></span></div></li><li
+                                        class="active" style="display: block;"><a tabindex="0"><label
+                                        class="checkbox"><input type="checkbox" value="1"> Option 1</label></a></li><li
+                                        class="active" style="display: block;"><a tabindex="0"><label
+                                        class="checkbox"><input type="checkbox" value="2"> Option 2</label></a></li><li
+                                        class="active" style="display: block;"><a tabindex="0"><label
+                                        class="checkbox"><input type="checkbox" value="3"> Option 3</label></a></li><li
+                                        class="active" style="display: block;"><a tabindex="0"><label
+                                        class="checkbox"><input type="checkbox" value="4"> Option 4</label></a></li><li
+                                        class="active" style="display: block;"><a tabindex="0"><label
+                                        class="checkbox"><input type="checkbox" value="5"> Option 5</label></a></li><li
+                                        class="active" style="display: block;"><a tabindex="0"><label
+                                        class="checkbox"><input type="checkbox"
+                                                                value="6"> Option 6</label></a></li></ul></div></span>
+                            </div>
+                        </div>
+                    </td>
+                    <td></td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="col-sm-4"></div>
+            <div class="col-sm-8" id="ingredients">
+                <div class="col-sd-4">
+                    <button type="submit" class="btn btn-primary" onclick="save_changes()">Add course</button>
+                </div>
+                <table class="table table-bordered table-hover" id="tab_ingredients">
+                    <thead>
+                    <tr>
+                        <th class="text-center">
+                            Ingr Name
+                        </th>
+                        <th class="text-center">
+                            Ingr Weight
+                        </th>
+                        <th class="text-center">
+                            Weight Unit
+                        </th>
+                        <th>
+                            <button id="b1" class="btn add-more" type="button">+</button>
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr id="field1">
+
+                        <td>
+                            <input type="text" name="ingr1" placeholder="{{=T('Ingredient Name')}}"
+                                   class="form-control ingr"
+                                   required>
+                        </td>
+                        <td>
+                            <input type="number" name="wght1" placeholder="{{=T('Ingredient Weight')}}"
+                                   class="form-control ingr">
+                        </td>
+                        <td>
+                            <input type="text" name="unit1" placeholder="{{=T('Ingredient Unit')}}"
+                                   class="form-control ingr" required>
+                        </td>
+                    {{pass}}
+                        <td>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function add_row() {
+        var i = 1;
+        $("#add_row").click(function () {
+            $('#addr' + i).html("" +
+                    "<button id='delete' class='btn btn-default pull-left remove'>Delete Ingr</button></div>");
+
+            $('#tab_ingredients').append('<tr id="addr' + (i + 1) + '"></tr>');
+            i++;
+        });
+
+        $('#ingredients').on('click', '.remove', function () {
+            $(this).parent().remove();
+            i = i - 1;
+        });
+    }
+
+    function save_changes() {
+        var course = {};
+        course.weight = document.getElementById("course_weight").value;
+        course.name = document.getElementById("course_name").value;
+        course.price = document.getElementById("course_price").value;
+        if (course.name.length === 0) {
+            document.getElementById("course_name").className += ' alert-danger';
+            return null;
+        }
+        else {
+            document.getElementById("course_name").classList.remove('alert-danger');
+        }
+        if (isNaN(course.price) || course.price.length === 0) {
+            document.getElementById("course_price").className += ' alert-danger';
+            return null;
+        }
+        else {
+            document.getElementById("course_price").classList.remove('alert-danger');
+        }
+        _tmp = document.getElementById("course_unit");
+        course.unit_id = _tmp.options[_tmp.selectedIndex].id;
+        course.menu_id = document.getElementById("menu_id").value;
+        course.change_factor = "add";
+
+        x = document.getElementsByClassName('ingr');
+        var ingrs = [];
+
+        for (i = 0; i < x.length - 2; i = i + 3) {
+            var cur_ingr = {};
+            cur_ingr.name = x[i].value;
+            cur_ingr.weight = x[i + 1].value;
+            cur_ingr.unit = x[i + 2].value;
+            cur_ingr.unit_id = x[i + 2].id;
+            if (cur_ingr.unit.length === 0) {
+                x[i + 2].className += ' alert-danger';
+                return null;
+            }
+            else {
+                x[i + 2].classList.remove('alert-danger')
+            }
+            ingrs.push(cur_ingr)
+        }
+
+        var DTO = {'course': course, 'ingr': ingrs};
+        var data = JSON.stringify(DTO);    //Using the toJSON plugin by Mark Gibson
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('default', 'save_course')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json; charset=utf-8",
+            data: data,
+            dataType: 'json',
+            success: function (data) {
+                alert('Saved!');
+                location.reload();
+            },
+            error: function (data) {
+                alert('oh no, its failed again!');
+                location.reload();
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        var next = 1;
+        $(".add-more").click(function (e) {
+            e.preventDefault();
+            var addto = "#field" + next;
+            var addRemove = "#lasttr" + (next);
+            next = next + 1;
+            var newIn = "<tr id='field" + next + "' ><td><input name='ingr" + next + "' type='text' 'placeholder='Ingredient Name' class='form-control input-sm ingr'  /></td>" +
+                    "<td><input  name='wght" + next + "' type='number' placeholder='Weight (OPTIONAL)'  class='form-control input-md ingr'></td>" +
+                    "<td id='lasttr" + next + "'><input id='unit" + next + "' placeholder='Weight unit' class='form-control input-md ingr'></td>" +
+                    "<td><button id='remove" + next + "' class='btn btn-danger remove-me' >-</button></td></tr>";
+            var newInput = $(newIn);
+            //var removeBtn = '<td><button id="remove' + (next - 1) + '" class="btn btn-danger remove-me" >-</button></td></tr>';
+            //var removeButton = $(removeBtn);
+            $(addto).after(newInput);
+            //$(addRemove).after(removeButton);
+            $("#field" + next).attr('data-source', $(addto).attr('data-source'));
+            $("#count").val(next);
+
+            $('.remove-me').click(function (e) {
+                e.preventDefault();
+                var fieldNum = this.id.charAt(this.id.length - 1);
+                var fieldID = "#field" + fieldNum;
+                $(this).remove();
+                $(fieldID).remove();
+            });
+
+        });
+
+        $('#example-clear-after-filter-selection').multiselect({
+            buttonContainer: '',
+            enableFiltering: true,
+            onChange: function ($option) {
+                // Check if the filter was used.
+                var query = $('#example-clear-after-filter-selection-container li.multiselect-filter input').val();
+
+                if (query) {
+                    $('#example-clear-after-filter-selection-container li.multiselect-filter input').val('').trigger('keydown');
+                }
+            }
+        });
+    });
+
+
+    function delete_course(item) {
+        var item_t = {"item": {'id': item.id}};
+        var data = JSON.stringify(item_t);
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('default', 'delete_course')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json; charset=utf-8",
+            data: data,
+            dataType: 'json',
+            success: function (data) {
+                alert('Saved!');
+                location.reload();
+            },
+            error: function () {
+                alert('oh no, its failed again!');
+                location.reload();
+            }
+        });
+    }
+
+
+</script>

@@ -1,0 +1,197 @@
+{{extend 'layout.html'}}
+<div class="container">
+
+    <h1>Edit course in menu {{=A(menu_name, _href=(URL('default', 'menu_edit?men_name=' + menu_name)), )}}</h1>
+    <div class="row">
+        <div class="col-sd-4">
+            <br/>
+            <h2>Current course</h2>
+        </div>
+        <div class="col-sd-8" id="new_item">
+            <table class="table table-hover">
+                <thead>
+                <th>
+                    course Weight
+                </th>
+                <th>
+                    course Price
+                </th>
+                <th>
+                    course weight
+                </th>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>
+                        <input id="course_name" placeholder="{{=coar.name}}" type="text" value="{{=coar.name}}"> course
+                        Name
+                        <input type="hidden" id="course_id" value="{{=item_id}}">
+                        <input type="hidden" id="recipe_id" value="{{=recipe_id}}">
+                    </td>
+                    <td>
+                        <input id="course_price" type="number" value="{{=coar.price}}">
+                    </td>
+                    <td>
+                        <input id="course_weight" type="number" value="{{=coar.weight}}">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="col-sd-4">
+                <button type="submit" class="btn btn-primary" onclick="save_changes()">Save changes</button>
+            </div>
+            <div class="col-sd-8" id="ingredients">
+                <table class="table table-bordered table-hover" id="tab_ingredients">
+                    <thead>
+                    <tr>
+                        <th class="text-center">
+                            Ingr Name
+                        </th>
+                        <th class="text-center">
+                            Ingr Weight
+                        </th>
+                        <th class="text-center">
+                            Weight Unit
+                        </th>
+                        <th>
+                            <button id="b1" class="btn add-more" type="button">+</button>
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{count = 0}}
+                    {{for ingr in ingrs:}}
+                    <tr id="field{{=count}}">
+                        <td>
+                            <input type="text" name="ingr{{=count}}" placeholder="{{=T('Ingredient Name')}}"
+                                   class="form-control ingr" value="{{=ingr.name}}"
+                                   required>
+                        </td>
+                        <td>
+                            <input type="number" name="wght{{=count}}" placeholder="{{=T('Ingredient Weight')}}"
+                                   class="form-control ingr" value="{{=ingr.weight}}">
+                        </td>
+                        <td>
+                            <input type="text" name="unit{{=count}}" placeholder="{{=T('Ingredient Unit')}}"
+                                   class="form-control ingr" value="{{=ingr.unit}}" id="{{=ingr.unit_id}}" required>
+                            <input type="hidden" id="ingrid{{=count}}" value="{{=ingr.id}}">
+                            <input type="hidden" id="ingridstep{{=count}}" value="{{=ingr.step_id}}">
+
+                        </td>
+                        <td>
+                            <button id="remove{{=count}}" class="btn btn-danger remove-me" value="field{{=count}}">-
+                            </button>
+                        </td>
+                    {{count = count + 1}}
+                    {{pass}}
+                    </tr>
+                    {{pass}}
+                    </tbody>
+                </table>
+                <input type="hidden" id="count" value="{{=count}}"/>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .strikedOut {
+        text-decoration: line-through;
+
+    }
+</style>
+
+<script>
+
+    $(document).ready(function () {
+        var next = parseInt(document.getElementById('count').value) - 1;
+        $(".add-more").click(function (e) {
+            e.preventDefault();
+            var addto = "#field" + next;
+            //var addRemove = "#lasttr" + (next);
+            next = next + 1;
+            var newIn = "<tr id='field" + next + "' ><td><input name='ingr" + next + "' type='text' placeholder='Ingredient Name' class='form-control input-sm ingr'  /></td>" +
+                    "<td><input  name='wght" + next + "' type='number' placeholder='Weight (OPTIONAL)'  class='form-control input-md ingr'></td>" +
+                    "<td id='lasttr" + next + "'><input id='unit" + next + "' placeholder='Weight unit' class='form-control input-md ingr'>" +
+                    "<input type='hidden' id='ingrid" + next + "' value='new' /></td>" +
+                    "<td><button id='remove" + next + "' class='btn btn-danger remove-me' value='field" + next + "' >-</button></td></tr>";
+            var newInput = $(newIn);
+            //var removeBtn = '<td><button id="remove' + (next - 1) + '" class="btn btn-danger remove-me" >-</button></td></tr>';
+            //var removeButton = $(removeBtn);
+            $(addto).after(newInput);
+            //$(addRemove).after(removeButton);
+            $("#field" + next).attr('data-source', $(addto).attr('data-source'));
+            $("#count").val(next);
+
+        });
+
+        $('body').on('click', '.remove-me', function (e) {
+            e.preventDefault();
+            var fieldID = this.parentNode.parentNode.id;
+            var target = document.getElementById(fieldID);
+            if (target.children[2].children[1].value !== 'new') {
+                target.className += ' strikedOut';
+            }
+            else {
+                var fieldNum = this.id.charAt(this.id.length - 1);
+                var fieldID = "#field" + fieldNum;
+                $(this).remove();
+                $(fieldID).remove();
+            }
+        });
+
+
+    });
+
+
+    function save_changes() {
+        var course = {};
+        course.weight = document.getElementById("course_weight").value;
+        course.name = document.getElementById("course_name").value;
+        course.price = document.getElementById("course_price").value;
+        course.id = document.getElementById("course_id").value;
+        course.recipe_id = document.getElementById("recipe_id").value;
+        course.change_factor = "edit";
+        x = document.getElementsByClassName('ingr');
+        var ingrs = [];
+        for (i = 0; i < x.length - 2; i = i + 3) {
+            var cur_ingr = {};
+            cur_ingr.name = x[i].value;
+            cur_ingr.weight = x[i + 1].value;
+            cur_ingr.unit = x[i + 2].value;
+            cur_ingr.unit_id = x[i + 2].id;
+            if (x[i].parentNode.parentNode.classList.contains('strikedOut')) {
+                cur_ingr.deleted = 1;
+                target_id = 'ingridstep' + i;
+                cur_ingr.step_id = x[i + 2].parentNode.children[2].value
+            }
+            else {
+                cur_ingr.deleted = 0;
+            }
+
+            ingrs.push(cur_ingr)
+        }
+
+        var DTO = {'course': course, 'ingr': ingrs};
+        var data = JSON.stringify(DTO);    //Using the toJSON plugin by Mark Gibson
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('default', 'save_course')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json; charset=utf-8",
+            data: data,
+            dataType: 'json',
+            success: function (data) {
+                alert('Saved!');
+                location.reload();
+            },
+            error: function (data) {
+                alert('oh no, its failed again!');
+                location.reload();
+            }
+        });
+    }
+</script>

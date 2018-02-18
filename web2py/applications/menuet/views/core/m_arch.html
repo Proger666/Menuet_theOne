@@ -1,0 +1,28 @@
+{{extend "layout.html"}}
+
+
+<div class="container">
+    <div class="row">
+    {{for menu in menus_disp:}}
+    {{menu = Storage(menu)}}
+        <div class="col-sm-4">
+
+            <div class="card text-center">
+                <div class="card-block">
+                    <h4 class="card-title">{{=menu.name}}</h4>
+                    <p class="card-text">
+                    <em></em><br/>
+                    <em class="text-muted">Создано: {{=rest.created_on}}</em><br/>
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <input type="submit" value="Править" onclick="window.location='{{=URL('core', 'e_menu', vars=dict(r_id=rest.id, m_id=menu.id))}}'" class="btn btn-primary">
+                </div>
+            </div>
+
+
+        </div>
+    {{pass}}
+
+    </div>
+</div>

@@ -1,0 +1,148 @@
+{{extend 'layout.html'}}
+<style>
+    .left {
+        display: block;
+    }
+
+    .grayout {
+        opacity: 0.6; /* Real browsers */
+        filter: alpha(opacity=60); /* MSIE */
+    }
+</style>
+
+<h1>Add New menu to Rest {{=rest_name}}</h1>
+<input type="hidden" value="{{=rest_id}}" id="rest_id">
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-4">
+            <br/>
+            <h2>Current menu:</h2>
+            <ul class="list-group">
+                <div class="controls">
+
+                    <form role="form" autocomplete="on">
+                    {{for menux in menu:}}
+                        <ul>
+                            <div class="entry input-group col-sm-12">
+                            {{ a = ''
+                            if menux.f_current is False: a = ' grayout'
+                            }}
+                                <li class="form-control {{=a}}" id="{{=menux.id}} " style="font-weight: 700"
+                                    onclick="window.location='{{=URL('default', 'menu_edit' + '?men_name=' + menux.f_name)}}'">{{=menux.f_name}}
+                                </li>
+                                <span class="input-group-btn">
+                            <button class="btn btn-danger btn-add" type="button">
+                                <span class="fa fa-times-circle fa-2x" onclick="delete_menu(this)"
+                                      id="{{=menux.id}}"></span>
+                            </button>
+                        </span>
+                            </div>
+                        </ul>
+
+                    {{pass}}
+
+                    </form>
+                </div>
+            </ul>
+        </div>
+
+        <div class="col-sm-8">
+            <table class="table table-bordered table-hover" id="tab_ingredients">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th class="text-center">
+                        Menu Name
+                    </th>
+                    <th class="text-center">
+                        RES
+                    </th>
+                    <th class="text-center">
+                        RES
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr id="addr0">
+                    <td>
+                        <button type="submit" onclick="add_menu()">Add Menu</button>
+                    </td>
+                    <td>
+                        <input type="text" id="menu_name" placeholder="{{=T('Menu Name')}}"
+                               class="form-control menu"
+                               required>
+                    </td>
+                    <td>
+
+                    </td>
+                    <td>
+
+                    </td>
+                {{pass}}
+                </tr>
+                <tr id="addr1"></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+
+
+    function add_menu() {
+        var menu = {};
+        var rest = {};
+        menu.name = document.getElementById('menu_name').value;
+        rest.id = document.getElementById('rest_id').value;
+        if (menu.name.length === 0) {
+            document.getElementById('menu_name').className += ' alert-danger';
+            return null;
+        }
+
+        var DTO = {'menu': menu, 'rest': rest};
+        var data = JSON.stringify(DTO);    //Using the toJSON plugin by Mark Gibson
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('default', 'save_menu')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json; charset=utf-8",
+            data: data,
+            dataType: 'json',
+            success: function (data) {
+                alert('Saved!');
+                location.reload();
+            },
+            error: function (data) {
+                alert('oh no, its failed again!');
+                location.reload();
+            }
+        });
+    }
+
+    function delete_menu(menu) {
+        var rest = {};
+        rest.id = document.getElementById('rest_id').value;
+        var menu_t = {"menu": {"id": menu.id}, "rest": {"id": rest.id}};
+        var data = JSON.stringify(menu_t);
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('default', 'delete_menu')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json; charset=utf-8",
+            data: data,
+            dataType: 'json',
+            success: function (data) {
+                alert('Saved!');
+                location.reload();
+            },
+            error: function () {
+                alert('oh no, its failed again!');
+                location.reload();
+            }
+        });
+    }
+</script>
