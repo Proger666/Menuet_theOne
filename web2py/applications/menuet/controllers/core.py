@@ -117,9 +117,6 @@ def e_rest():
                 menu.name = _menu.f_name
                 menu.created_on = _menu.created_on
                 menu_disp.append(menu)
-
-
-
     else:
         redirect(URL("core", "rest"))
     menu_types = db().select(db.t_seosanal_type.ALL).to_json()
