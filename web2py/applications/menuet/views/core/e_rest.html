@@ -81,27 +81,34 @@
                                    type="hidden">
                             <input class="form-control" required name="rest_name" value="{{=rest.name}}" id="rest_name"
                                    type="hidden">
-                            <input class="form-control" required name="comment" placeholder="Необязательно" id="comment"
-                                   type="text">
+
                         </div>
                         <div class="form-group">
                             <label class="font-weight-bold">Тип меню</label>
                             <select class="form-control">
                             {{for option_type in menu_types:}}
-                                <option>{{=option_type}}</option>
+                                <option>{{=option_type.f_name}}</option>
+                            {{pass}}
                             </select>
                         </div>
                         <div class="form-group">
-                            <label class="font-weight-bold">Сезонное?</label>
-                            <label class="checkbox"><input type="checkbox" name="seosanal_checkbox">
+                            <label class="font-weight-bold" id="season_checkbox"
+                                   >Сезонное?</label>
+                            <label class="checkbox"><input type="checkbox" onclick="show_hidden(this)" name="seosanal_checkbox">
                         </div>
-                        <div class="form-group">
-                            <label class="font-weight-bold">Тип меню</label>
+
+                        <div class="form-group" hidden id="seasonal_div">
+                            <label class="font-weight-bold">Тип сезонного меню</label>
                             <select class="form-control">
-                            {{for option_seosanl in menu_seosanal:}}
-                                <option>{{=option_seosanal}}</option>
+                            {{for option_seosanal in menu_seosanal:}}
+                                <option>{{=option_seosanal.f_name}}</option>
+                            {{pass}}
                             </select>
                         </div>
+                        <label class="font-weight-bold">Комментарий</label>
+
+                        <input class="form-control" required name="comment" placeholder="Необязательно" id="comment"
+                               type="text">
                         <button type="submit" class="btn btn-primary" onclick="add_menu()">Создать!</button>
                     </form>
                 </div>
@@ -120,83 +127,94 @@
 <![endif]-->
 <script type="text/javascript"
         src="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/js/jquery.suggestions.min.js"></script>
-<script type="text/javascript">
+<script type="text/javascript">function show_hidden(obj) {
+    if (document.getElementsByName('seosanal_checkbox')[0].checked === true) {
+        $('#seasonal_div').removeAttr("hidden");
+    } else {
+        var tmp = document.getElementById('seasonal_div');
+        tmp.setAttribute("type", "hidden");
 
-    function submitForm() {
-        var rest = {};
-        rest.name = document.getElementById('rest_name').value;
-        rest.addr = document.getElementById('rest_addr').value;
-        rest.is_network = document.getElementById("is_network").checked;
-
-        var DTO = {'rest': rest};
-        var data = JSON.stringify(DTO);
-
-        $.ajax({
-            type: 'POST',
-            url: '{{=URL('default', 'save_rest')}}',
-            scriptCharset: "utf-8",
-            contentType: "application/json",
-            dataType: 'json',
-            data: data
-        });
     }
+}
 
-    $("#rest_addr").suggestions({
-        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
-        type: "ADDRESS",
-        count: 5,
-        onSelect: function (suggestion) {
-            console.log(suggestion);
+
+function submitForm() {
+    var rest = {};
+    rest.name = document.getElementById('rest_name').value;
+    rest.addr = document.getElementById('rest_addr').value;
+    rest.is_network = document.getElementById("is_network").checked;
+
+    var DTO = {'rest': rest};
+    var data = JSON.stringify(DTO);
+
+    $.ajax({
+        type: 'POST',
+        url: '{{=URL('default', 'save_rest')}}',
+        scriptCharset: "utf-8",
+        contentType: "application/json",
+        dataType: 'json',
+        data: data
+    });
+}
+
+$("#rest_addr").suggestions({
+    token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
+    type: "ADDRESS",
+    count: 5,
+    onSelect: function (suggestion) {
+        console.log(suggestion);
+    }
+});
+
+
+function add_menu() {
+    var menu = {};
+    var rest = {};
+    rest.name = document.getElementById('rest_name').value;
+    rest.id = document.getElementById('rest_id').value;
+
+    var DTO = {'menu': menu, 'rest': rest};
+    var data = JSON.stringify(DTO);    //Using the toJSON plugin by Mark Gibson
+
+    $.ajax({
+        type: 'POST',
+        url: '{{=URL('default', 'save_menu')}}',
+        scriptCharset: "utf-8",
+        contentType: "application/json; charset=utf-8",
+        data: data,
+        dataType: 'json',
+        success: function (data) {
+            location.reload();
+        },
+        error: function (data) {
+            location.reload();
         }
     });
+}
+
+function delete_menu(menu) {
+    var rest = {};
+    rest.id = document.getElementById('rest_id').value;
+    var menu_t = {"menu": {"id": menu.id}, "rest": {"id": rest.id}};
+    var data = JSON.stringify(menu_t);
+
+    $.ajax({
+        type: 'POST',
+        url: '{{=URL('default', 'delete_menu')}}',
+        scriptCharset: "utf-8",
+        contentType: "application/json; charset=utf-8",
+        data: data,
+        dataType: 'json',
+        success: function (data) {
+            alert('Saved!');
+            location.reload();
+        },
+        error: function () {
+            alert('oh no, its failed again!');
+            location.reload();
+        }
+    });
+}
 
 
-    function add_menu() {
-        var menu = {};
-        var rest = {};
-        rest.name = document.getElementById('rest_name').value;
-        rest.id = document.getElementById('rest_id').value;
-
-        var DTO = {'menu': menu, 'rest': rest};
-        var data = JSON.stringify(DTO);    //Using the toJSON plugin by Mark Gibson
-
-        $.ajax({
-            type: 'POST',
-            url: '{{=URL('default', 'save_menu')}}',
-            scriptCharset: "utf-8",
-            contentType: "application/json; charset=utf-8",
-            data: data,
-            dataType: 'json',
-            success: function (data) {
-                location.reload();
-            },
-            error: function (data) {
-                location.reload();
-            }
-        });
-    }
-
-    function delete_menu(menu) {
-        var rest = {};
-        rest.id = document.getElementById('rest_id').value;
-        var menu_t = {"menu": {"id": menu.id}, "rest": {"id": rest.id}};
-        var data = JSON.stringify(menu_t);
-
-        $.ajax({
-            type: 'POST',
-            url: '{{=URL('default', 'delete_menu')}}',
-            scriptCharset: "utf-8",
-            contentType: "application/json; charset=utf-8",
-            data: data,
-            dataType: 'json',
-            success: function (data) {
-                alert('Saved!');
-                location.reload();
-            },
-            error: function () {
-                alert('oh no, its failed again!');
-                location.reload();
-            }
-        });
-    }
 </script>

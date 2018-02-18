@@ -119,6 +119,6 @@ def e_rest():
                 menu_disp.append(menu)
     else:
         redirect(URL("core", "rest"))
-    menu_types = db().select(db.t_seosanal_type.ALL).to_json()
-    menu_seosanal = db().select(db.t_type.ALL).to_json()
+    menu_types = db().select(db.t_type.ALL)
+    menu_seosanal = db().select(db.t_seosanal_type.ALL)
     return locals()
