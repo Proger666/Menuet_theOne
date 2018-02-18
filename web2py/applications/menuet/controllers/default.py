@@ -100,12 +100,12 @@ def load_menu():
 
 def ajax_success():
     session.flash = T("Success!")
-    return response
+    return simplejson.dumps("{'status':'OK'}")
 
 
 def ajax_error():
     session.flash = T("Failure!")
-    return response
+    return simplejson.dumps("{'status':'ERR'}")
 
 
 def delete_course():
@@ -217,6 +217,7 @@ def users_m():
     form = SQLFORM.smartgrid(db.auth_user, onupdate=auth.archive)
 
     return locals()
+
 
 @auth.requires_login()
 ### end requires
@@ -350,36 +351,31 @@ def save_rest():
     return ajax_error()
 
 
+@auth.requires_login()
 def save_menu():
     try:
+        menu_type =  int(request.vars.menu['type'])
         ### Fill some variables
-        assert 'date' in request.vars.menu
-
-        menu_name = "Menu_" + request.vars.rest['name'] + "_forDate_" + request.vars.menu['date']
-        menu_acive_date = request.vars.menu['date']
+        menu_name = db(db.t_type.id == menu_type).select().first().f_name + "_Menu_" + \
+                    request.vars.rest['name'].encode('utf-8')
         rest_id = request.vars.rest['id']
         # just create menu TODO: redesign
-        # Check if Menu already exists
-        if db(db.t_menu.f_name == menu_name).select().first() is None:
-            # Lets find old menu and mace it inactive
-            _old_menu = db((db.t_menu.f_current == True) & (db.t_rest_menu.t_rest == db.t_restaraunt.id) & (
-                    db.t_rest_menu.t_menu == db.t_menu.id)).select()
-            for item in _old_menu:
-                item.t_menu.f_current = False
-                item.t_menu.update_record()
-            # and create new menu and set it to active
-            _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_month=menu_acive_date)
-            db.t_rest_menu.insert(t_menu=_new_menu, t_rest=rest_id)
-            db.commit()
+        # Check if Menu already exists for this rest by name and type
 
-            return ajax_success()
-        elif db((db.t_menu.f_name == menu_name) & (db.t_restaraunt.id == rest_id) & (
+        # Lets find old menu and make it inactive
+        # Find all active menus with given type
+        _old_menu = db((db.t_menu.f_current == True) & (db.t_rest_menu.t_rest == db.t_restaraunt.id) & (
                 db.t_rest_menu.t_menu == db.t_menu.id) & (
-                        db.t_rest_menu.t_rest == db.t_restaraunt.id)).select().first() is None:
-            _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True)
-            db.t_rest_menu.insert(t_menu=_new_menu, t_rest=rest_id)
-            db.commit()
-            return ajax_success()
+                           db.t_menu.f_type.belongs(request.vars.menu['type']))).select()
+        for item in _old_menu:
+            item.t_menu.f_current = False
+            item.t_menu.update_record()
+        # and create new menu and set it to active
+
+        _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type])
+        db.t_rest_menu.insert(t_menu=_new_menu, t_rest=rest_id)
+        db.commit()
+        return ajax_success()
     except AssertionError:
         return ajax_error()
     except:

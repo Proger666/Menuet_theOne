@@ -1,3 +1,4 @@
+@auth.requires_membership('admin')
 def statistics():
     result_list = []
 
