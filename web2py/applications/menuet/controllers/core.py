@@ -17,7 +17,7 @@ def check_rest():
         return result_list
     session.flash = T('Failure')
     return False
-
+asasd
 
 @auth.requires_login()
 def rest():
