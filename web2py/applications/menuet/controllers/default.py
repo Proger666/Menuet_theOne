@@ -18,7 +18,6 @@ import hashlib
 APIKEY = "5Db[fJeUsssssA(N[+b~P"
 
 
-
 def user():
     if request.args(0) == 'register':
         request.vars.username = request.vars.email

@@ -12,8 +12,13 @@ def check_rest():
         _rest_name = rest_name.split(' ')
         for word in _rest_name:
             if len(word) > 2:
-                result_list.append(db(db.t_restaraunt.f_name.contains(word.encode('utf-8')) & ((db.t_restaraunt.modified_by != auth.user.id) | (db.t_restaraunt.modified_by == None))).select(db.t_restaraunt.f_name, db.t_restaraunt.f_address, db.t_restaraunt.id, db.t_restaraunt.modified_by).as_json())
-                #result_list.append(db(db.t_restaraunt.f_name.contains(word.encode('utf-8')), db.t_restaraunt.f_name).select())
+                result_list.append(db(db.t_restaraunt.f_name.contains(word.encode('utf-8')) & (
+                            (db.t_restaraunt.modified_by != auth.user.id) | (
+                                db.t_restaraunt.modified_by == None))).select(db.t_restaraunt.f_name,
+                                                                              db.t_restaraunt.f_address,
+                                                                              db.t_restaraunt.id,
+                                                                              db.t_restaraunt.modified_by).as_json())
+                # result_list.append(db(db.t_restaraunt.f_name.contains(word.encode('utf-8')), db.t_restaraunt.f_name).select())
     if len(result_list) > 0:
         return result_list
     session.flash = T('Failure')
@@ -24,12 +29,13 @@ def check_rest():
 def rest():
     rests = {"rests": []}
     rests = Storage(rests)
-    _tmp = db(db.t_restaraunt.modified_by == auth.user.id).select(orderby=~db.t_restaraunt.created_on, limitby=(0,4))
+    _tmp = db(db.t_restaraunt.modified_by == auth.user.id).select(orderby=~db.t_restaraunt.created_on, limitby=(0, 4))
     for row in _tmp:
         rests.rests.append({"id": row.id, "name": row.f_name, "created_on": row.created_on, "addr": row.f_address})
 
     rest_disp = [x for x in rests.rests]
     return locals()
+
 
 @auth.requires_login()
 def e_menu():
@@ -44,6 +50,7 @@ def e_menu():
     menu.created_on = _tmp.created_on
 
     return locals()
+
 
 @auth.requires_login()
 def rests():
@@ -65,7 +72,6 @@ def lock_rest():
     return simplejson.dumps(result)
 
 
-
 @auth.requires_login()
 def e_rest():
     if "r_id" in request.vars:
@@ -84,8 +90,8 @@ def e_rest():
             'декабря': 12,
         }
 
-
-        _rest = db((db.t_restaraunt.created_by == auth.user.id) and (db.t_restaraunt.id == request.vars.r_id)).select().first()
+        _rest = db(
+            (db.t_restaraunt.created_by == auth.user.id) and (db.t_restaraunt.id == request.vars.r_id)).select().first()
         # Form rest ast class
         rest = Storage()
         # fill the attr
@@ -102,7 +108,7 @@ def e_rest():
             (db.t_menu.id == db.t_rest_menu.t_menu) & (db.t_restaraunt.id == db.t_rest_menu.t_rest)
         )
         menus = [menux.t_menu for menux in tmp(db.t_restaraunt.id == rest.id).select()]
-        #create menu object
+        # create menu object
         menu_disp = []
         for _menu in menus:
             if _menu.f_current is True:
@@ -111,11 +117,11 @@ def e_rest():
                 menu.name = _menu.f_name
                 menu.created_on = _menu.created_on
                 menu_disp.append(menu)
-    menu_types = db(db.t_seosanal_type)
-    menu_seosanal
+
 
 
     else:
         redirect(URL("core", "rest"))
-
+    menu_types = db().select(db.t_seosanal_type.ALL).to_json()
+    menu_seosanal = db().select(db.t_type.ALL).to_json()
     return locals()
