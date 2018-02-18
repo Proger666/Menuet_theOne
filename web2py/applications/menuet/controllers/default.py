@@ -11,12 +11,11 @@ from time import gmtime, strftime
 import requests
 
 from gluon.contrib import simplejson
-import pandas as pd
 import hashlib
 
 ### GLOBALS
 
-APIKEY = "5Db[fJeUA(N[+b~P"
+AP
 
 
 def user():
