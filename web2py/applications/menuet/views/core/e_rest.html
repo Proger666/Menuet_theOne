@@ -131,8 +131,7 @@
     if (document.getElementsByName('seosanal_checkbox')[0].checked === true) {
         $('#seasonal_div').removeAttr("hidden");
     } else {
-        var tmp = document.getElementById('seasonal_div');
-        tmp.setAttribute("type", "hidden");
+        $('#seasonal_div').fadeOut();
 
     }
 }
