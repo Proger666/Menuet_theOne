@@ -15,7 +15,8 @@ import hashlib
 
 ### GLOBALS
 
-AP
+APIKEY = "5Db[fJeUsssssA(N[+b~P"
+
 
 
 def user():
