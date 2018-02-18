@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from gluon.contrib import simplejson
 
 
 @auth.requires_login()
@@ -110,7 +111,8 @@ def e_rest():
                 menu.name = _menu.f_name
                 menu.created_on = _menu.created_on
                 menu_disp.append(menu)
-
+    menu_types = db(db.t_seosanal_type)
+    menu_seosanal
 
 
     else:
