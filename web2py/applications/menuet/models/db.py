@@ -94,6 +94,11 @@ auth = Auth(db, host_names=configuration.get('host.names'))
 auth.settings.extra_fields['auth_user'] = []
 auth.define_tables(username=True, signature=False)
 
+### Create Logger #####
+import logging
+logger = logging.getLogger("web2py.app.menuet")
+logger.setLevel(logging.DEBUG)
+
 # -------------------------------------------------------------------------
 # configure email
 # -------------------------------------------------------------------------

@@ -66,7 +66,7 @@ setup(app=['web2py.py'],
       'LICENSE',
       'VERSION',
       'splashlogo.gif',
-      'logging.example.conf',
+      'logging.conf',
       'options_std.py',
       ],
       options={'py2app': {

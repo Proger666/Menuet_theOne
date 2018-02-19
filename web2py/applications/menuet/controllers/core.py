@@ -1,6 +1,14 @@
-from datetime import datetime
-
 from gluon.contrib import simplejson
+
+# define this DB SHIT!
+t_menu = db.t_menu
+t_restaraunt = db.t_restaraunt
+t_rest_menu = db.t_rest_menu
+t_ingredient = db.t_ingredient
+t_seosanal_type = db.t_seosanal_type
+t_menu_type = db.t_menu_type
+t_menu_item = db.t_menu_item
+t_item = db.t_item
 
 
 @auth.requires_login()
@@ -13,11 +21,11 @@ def check_rest():
         for word in _rest_name:
             if len(word) > 2:
                 result_list.append(db(db.t_restaraunt.f_name.contains(word.encode('utf-8')) & (
-                            (db.t_restaraunt.modified_by != auth.user.id) | (
-                                db.t_restaraunt.modified_by == None))).select(db.t_restaraunt.f_name,
-                                                                              db.t_restaraunt.f_address,
-                                                                              db.t_restaraunt.id,
-                                                                              db.t_restaraunt.modified_by).as_json())
+                        (db.t_restaraunt.modified_by != auth.user.id) | (
+                        db.t_restaraunt.modified_by == None))).select(db.t_restaraunt.f_name,
+                                                                      db.t_restaraunt.f_address,
+                                                                      db.t_restaraunt.id,
+                                                                      db.t_restaraunt.modified_by).as_json())
                 # result_list.append(db(db.t_restaraunt.f_name.contains(word.encode('utf-8')), db.t_restaraunt.f_name).select())
     if len(result_list) > 0:
         return result_list
@@ -37,18 +45,62 @@ def rest():
     return locals()
 
 
+def getMenu_forRest(rest_id, menu_id):
+    menu = db((t_menu.id == menu_id) &
+              (t_restaraunt.id == rest_id) &
+              (t_rest_menu.t_menu == t_menu.id) &
+              (t_rest_menu.t_rest == t_restaraunt.id)).select(t_menu.ALL).first()
+    return menu
+
+
+def getItems_for_menu(menu_id):
+    items = db((t_menu.id == menu_id)
+               & (t_menu_item.t_menu == t_menu.id)
+               & (t_menu_item.t_item == t_item.id)).select(t_item.ALL)
+    return items
+
+
+def get_ingrs_for_item(item_id):
+    # get recipe for item to use later on
+    item_recipe = db.t_item.f_recipe
+    # get all ingrs for this item
+    ingrs = db((t_item.id == item_id) &
+               # get recipe for this item
+               (db.t_recipe.id == item_recipe) &
+               # M-to-M relation for step <> recipe
+               (db.t_step_ing.t_step == db.t_step.id) &
+               (db.t_step_ing.t_recipe == db.t_recipe.id)).select(db.t_ingredient.ALL)
+
+    return ingrs
+
+
 @auth.requires_login()
 def e_menu():
-    menu_id = request.vars.m_id
-    rest_id = request.vars.r_id
-
-    menu = Storage()
-
-    # Get DB menu
-    _tmp = db(db.t_menu.id == menu_id).select().first()
-    menu.name = _tmp.f_name
-    menu.created_on = _tmp.created_on
-
+    try:
+        # get something or NONE
+        menu_id = request.vars.get('m_id')
+        rest_id = request.vars.get('r_id')
+        if rest_id == None and menu_id == None:
+            # just throw them execption in the face
+            raise HTTP(500)
+            # are u really a digit ? dont you ?
+        elif str.isdigit(menu_id) and str.isdigit(rest_id):
+            # get current menu based on URL parameters
+            menu = Storage(getMenu_forRest(rest_id, menu_id))
+            # Get all ITEMS for this MENU
+            menu_items = getItems_for_menu(menu_id)
+            # create class sotrage for item
+            item = Storage()
+            # Lets fill item class
+            for menu_item in menu_items:
+                item.name = menu_item.f_name
+                item.id = menu_item.id
+                ingrs = get_ingrs_for_item(item.id)
+        else:
+            raise HTTP(500)
+    except HTTP:
+        logger.warn('Missing one or all ids on page e_menu, menu id or rest id are missing ' + str(request.vars))
+        return None
     return locals()
 
 
@@ -119,6 +171,6 @@ def e_rest():
                 menu_disp.append(menu)
     else:
         redirect(URL("core", "rest"))
-    menu_types = db().select(db.t_type.ALL)
+    menu_types = db().select(t_menu_type.ALL)
     menu_seosanal = db().select(db.t_seosanal_type.ALL)
     return locals()

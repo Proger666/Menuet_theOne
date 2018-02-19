@@ -380,7 +380,6 @@ def save_menu():
         return ajax_error()
     except:
         return ajax_error()
-    return ajax_error()
 
 
 def course_edit():
