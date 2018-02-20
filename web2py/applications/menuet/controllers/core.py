@@ -165,6 +165,8 @@ def lock_rest():
     return simplejson.dumps(result)
 
 
+def test():
+    return locals()
 
 @auth.requires_login()
 def a_item():
