@@ -150,7 +150,8 @@ def menus():
 
     for row in _tmp:
         menus.menus.append({"id": row.t_menu.id, "name": row.t_menu.f_name, "created_on": row.t_menu.created_on,
-                            "rest_name": row.t_restaraunt.f_name, "rest_addr": row.t_restaraunt.f_address, "r_id": row.t_restaraunt.id})
+                            "rest_name": row.t_restaraunt.f_name, "rest_addr": row.t_restaraunt.f_address,
+                            "r_id": row.t_restaraunt.id})
     menu_disp = [x for x in menus.menus]
     return locals()
 
@@ -163,17 +164,26 @@ def lock_rest():
     result = {'status': 'OK'}
     return simplejson.dumps(result)
 
+
+
 @auth.requires_login()
 def a_item():
-
     return locals()
 
+
+lock = 0
+
+
+@auth.requires_login()
 def get_ingrs():
+    global lock
     _tmp = db(db.t_ingredient.f_name.contains(request.vars.q)).select(db.t_ingredient.ALL)
     _rs = []
     for _s in _tmp:
-       _rs.append({'label':_s.f_name, 'id': _s.id})
+        _rs.append({'label': _s.f_name, 'id': _s.id})
+        lock += 1
     return simplejson.dumps(_rs)
+
 
 @auth.requires_login()
 def e_rest():
