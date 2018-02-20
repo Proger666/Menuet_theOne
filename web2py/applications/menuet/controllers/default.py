@@ -100,6 +100,8 @@ def load_menu():
 
 def ajax_success():
     session.flash = T("Success!")
+    response.flash = T("Success!")
+
     return simplejson.dumps("{'status':'OK'}")
 
 
@@ -355,7 +357,6 @@ def save_menu():
         menu_name = db(db.t_menu_type.id == menu_type).select().first().f_name + "_Menu_" + \
                     request.vars.rest['name'].encode('utf-8')
         rest_id = request.vars.rest['id']
-        is_seosanal = request.vars.menu['seosanal']
         comment = '' if request.vars.menu.get('comment') == u'None' else request.vars.menu['comment']
         # just create menu TODO: redesign
         # Check if Menu already exists for this rest by name and type
@@ -370,7 +371,7 @@ def save_menu():
             item.t_menu.update_record()
         # and create new menu and set it to active
 
-        _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type], f_seosanal=is_seosanal,
+        _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type],
                                      f_comment=comment)
         db.t_rest_menu.insert(t_menu=_new_menu, t_rest=rest_id)
         db.commit()
