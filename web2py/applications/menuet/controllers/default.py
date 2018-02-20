@@ -100,6 +100,8 @@ def load_menu():
 
 def ajax_success():
     session.flash = T("Success!")
+    response.flash = T("Success!")
+
     return simplejson.dumps("{'status':'OK'}")
 
 
