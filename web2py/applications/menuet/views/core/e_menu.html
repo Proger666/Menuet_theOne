@@ -12,15 +12,23 @@
                         <br></div>
                 </div>
             </div>
+        {{if len(menu_items) > 0 :}}
+            <div class="card-footer center">
+                <input class="btn btn-success" type="button" onclick="window.location ='{{=URL('core', 'a_item',
+                vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}'" value="Добавить!">
+            </div>
+        {{pass}}
         </div>
     </div>
 
 {{if len(menu_items) > 0 :}}
+
     <div class="row">
         <div class="col-sm-12">
             <div class="card-columns">
+            {{for item in menu_items:}}
+
                 <div class="card">
-                {{for item in menu_items:}}
                     <div class="card-header">
                         <label class="font-weight-bold">{{=item.name}}</label>
                     </div>
@@ -46,7 +54,7 @@
     <div class="row">
         <div class="col-sm-12 text-center">
             <h2>Ничего нет :(</h2><br>
-            <h2> <input class="btn btn-success" type="button" onclick="window.location ='{{=URL('core', 'a_item',
+            <h2><input class="btn btn-success" type="button" onclick="window.location ='{{=URL('core', 'a_item',
             vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}'" value="Давай добавим!"></h2>
         </div>
     </div>

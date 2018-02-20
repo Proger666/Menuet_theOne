@@ -118,33 +118,41 @@
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
 <div class="container">
+{{if  not 'itm_id' in request.vars:}}
     <h1>Новый предмет в меню</h1>
+{{else:}}
+    <h1>Изменить предмет</h1>
+    {{pass}}
     <div class="row">
         <div class="col-sm-4">
 
             <div class="card" id="suda">
                 <div class="card-header">
-                    Основное
                 </div>
                 <div class="card-block">
                     <div class="form-group">
                         <label class="font-weight-bold">Наименование</label>
-                        <input type="text" id="item_name" class="form-control">
+                        <input type="text" id="item_name" value="{{=item.name}}" class="form-control">
                         <em class="text-muted">Например хуйцы с гречей</em>
                     </div>
                     <div class="form-group input-group">
                         <span class="input-group-addon"><i class="fas fa-ruble-sign"
                                                            style="width: 20px;height: 16px"></i> </span>
-                        <input type="number" id="item_price" class="form-control" placeholder="Цена">
+                        <input type="number" id="item_price" value="{{=item.price}}" class="form-control" placeholder="Цена">
                     </div>
                     <div class="form-group input-group">
                         <span class="input-group-addon"><i class="fas fa-balance-scale"></i> </span>
-                        <input type="number" id="item_weight" class="form-control" placeholder="Вес / Объем">
-                        <span class="input-group-addon">кг</span>
+                        <input type="number" id="item_weight" value="{{=item.weight}}" class="form-control" placeholder="Вес / Объем">
+                        <span class="input-group-addon"><select id="item_weight">
+                            <option>Выберите...</option>
+                            {{for opt in units:}}
+                            <option value="{{=opt.id}}">{{=opt.f_name}}</option>
+                            {{pass}}
+                        </select></span>
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Описание</label>
-                        <textarea type="text" id="item_desc" class="form-control"></textarea>
+                        <textarea type="text" placeholder="{{=item.desc}}" id="item_desc" class="form-control"></textarea>
                         <em class="text-muted">Средневековое блюдо из молодых бычков, приготовленное...</em>
                     </div>
                     <div class="form-group">
@@ -154,7 +162,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <input class="btn btn-primary" type="button" value="Добавить!">
+                    <input class="btn btn-primary" type="button" value="Добавить!" onclick="save_item()">
                 </div>
             </div>
         </div>
@@ -245,13 +253,44 @@
                     .data('ui-autocomplete')._renderItem = function (ul, item) {
                 return $('<li></li>')
                         .data("item.autocomplete", item)
-                        .append('<li>' + item.label + + '</li><br> ')
+                        .append('<li>' + item.label + +'</li><br> ')
                         .appendTo(ul);
             };
             // end autocomplete
         });
-    })();
+    });
 
+    function save_item() {
+        var item = {};
+        item.price = document.getElementById('item_price').value;
+        item.name = document.getElementById('item_name').value;
+        item.weight = document.getElementById('item_weight').value;
+        item.desc = document.getElementById('item_desc').value;
+        item.unit = $("#item_weight").find("option:selected").val();
+        item.change_factor = 'add';
+        item.m_id = "{{=request.vars.m_id}}";
+
+        var DTO = {'item': item};
+        var data = JSON.stringify(DTO);
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('menu_works', 'save_item')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json",
+            dataType: 'json',
+            data: data,
+            success: function (data) {
+                $('#suda').removeClass('has-danger');
+                window.location = '{{=URL('core', 'e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}'
+
+            },
+            error: function (data) {
+                $('#suda').addClass('has-danger');
+            }
+        });
+
+    }
 </script>
 
 
