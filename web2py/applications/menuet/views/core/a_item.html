@@ -245,7 +245,7 @@
                     .data('ui-autocomplete')._renderItem = function (ul, item) {
                 return $('<li></li>')
                         .data("item.autocomplete", item)
-                        .append('<a>' + item.label + + '</a><br> ')
+                        .append('<li>' + item.label + + '</li><br> ')
                         .appendTo(ul);
             };
             // end autocomplete
