@@ -104,7 +104,6 @@ def ajax_success():
 
 
 def ajax_error():
-    session.flash = T("Failure!")
     return simplejson.dumps("{'status':'ERR'}")
 
 
@@ -338,11 +337,14 @@ def save_rest():
         elif rest != None:
             db(db.t_restaraunt.id == rest_id).update(f_name=rest_name, f_active=True, f_is_network=rest_is_network, f_address=rest_addr)
             db.commit()
+            return ajax_success()
         else:
             session.flash = T('Ресторан с таким именем уже существует')
             logger.warn('User:' + auth.user.username + " tried create existing rest")
             return locals()
     except:
+        session.flash = T('FAILURE!!!! Exception')
+        logger.warn('Problem in save_rest - Exception occured')
         return ajax_error()
 
 

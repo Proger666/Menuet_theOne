@@ -122,7 +122,7 @@
     <div class="row">
         <div class="col-sm-4">
 
-            <div class="card">
+            <div class="card" id="suda">
                 <div class="card-header">
                     Основное
                 </div>
@@ -133,7 +133,8 @@
                         <em class="text-muted">Например хуйцы с гречей</em>
                     </div>
                     <div class="form-group input-group">
-                        <span class="input-group-addon"><i class="fas fa-ruble-sign" style="width: 20px;height: 16px"></i> </span>
+                        <span class="input-group-addon"><i class="fas fa-ruble-sign"
+                                                           style="width: 20px;height: 16px"></i> </span>
                         <input type="number" id="item_price" class="form-control" placeholder="Цена">
                     </div>
                     <div class="form-group input-group">
@@ -148,13 +149,13 @@
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Ингридиенты</label>
-                        <input type="text"  id="ac-demo" class="form-control bs-autocomplete ui-autocomplete-input">
+                        <input type="text" id="ac-demo" class="form-control bs-autocomplete ui-autocomplete-input">
                         <em class="text-muted">Греча, хуйцы. Через зпт</em>
                     </div>
                 </div>
-<div class="card-footer">
-    <input class="btn btn-primary" type="button" value="Добавить!">
-</div>
+                <div class="card-footer">
+                    <input class="btn btn-primary" type="button" value="Добавить!">
+                </div>
             </div>
         </div>
 
@@ -244,7 +245,7 @@
                     .data('ui-autocomplete')._renderItem = function (ul, item) {
                 return $('<li></li>')
                         .data("item.autocomplete", item)
-                        .append('<a>' + item[_data.item_label] + '</a>')
+                        .append('<a>' + item.label + + '</a><br> ')
                         .appendTo(ul);
             };
             // end autocomplete
