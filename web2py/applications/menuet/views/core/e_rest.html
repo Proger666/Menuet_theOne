@@ -17,7 +17,7 @@
                         </div>
                         <div class="checkbox">
                             <label>
-                                <input type="checkbox" id="is_network" {{=rest.is_network}}> Сетевой ?
+                                <input type="checkbox" id="is_network" checked="{{=rest.is_network}}"> Сетевой ?
                             </label>
                         </div>
                         <div class="form-group">
@@ -59,7 +59,7 @@
                     </div>
                     <!-- /.list-group -->
                 {{if menu_disp.__len__() != 0:}}
-                    <a href="{{=URL('core', 'rests', vars=dict(r_id=rest.id,m_id=menu.id))}}"
+                    <a href="{{=URL('core', 'menus', vars=dict(r_id=rest.id,m_id=menu.id))}}"
                        class="btn btn-default btn-block">Остальные...</a>
                 {{else:}}
                     <input class="btn btn-block" type="button" value="Ничего нет :(">
@@ -92,18 +92,10 @@
                         </div>
                         <div class="form-group">
                             <label class="font-weight-bold" id="season_checkbox">Сезонное?</label>
-                            <label class="checkbox"><input type="checkbox" id="seosanal_checkbox"  name="seosanal_checkbox">
+                            <label class="checkbox"><input type="checkbox" id="seosanal_checkbox"  name="seosanal_checkbox"></label>
                         </div>
 
-                        <div class="form-group" hidden id="seasonal_div">
-                            <label class="font-weight-bold">Тип сезонного меню</label>
-                            <select id="menu_seosanl" class="form-control">
-                            {{for option_seosanal in menu_seosanal:}}
-                                <option>Выберите ...</option>
-                                <option value="{{=option_seosanal.id}}">{{=option_seosanal.f_name}}</option>
-                            {{pass}}
-                            </select>
-                        </div>
+
                         <label class="font-weight-bold">Комментарий</label>
 
                         <input class="form-control" name="comment" placeholder="Необязательно" id="comment"
@@ -146,6 +138,7 @@
         rest.name = document.getElementById('rest_name').value;
         rest.addr = document.getElementById('rest_addr').value;
         rest.is_network = document.getElementById("is_network").checked;
+        rest.r_id = "{{=request.vars.r_id}}";
 
         var DTO = {'rest': rest};
         var data = JSON.stringify(DTO);
@@ -176,8 +169,8 @@
         rest.name = document.getElementById('rest_name').value;
         rest.id = document.getElementById('rest_id').value;
         menu.type = $( "#menu_type").find("option:selected" ).val();
-        menu.seosanal = $( "#menu_seosanl").find("option:selected" ).val();
-
+        menu.seosanal = $('#seosanal_checkbox')[0].checked;
+        menu.comment = document.getElementById('comment').value;
 
         var DTO = {'menu': menu, 'rest': rest};
         var data = JSON.stringify(DTO);    //Using the toJSON plugin by Mark Gibson

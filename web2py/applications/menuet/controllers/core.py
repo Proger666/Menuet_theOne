@@ -45,6 +45,7 @@ def rest():
     return locals()
 
 
+@auth.requires_login()
 def getMenu_forRest(rest_id, menu_id):
     menu = db((t_menu.id == menu_id) &
               (t_restaraunt.id == rest_id) &
@@ -53,6 +54,7 @@ def getMenu_forRest(rest_id, menu_id):
     return menu
 
 
+@auth.requires_login()
 def getItems_for_menu(menu_id):
     items = db((t_menu.id == menu_id)
                & (t_menu_item.t_menu == t_menu.id)
@@ -60,17 +62,29 @@ def getItems_for_menu(menu_id):
     return items
 
 
+@auth.requires_login()
 def get_ingrs_for_item(item_id):
     # get recipe for item to use later on
     item_recipe = db.t_item.f_recipe
-    # get all ingrs for this item
-    ingrs = db((t_item.id == item_id) &
-               # get recipe for this item
-               (db.t_recipe.id == item_recipe) &
-               # M-to-M relation for step <> recipe
-               (db.t_step_ing.t_step == db.t_step.id) &
-               (db.t_step_ing.t_recipe == db.t_recipe.id)).select(db.t_ingredient.ALL)
-
+    # get step
+    step = db(db.t_step.id == db.t_ingredient.id).select()
+    # Get recipe ID for given item
+    recipe_id = db((db.t_recipe.id == db.t_item.f_recipe)
+                   & (db.t_item.id == item_id)).select()[0].t_recipe.id
+    # Get m-t-m relation - get all steps for given recipe id
+    steps_ing = db((db.t_recipe.id == recipe_id) &
+                   (db.t_step.id == db.t_step_ing.t_step) &
+                   (db.t_recipe.id == db.t_step_ing.t_recipe))
+    # Create list of ingrs
+    # create ingrs storage class
+    ingrs = []
+    for _cur_step in steps_ing.select():
+        ingr = Storage()
+        # get Ingr set names n weight
+        ingr.name = db(db.t_ingredient.id == _cur_step.t_step.f_ingr).select(db.t_ingredient.f_name).first().f_name
+        ingr.qty = _cur_step.t_step.f_qty
+        ingr.unit = db(db.t_unit.id == _cur_step.t_step.f_unit).select().first()
+        ingrs.append(ingr)
     return ingrs
 
 
@@ -81,27 +95,38 @@ def e_menu():
         menu_id = request.vars.get('m_id')
         rest_id = request.vars.get('r_id')
         if rest_id == None and menu_id == None:
-            # just throw them execption in the face
+            # just throw them exception in the face
             raise HTTP(500)
             # are u really a digit ? dont you ?
         elif str.isdigit(menu_id) and str.isdigit(rest_id):
             # get current menu based on URL parameters
             menu = Storage(getMenu_forRest(rest_id, menu_id))
             # Get all ITEMS for this MENU
-            menu_items = getItems_for_menu(menu_id)
-            # create class sotrage for item
-            item = Storage()
+            _menu_items = getItems_for_menu(menu_id)
+            menu_items = []
             # Lets fill item class
-            for menu_item in menu_items:
+            for menu_item in _menu_items:
+                # create class storage for item
+                item = Storage()
                 item.name = menu_item.f_name
                 item.id = menu_item.id
-                ingrs = get_ingrs_for_item(item.id)
+                item.ingrs = get_ingrs_for_item(item.id)
+                menu_items.append(item)
+            return locals()
         else:
             raise HTTP(500)
     except HTTP:
         logger.warn('Missing one or all ids on page e_menu, menu id or rest id are missing ' + str(request.vars))
         return None
-    return locals()
+
+
+def e_item():
+    # safely get item id if it exists else - NONE
+    item_id = request.vars.get('itm_id')
+    if str(item_id).isdigit():
+        item = t_item[item_id]
+        return dict(item=item)
+    return HTTP(404)
 
 
 @auth.requires_login()
@@ -116,6 +141,21 @@ def rests():
 
 
 @auth.requires_login()
+def menus():
+    menus = {"menus": []}
+    menus = Storage(menus)
+    _tmp = db((db.t_rest_menu.t_menu == t_menu.id) &
+              (t_rest_menu.t_rest == t_restaraunt.id) &
+              (t_restaraunt.id == request.vars.r_id)).select()
+
+    for row in _tmp:
+        menus.menus.append({"id": row.t_menu.id, "name": row.t_menu.f_name, "created_on": row.t_menu.created_on,
+                            "rest_name": row.t_restaraunt.f_name, "rest_addr": row.t_restaraunt.f_address, "r_id": row.t_restaraunt.id})
+    menu_disp = [x for x in menus.menus]
+    return locals()
+
+
+@auth.requires_login()
 def lock_rest():
     assert request.vars.rest['r_id'] != None
     row = db(db.t_restaraunt.id == request.vars.rest['r_id']).select().first()
@@ -123,6 +163,17 @@ def lock_rest():
     result = {'status': 'OK'}
     return simplejson.dumps(result)
 
+@auth.requires_login()
+def a_item():
+
+    return locals()
+
+def get_ingrs():
+    _tmp = db(db.t_ingredient.f_name.contains(request.vars.q)).select(db.t_ingredient.ALL)
+    _rs = []
+    for _s in _tmp:
+       _rs.append({'label':_s.f_name, 'id': _s.id})
+    return simplejson.dumps(_rs)
 
 @auth.requires_login()
 def e_rest():

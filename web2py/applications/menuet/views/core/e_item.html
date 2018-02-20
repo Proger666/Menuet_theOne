@@ -1,0 +1,73 @@
+{{extend "layout.html"}}
+
+
+<div class="container">
+    <div class="row">
+        <div class="card">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-12 text-center">
+                        <p class="font-weight-bold">
+                        <h1>{{=item.f_name}}</h1>
+                        <br></div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row" id="price_col">
+                            <div class="col-xs-3" >
+                                <i class="fas fa-ruble-sign fa-5x"></i>
+                            </div>
+                            <div class="float-right">
+                                <div class="huge" id="cur_price">{{=item.f_price}}</div>
+
+                            </div>
+                            <input class="form-control" type="number" value=""
+                                   placeholder="Введите новую сумму" id="new_price">
+                        </div>
+
+                    </div>
+
+
+                </div>
+                <div class="card-footer">
+                    <input class="btn btn-primary" type="button" value="Поправить!" onclick="change_item_price()">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+
+<script>
+    function change_item_price() {
+        var item = {};
+        item.id = "{{=item.id}}";
+        item.curr_price = "{{=item.f_price}}";
+        item.new_price = document.getElementById('new_price').value;
+
+        var DTO = {'item': item};
+        var data = JSON.stringify(DTO);
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('menu_works', 'change_price_item')}}',
+            contentType: "application/json",
+            dataType: 'json',
+            data: data,
+            success: function (data) {
+                $('#cur_price').text(item.new_price);
+                $('#price_col').removeClass('has-danger');
+
+                return data
+            },
+            error: function (data) {
+                $('#price_col').addClass('has-danger');
+                return data
+            }
+
+        });
+    }
+</script>

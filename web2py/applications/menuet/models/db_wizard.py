@@ -1,17 +1,20 @@
 ### we prepend t_ to tablenames and f_ to fieldnames for disambiguity
 
+
 ########################################
 db.define_table('t_seosanal_type',
                 Field('f_name', type='string',
                       label=T('Name of the type')),
                 auth.signature, format='%(f_name)s',
                 migrate=settings.migrate)
+########################################
 
 db.define_table('t_menu_type',
                 Field('f_name', type='string',
                       label=T('Name of the type')),
                 auth.signature, format='%(f_name)s',
                 migrate=settings.migrate)
+########################################
 
 db.define_table('t_restaraunt',
                 Field('f_q_id', type='string',
@@ -96,7 +99,9 @@ db.define_table('t_step_ing',
                       label=T('recipe link')),
                 auth.signature,
                 migrate=settings.migrate)
+
 ########################################
+
 
 db.define_table('t_item',
                 Field('f_name', type='string',
@@ -107,15 +112,26 @@ db.define_table('t_item',
                       label=T('recipe link')),
                 Field('f_weight', type='integer', default=0,
                       label=T('Weight')),
-                Field('f_unit', 'reference:t_unit', default=1,
+                Field('f_unit', 'reference:t_unit',
                       label=T('Unit')),
                 Field('tags', 'list:reference tag'),
                 auth.signature, format='%(f_name)s',
                 migrate=settings.migrate)
 ########################################
+db.define_table('t_item_price_archive',
+                Field('f_price', type='integer',
+                      label=T('Old price')),
+                Field('f_item', 'reference:t_item',
+                      label=T('Linked Item')),
+                auth.signature, format='%(f_price)s',
+                migrate=settings.migrate)
+########################################
+########################################
 db.define_table('t_menu',
                 Field('f_name', type='string',
                       label=T('Menu Name')),
+                Field('f_comment', type='string',
+                      label=T('Comment for menu')),
                 Field('f_current', type='boolean', default=False,
                       label=T('Current?')),
                 Field('f_seosanal', type='boolean', default=False,

@@ -319,46 +319,43 @@ def save_course():
     return ajax_success()
 
 
-def generator():
-    count = 100
-    names = ["кофе", "каша", "суп", "чай"]
-    ingrs = ["молоко", "варенье", "изюм", "курага", "семечки"]
-    result = []
-    for step in names:
-        result.append({"item_name": step, "ingrs": random.choice(ingrs)})
-    return result
-
-
+@auth.requires_login()
 @request.restful()
 def save_rest():
     try:
         rest_name = request.vars.rest['name']
         rest_addr = request.vars.rest['addr']
         rest_is_network = request.vars.rest['is_network']
+        rest_id = int(request.vars.rest['r_id'])
 
         # just create menu TODO: redesign
         # Check if Menu already exists
-        if db(db.t_restaraunt.f_name.like(rest_name)).select().first() is None:
+        rest = db(db.t_restaraunt.f_name.like(rest_name)).select().first()
+        if rest is None:
             db.t_restaraunt.insert(f_name=rest_name, f_active=True, f_is_network=rest_is_network, f_address=rest_addr)
             db.commit()
             return ajax_success()
+        elif rest != None:
+            db(db.t_restaraunt.id == rest_id).update(f_name=rest_name, f_active=True, f_is_network=rest_is_network, f_address=rest_addr)
+            db.commit()
         else:
             session.flash = T('Ресторан с таким именем уже существует')
+            logger.warn('User:' + auth.user.username + " tried create existing rest")
             return locals()
     except:
         return ajax_error()
-
-    return ajax_error()
 
 
 @auth.requires_login()
 def save_menu():
     try:
-        menu_type =  int(request.vars.menu['type'])
+        menu_type = int(request.vars.menu['type'])
         ### Fill some variables
-        menu_name = db(db.t_type.id == menu_type).select().first().f_name + "_Menu_" + \
+        menu_name = db(db.t_menu_type.id == menu_type).select().first().f_name + "_Menu_" + \
                     request.vars.rest['name'].encode('utf-8')
         rest_id = request.vars.rest['id']
+        is_seosanal = request.vars.menu['seosanal']
+        comment = '' if request.vars.menu.get('comment') == u'None' else request.vars.menu['comment']
         # just create menu TODO: redesign
         # Check if Menu already exists for this rest by name and type
 
@@ -372,13 +369,15 @@ def save_menu():
             item.t_menu.update_record()
         # and create new menu and set it to active
 
-        _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type])
+        _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type], f_seosanal=is_seosanal,
+                                     f_comment=comment)
         db.t_rest_menu.insert(t_menu=_new_menu, t_rest=rest_id)
         db.commit()
         return ajax_success()
     except AssertionError:
         return ajax_error()
-    except:
+    except Exception, e:
+        logger.warn('Error in save_menu' + str(e))
         return ajax_error()
 
 

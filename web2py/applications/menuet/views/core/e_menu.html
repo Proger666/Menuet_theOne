@@ -14,34 +14,47 @@
             </div>
         </div>
     </div>
+
+{{if len(menu_items) > 0 :}}
     <div class="row">
         <div class="col-sm-12">
             <div class="card-columns">
                 <div class="card">
                 {{for item in menu_items:}}
                     <div class="card-header">
-                    {{=item.name}}
+                        <label class="font-weight-bold">{{=item.name}}</label>
                     </div>
                     <div class="card-block">
                     {{for ingr in item.ingrs:}}
                         <div class="form-group">
-                        {{ingr.name}}
+                            <label class="font-weight-bold">{{=ingr.name}}</label>
+                            <em class="text-muted">{{=ingr.qty}}</em>
+                            <em class="text-muted">{{=ingr.unit.f_name}}</em>
                         </div>
                     {{pass}}
                     </div>
                     <div class="card-footer">
-                        <input value="{{=item.id}}" type="hidden">
-                        <input class="btn btn-primary" value="Поправить" onclick="go_to_item(this)">
+                        <input value="{{=item.id}}" id="item_id" type="hidden">
+                        <input class="btn btn-primary" value="Поправить" type="button" onclick="go_to_item(this)">
                     </div>
                 </div>
             {{pass}}
             </div>
         </div>
     </div>
+{{else:}}
+    <div class="row">
+        <div class="col-sm-12 text-center">
+            <h2>Ничего нет :(</h2><br>
+            <h2> <input class="btn btn-success" type="button" onclick="window.location ='{{=URL('core', 'a_item',
+            vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}'" value="Давай добавим!"></h2>
+        </div>
+    </div>
+{{pass}}
 </div>
 
 <script>
     function go_to_item(obj) {
-        window.location = '{{=URL("core", "e_item", vars=dict(m_id=request.vars.m_id))}}' + '&itm_id=' + obj
+        window.location = '{{=URL("core", "e_item")}}' + '?itm_id=' + obj.previousElementSibling.value
     }
 </script>

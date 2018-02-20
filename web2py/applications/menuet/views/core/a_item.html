@@ -1,0 +1,117 @@
+{{extend "layout.html"}}
+<style>
+    .ui-autocomplete-loading {
+        background: white url("{{=URL('static', 'images/ui-anim_basic_16x16.gif')}}") right center no-repeat;
+    }
+</style>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+<div class="container">
+    <h1>Новый предмет в меню</h1>
+    <div class="row">
+        <div class="col-sm-4">
+
+            <div class="card">
+                <div class="card-header">
+                    Основное
+                </div>
+                <div class="card-block">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Наименование</label>
+                        <input type="text" id="item_name" class="form-control">
+                        <em class="text-muted">Например хуйцы с гречей</em>
+                    </div>
+                    <div class="form-group input-group">
+                        <span class="input-group-addon"><i class="fas fa-ruble-sign"></i> </span>
+                        <input type="number" id="item_price" class="form-control" placeholder="Цена">
+                    </div>
+                    <div class="form-group input-group">
+                        <span class="input-group-addon"><i class="fas fa-balance-scale"></i> </span>
+                        <input type="number" id="item_weight" class="form-control" placeholder="Вес / Объем">
+                        <span class="input-group-addon">кг</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Описание</label>
+                        <textarea type="text" id="item_desc" class="form-control"></textarea>
+                        <em class="text-muted">Средневековое блюдо из молодых бычков, приготовленное...</em>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Ингридиенты</label>
+                        <input type="text" id="ingrs" class="form-control">
+                        <em class="text-muted">Греча, хуйцы. Через зпт</em>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="ui-widget">
+            <label for="birds">Birds: </label>
+            <input id="birds" size="50">
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        function split(val) {
+            return val.split(/,\s*/);
+        }
+
+        function extractLast(term) {
+            return split(term).pop();
+        }
+
+        $("#ingrs")
+        // don't navigate away from the field on tab when selecting an item
+                .on("keydown", function (event) {
+                    if (event.keyCode === $.ui.keyCode.TAB &&
+                            $(this).autocomplete("instance").menu.active) {
+                        event.preventDefault();
+                    }
+                })
+                .autocomplete({
+
+                    source: function (request, response) {
+                        var BC_URI = "{{=URL('core', 'get_ingrs')}} + ?";
+                        $.getJSON(BC_URI, {
+                            q: extractLast( request.term ),
+                            format: "json"
+                        }, response)
+                    },
+                    create: function () {
+                        $(this).data('ui-autocomplete')._renderItem = function (ul, item) {
+                            return $('<li class="selected">')
+                                    .append('<a>' + item.label + '<br>' + item.value + '</a>')
+                                    .appendTo(ul);
+                        }
+                    },
+                    search: function () {
+                        // custom minLength
+                        var term = extractLast(this.value);
+                        if (term.length < 3) {
+                            return false;
+                        }
+                    },
+                    focus: function () {
+                        // prevent value inserted on focus
+                        return false;
+                    },
+
+                    select: function (event, ui) {
+                        var terms = split(this.value);
+                        // remove the current input
+                        terms.pop();
+                        // add the selected item
+                        terms.push(ui.item.value);
+                        // add placeholder to get the comma-and-space at the end
+                        terms.push("");
+                        this.value = terms.join(", ");
+                        return false;
+                    }
+                });
+
+    });
+
+</script>
+
+
+
