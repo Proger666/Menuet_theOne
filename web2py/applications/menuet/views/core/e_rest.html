@@ -90,11 +90,6 @@
                             {{pass}}
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label class="font-weight-bold" id="season_checkbox">Сезонное?</label>
-                            <label class="checkbox"><input type="checkbox" id="seosanal_checkbox"  name="seosanal_checkbox"></label>
-                        </div>
-
 
                         <label class="font-weight-bold">Комментарий</label>
 
@@ -169,7 +164,6 @@
         rest.name = document.getElementById('rest_name').value;
         rest.id = document.getElementById('rest_id').value;
         menu.type = $( "#menu_type").find("option:selected" ).val();
-        menu.seosanal = $('#seosanal_checkbox')[0].checked;
         menu.comment = document.getElementById('comment').value;
 
         var DTO = {'menu': menu, 'rest': rest};

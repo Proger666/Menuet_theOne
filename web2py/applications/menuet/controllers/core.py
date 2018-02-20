@@ -235,5 +235,5 @@ def e_rest():
     else:
         redirect(URL("core", "rest"))
     menu_types = db().select(t_menu_type.ALL)
-    menu_seosanal = db().select(db.t_seosanal_type.ALL)
+    menu_seosanal = False
     return locals()
