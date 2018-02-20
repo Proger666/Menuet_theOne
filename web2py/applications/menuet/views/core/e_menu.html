@@ -31,8 +31,14 @@
                 <div class="card">
                     <div class="card-header">
                         <label class="font-weight-bold">{{=item.name}}</label>
+                        <span class="float-right"><i class="fas fa-ruble-sign"></i> {{=item.price}}</span>
+                        <br>
+                        <em class="text-muted">{{=item.desc}}</em>
                     </div>
                     <div class="card-block">
+                        <div class="form-group">
+                            <label class="font-weight-bold"></label>
+                        </div>
                     {{for ingr in item.ingrs:}}
                         <div class="form-group">
                             <label class="font-weight-bold">{{=ingr.name}}</label>

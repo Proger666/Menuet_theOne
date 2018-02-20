@@ -110,6 +110,8 @@ def e_menu():
                 item = Storage()
                 item.name = menu_item.f_name
                 item.id = menu_item.id
+                item.desc = menu_item.f_desc
+                item.price = menu_item.f_price
                 item.ingrs = get_ingrs_for_item(item.id)
                 menu_items.append(item)
             return locals()
