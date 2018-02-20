@@ -110,6 +110,8 @@ def e_menu():
                 item = Storage()
                 item.name = menu_item.f_name
                 item.id = menu_item.id
+                item.desc = menu_item.f_desc
+                item.price = menu_item.f_price
                 item.ingrs = get_ingrs_for_item(item.id)
                 menu_items.append(item)
             return locals()
@@ -168,8 +170,22 @@ def lock_rest():
 def test():
     return locals()
 
+
 @auth.requires_login()
 def a_item():
+    item = Storage()
+    itm_id = request.vars.get('itm_id')
+    if itm_id != None:
+        _tmp = db.t_item[request.vars.itm_id]
+        item.desc = _tmp.f_desc
+        item.price = _tmp.f_price
+        item.name = _tmp.f_name
+        item.weight = _tmp.f_unit.f_name
+    else:
+        item.desc = item.name = item.price =  ''
+        item.weight = 0
+        units = db().select(db.t_unit.ALL)
+
     return locals()
 
 
