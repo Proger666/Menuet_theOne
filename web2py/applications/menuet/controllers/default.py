@@ -326,7 +326,6 @@ def save_rest():
         rest_addr = request.vars.rest['addr']
         rest_is_network = request.vars.rest['is_network']
         rest_id = int(request.vars.rest['r_id'])
-
         # just create menu TODO: redesign
         # Check if Menu already exists
         rest = db(db.t_restaraunt.f_name.like(rest_name)).select().first()
