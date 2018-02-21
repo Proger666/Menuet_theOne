@@ -157,7 +157,7 @@
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Ингридиенты</label>
-                        <input type="text" id="ac-demo" class="form-control bs-autocomplete ui-autocomplete-input">
+                        <input type="text" id="item_ingrs" class="form-control bs-autocomplete ui-autocomplete-input">
                         <em class="text-muted">Греча, хуйцы. Через зпт</em>
                     </div>
                 </div>
@@ -269,6 +269,7 @@
         item.unit = $("#item_weight").find("option:selected").val();
         item.change_factor = 'add';
         item.m_id = "{{=request.vars.m_id}}";
+        item.ingrs = document.getElementById('item_ingrs').value;
 
         var DTO = {'item': item};
         var data = JSON.stringify(DTO);

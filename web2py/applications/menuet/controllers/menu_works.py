@@ -30,34 +30,73 @@ def ajax_error():
     session.flash = T("Failure!")
     return simplejson.dumps("{'status':'ERR'}")
 
+
 @auth.requires_login()
 def save_item():
     # Create storage class for item
     item = Storage()
-    #lets get our item from request
+    # lets get our item from request
     item_source = request.vars.get('item')
     if item_source != None:
         item_source = Storage(item_source)
         _tmp_obj = Storage()
         # Lets gather stones
+
+        ingrs_list = [x.strip() for x in item_source.ingrs.split(',')]
+        ingrs_to_commit_list = []
+        # Lets find ingrs one by one
+        for ingr in ingrs_list:
+            found = db(db.t_ingredient.f_name.like(ingr)).select().first()
+            ingrs_to_commit = Storage()
+            if found != None:
+                ingrs_to_commit.ingr = found.id
+                ingrs_to_commit.f_curate = False
+                ingrs_to_commit_list.append(ingrs_to_commit)
+            else:
+                ingrs_to_commit.f_curate = True
+                # commit new ingr
+                ingrs_to_commit.ingr = db.t_ingredient.insert(f_name=ingr, f_curate=True)
+                ingrs_to_commit_list.append(ingrs_to_commit)
+
         if item_source.change_factor == 'add':
 
             # Create new recipe
-            _tmp_obj.recipe_id = db.t_recipe.insert(f_name=item_source.name +  '_recipe')
+            _tmp_obj.recipe_id = db.t_recipe.insert(f_name=item_source.name + '_recipe')
             item_source.desc = "" if item_source.desc == None else item_source.desc
             # Create new Item
             _tmp_obj.item_id = db.t_item.insert(f_name=item_source.name,
                                                 f_weight=item_source.weight,
                                                 f_price=item_source.price,
-                                                f_unit=item_source.unit, f_recipe=_tmp_obj.recipe_id, f_desc=item_source.desc)
+                                                f_unit=item_source.unit, f_recipe=_tmp_obj.recipe_id,
+                                                f_desc=item_source.desc)
 
             _tmp_obj.item_unit_id = item_source.unit
             _tmp_obj._new_menu_item_id = db.t_menu_item.insert(t_menu=item_source.m_id,
-                                                       t_item=_tmp_obj.item_id)
+                                                               t_item=_tmp_obj.item_id)
+
+            for step in ingrs_to_commit_list:
+                # create new step
+                _tmp_obj._new_step_id = db.t_step.insert(f_ingr=step.ingr)
+                # create new M-t-M
+                _tmp_obj._t_step_ing_new_id = \
+                    db.t_step_ing.update_or_insert(t_step=_tmp_obj._new_step_id, t_recipe=_tmp_obj.recipe_id)
+
+
         else:
             _tmp_obj.recipe_id = item_source.recipe_id
-        return ajax_success()
-      ####################### ADD INGREDIENTS #####################################
+        ####################### ADD INGREDIENTS #####################################
+        step = db(db.t_step.id == db.t_ingredient.id).select()
+        # Get m-t-m relation - get all steps for given recipe id
+        steps_ing = db((db.t_recipe.id == _tmp_obj.recipe_id) & (db.t_step.id == db.t_step_ing.t_step) & (
+                db.t_recipe.id == db.t_step_ing.t_recipe))
 
+        # lets commit ingrs to db
+        _tmp_obj._new_step_id = db.t_step.update_or_insert(f_unit=_tmp_obj.unit_id,
+                                                           f_ingr=_tmp_obj.ingr_id)
+        _tmp_obj._t_step_ing_new_id = \
+            db.t_step_ing.update_or_insert(t_step=_tmp_obj._new_step_id, t_recipe=_tmp_obj.recipe_id)
+        db.commit()
+
+        return ajax_success()
 
     return {}

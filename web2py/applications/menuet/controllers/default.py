@@ -342,7 +342,7 @@ def save_rest():
         else:
             session.flash = T('Ресторан с таким именем уже существует')
             logger.warn('User:' + auth.user.username + " tried create existing rest")
-            return locals()
+            return ajax_success()
     except:
         session.flash = T('FAILURE!!!! Exception')
         logger.warn('Problem in save_rest - Exception occured')
