@@ -34,7 +34,7 @@
                                        onchange="get_addr()"></div>
                             <p class="text-muted"><em>Например: Москва, ул. </em></p>
                         </div>
-                        <button type="button" class="btn btn-primary" onclick="submitForm()">Сохранить!</button>
+                        <input type="button" class="btn btn-primary" onclick="submitForm()" value="Сохранить!">
                     </form>
                 </div>
             </div>
@@ -94,12 +94,16 @@
                         {{pass}}
                         </select>
                     </div>
+                    <div class="form-group">
 
-                    <label class="font-weight-bold">Комментарий</label>
+                        <label class="font-weight-bold">Комментарий</label>
 
-                    <input class="form-control" name="comment" placeholder="Необязательно" id="comment"
-                           type="text">
-                    <input type="button" id="add_menu" class="btn btn-primary" onclick="add_menu()" value="Создать!">
+                        <input class="form-control" name="comment" placeholder="Необязательно" id="comment"
+                               type="text"><br>
+                        <input type="button" id="add_menu" class="btn btn-primary" onclick="add_menu()"
+                               value="Создать!">
+                    </div>
+
                 </div>
             </div>
         </div>

@@ -87,6 +87,9 @@ def get_ingrs_for_item(item_id):
         ingrs.append(ingr)
     return ingrs
 
+def add_rest():
+    # reuse existing
+    return locals()
 
 @auth.requires_login()
 def e_menu():

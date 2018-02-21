@@ -1,0 +1,83 @@
+{{extend "layout.html"}}
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-utensils"></i> Добавить ресторан
+                </div>
+                <div class="card-block">
+                    <form name="new_rest" id="new_rest">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Имя ресторана</label>
+                            <input class="form-control" required name="rest_name" id="rest_name">
+                            <p class="text-muted"><em>Например: Чайхона №1</em></p>
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" id="is_network"> Сетевой ?
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">Адрес ресторана</label>
+                            <div class="input-group">
+                                <span class="input-group-addon"><i
+                                        class="fas fa-map-marker-alt"></i></span>
+                                <input class="form-control" required name="rest_addr" id="rest_addr"
+                                       onchange="get_addr()"></div>
+                            <p class="text-muted"><em>Например: Москва, ул. </em></p>
+                        </div>
+                        <input type="button" value="Сохранить!" class="btn btn-primary" onclick="submitForm()">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/css/suggestions.min.css" type="text/css"
+      rel="stylesheet"/>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<!--[if lt IE 10]>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
+<![endif]-->
+<script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/js/jquery.suggestions.min.js"></script>
+
+<script>
+    function submitForm() {
+        var rest = {};
+        rest.name = document.getElementById('rest_name').value;
+        rest.addr = document.getElementById('rest_addr').value;
+        rest.is_network = document.getElementById('is_network').checked;
+
+        var DTO = {'rest': rest};
+        var data = JSON.stringify(DTO);
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('default', 'save_rest')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json",
+            dataType: 'json',
+            data: data,
+            success: function (data) {
+                window.location = '{{=URL('core','rest')}}'
+            },
+            error: function (data) {
+                window.location.reload()
+
+            }
+        });
+    }
+
+    $("#rest_addr").suggestions({
+        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
+        type: "ADDRESS",
+        count: 5,
+        onSelect: function (suggestion) {
+            console.log(suggestion);
+        }
+    });
+</script>

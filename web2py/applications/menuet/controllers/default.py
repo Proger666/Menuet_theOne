@@ -101,7 +101,6 @@ def load_menu():
 def ajax_success():
     session.flash = T("Success!")
     response.flash = T("Success!")
-
     return simplejson.dumps("{'status':'OK'}")
 
 
@@ -321,13 +320,14 @@ def save_course():
 
 
 @auth.requires_login()
-@request.restful()
 def save_rest():
     try:
         rest_name = request.vars.rest['name']
         rest_addr = request.vars.rest['addr']
         rest_is_network = request.vars.rest['is_network']
-        rest_id = int(request.vars.rest['r_id'])
+        rest_id = request.vars.rest.get('r_id')
+        if rest_id != None:
+            rest_id = int(request.vars.rest['r_id'])
         # just create menu TODO: redesign
         # Check if Menu already exists
         rest = db(db.t_restaraunt.f_name.like(rest_name)).select().first()

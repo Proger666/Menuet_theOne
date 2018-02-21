@@ -31,7 +31,7 @@
                 {{if rest_disp.__len__() != 0:}}
                     <a href="{{=URL('core', 'rests')}}" class="btn btn-default btn-block">Остальные...</a>
                 {{else:}}
-                    <input href="#" class="btn btn-default btn-block" disabled value="Ничего нет :("> </input>
+                    <input href="#" class="btn btn-default btn-block" disabled value="Ничего нет :("/>
                 {{pass}}
                 </div>
                 <!-- /.panel-body -->
@@ -84,7 +84,6 @@
         }
     });
 
-
     function CheckForm() {
         var rest = {};
         rest.name = document.getElementById('rest_name').value;
@@ -121,7 +120,10 @@
                     '                        <tbody  id="add_result">');
 
             if ((asd === "error") || (asd == "")) {
-                $("#add_result").append('<tr> <td> Ничего не найдено </td></tr>');
+                var rest_url = "\'{{=URL('core','add_rest')}}\'";
+
+                $("#add_result").append('<tr> <td> Ничего не найдено :( </td></tr><tr><td><input class="btn btn-success" type="button" value="Добавить!" ' +
+                        'onclick="window.location = '+rest_url + '"</td></tr>');
             } else {
                 asd.forEach(function (element) {
                     var user = parseInt("{{=auth.user.id}}");
@@ -133,12 +135,11 @@
                 });
             }
 
-
             $("#add_results").append('</tbody>    </table>                </div>            </div>')
         }
     }
 
-    function e_menu(r_id) {
+    function e_menu(url, r_id) {
         var rest = {};
         rest.r_id = r_id;
         var DTO = {'rest': rest};
@@ -160,7 +161,6 @@
 
 
         });
-
 
     }
 
