@@ -39,15 +39,14 @@
                             <select id="portion_size" class="form-control">
                                 <option value="1">Стандартная</option>
                                 <option value="2">Большая</option>
-                                <div class="form-group input-group">
+                            </select>
+                              <div class="form-group input-group">
                                     <input type="number" id="item_price" value="{{=item.price}}" class="form-control"
                                            placeholder="Цена">
                                     <div id="add_portion" class="form-group"></div>
                                     <input class="btn btn-success" id="addrow_id0" type="button" value=" + "
                                            title="Добавить еще порцию" onclick="addRow()">
-                                </div>
-                            </select>
-
+                              </div>
                         </div>
                     </form>
                     <div class="form-group">
