@@ -101,7 +101,14 @@ db.define_table('t_step_ing',
                       label=T('recipe link')),
                 auth.signature,
                 migrate=settings.migrate)
+########################################
 
+db.define_table('t_portion',
+                Field('f_name', type='string',
+                      label=T('Name')),
+                auth.signature,
+                format='%(f_name)s',
+                migrate=settings.migrate)
 ########################################
 
 
@@ -112,10 +119,16 @@ db.define_table('t_item',
                       label=T('Item desc')),
                 Field('f_price', type='integer', default=0,
                       label=T('Price Name')),
+                Field('f_t_start', type='time', default='00:00:00',
+                      label=T('work from ....')),
+                Field('f_t_end', type='time', default='00:00:00',
+                      label=T('work till ....')),
                 Field('f_recipe', 'reference:t_recipe',
                       label=T('recipe link')),
                 Field('f_weight', type='integer', default=0,
                       label=T('Weight')),
+                Field('f_portion', 'reference t_portion', default=1,
+                      label=T('Portion')),
                 Field('f_unit', 'reference:t_unit', default=1,
                       label=T('Unit')),
                 Field('tags', 'list:reference tag'),
