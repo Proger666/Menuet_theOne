@@ -5,6 +5,7 @@ ul.bs-autocomplete-menu {
   width: 100%;
   max-height: 200px;
   overflow: auto;
+  display: block;
   z-index: 9999;
   border: 1px solid #eeeeee;
   border-radius: 4px;

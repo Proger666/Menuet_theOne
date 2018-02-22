@@ -133,7 +133,7 @@
                     <div class="form-group">
                         <label class="font-weight-bold">Наименование</label>
                         <input type="text" id="item_name" value="{{=item.name}}" class="form-control">
-                        <em class="text-muted">Например хуйцы с гречей</em>
+                        <em class="text-muted">Например, равиоли с моцарелой</em>
                     </div>
                     <div class="form-group input-group">
                         <span class="input-group-addon"><i class="fas fa-ruble-sign"
@@ -146,19 +146,19 @@
                         <span class="input-group-addon"><select id="item_weight">
                             <option>Выберите...</option>
                             {{for opt in units:}}
-                            <option value="{{=opt.id}}">{{=opt.f_name}}</option>
+                            <option value="{{=opt.id}}">{{=opt.f_name}}, {{=opt.f_description}}</option>
                             {{pass}}
                         </select></span>
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Описание</label>
                         <textarea type="text" placeholder="{{=item.desc}}" id="item_desc" class="form-control"></textarea>
-                        <em class="text-muted">Средневековое блюдо из молодых бычков, приготовленное...</em>
+                        <em class="text-muted">Фирменная паста с креветками, кальмарами и мидиями в сливочном...</em>
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Ингридиенты</label>
                         <input type="text" id="item_ingrs" class="form-control bs-autocomplete ui-autocomplete-input">
-                        <em class="text-muted">Греча, хуйцы. Через зпт</em>
+                        <em class="text-muted">Спагетти, кальмары, мидии, помидоры</em>
                     </div>
                 </div>
                 <div class="card-footer">
