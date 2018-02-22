@@ -1,6 +1,30 @@
 from gluon.contrib import simplejson
 
 
+def get_network_sugg(q):
+    result = {}
+    if q != None:
+        result = []
+        rows = db(db.t_restaraunt.f_name.contains(q.encode('utf-8'))).select()
+        for row in rows:
+            result.append({
+                'unrestricted_value': row.f_name,
+            'value': row.f_name})
+    return result
+
+
+@auth.requires_login()
+@request.restful()
+def api():
+    def POST(*args, **vars):
+        suggestions = get_network_sugg(request.vars.get('query'))
+        return dict(suggestions=suggestions)
+    try:
+        result = db()
+    except:
+        logger.warn('suggestion for Network failed for user ' + auth.user.username)
+    return locals()
+
 @auth.requires_login()
 def change_price_item():
     try:

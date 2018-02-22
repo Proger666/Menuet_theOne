@@ -1,6 +1,5 @@
 {{extend "layout.html"}}
 
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
 <div class="container">
 {{if  not 'itm_id' in request.vars:}}
@@ -58,7 +57,12 @@
                         <em class="text-muted">Фирменная паста с креветками, кальмарами и мидиями в сливочном...</em>
                     </div>
                     <div class="form-group">
-                        <label class="font-weight-bold">Ингридиенты</label>
+                        <label class="font-weight-bold">Ингридиенты</label> <i class="fa fa-question-circle"
+                                                                              data-toggle="tooltip"
+                                                                              data-placement="right"
+                                                                              title="Ингридиенты будут авто-дополняться, если ингридиента нет - добавится новый"
+                                                                              style="color:red">
+                    </i>
                         <input type="text" id="item_ingrs" class="form-control bs-autocomplete ui-autocomplete-input">
                         <em class="text-muted">Спагетти, кальмары, мидии, помидоры</em>
                     </div>
@@ -98,6 +102,12 @@
         counter++;
     }
 
+
+    $(document).ready(function () {
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+    });
 
     $(function () {
         function split(val) {
@@ -182,7 +192,7 @@
                     .data('ui-autocomplete')._renderItem = function (ul, item) {
                 return $('<li></li>')
                         .data("item.autocomplete", item)
-                        .append('<li>' + item.value + '</li><br> ')
+                        .append('<li>' + item.label + '</li>')
                         .appendTo(ul);
             };
             // end autocomplete
@@ -220,23 +230,6 @@
             }
         });
 
-    }
-
-
-    function add_row() {
-        var i = 1;
-        $("#add_portion").click(function () {
-            $('#addr' + i).html("" +
-                    "<button id='delete' class='btn btn-default pull-left remove'>Delete Ingr</button></div>");
-
-            $('#tab_ingredients').append('<tr id="addr' + (i + 1) + '"></tr>');
-            i++;
-        });
-
-        $('#ingredients').on('click', '.remove', function () {
-            $(this).parent().remove();
-            i = i - 1;
-        });
     }
 </script>
 
