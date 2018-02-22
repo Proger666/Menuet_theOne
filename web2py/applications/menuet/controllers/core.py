@@ -188,7 +188,7 @@ def a_item():
         item.desc = item.name = item.price =  ''
         item.weight = 0
         units = db().select(db.t_unit.ALL)
-
+    portions = db(db.t_portion).select()
     return locals()
 
 
