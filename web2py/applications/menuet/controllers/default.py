@@ -105,7 +105,7 @@ def ajax_success():
 
 
 def ajax_error():
-    return simplejson.dumps("{'status':'ERR'}")
+    return {}
 
 
 def delete_course():
@@ -178,18 +178,20 @@ def reset_lock():
     try:
         rows = db(db.t_restaraunt.modified_by == request.vars.user['id']).select()
         if len(rows) == 0:
-            session.flash = T('Failure = USER HAS NO LOCKS')
-            raise HTTP(204)
+            response.flash = session.flash = T('Failure = USER HAS NO LOCKS')
+            logger.warn('reset_lock failed for user ' + str(request.vars.user) + ' by ' + auth.user.username)
+            return ajax_error()
         for row in rows:
             row.update_record(modified_by=None)
             session.flash = T('Success')
             result = {'user': request.vars.user, 'status': 'OK'}
+            db.commit()
             return simplejson.dumps(result)
     except:
         session.flash = T('Failure = EMPTY USER NAME')
-        result = {'user': request.vars.user, 'status': 'ERR'}
-        return simplejson.dumps(result)
-    return result
+        logger.warn('reset_lock failed for user ' + request.vars.user + ' by ' + auth.user.username)
+        return ajax_error()
+    return ajax_error()
 
 
 @auth.requires_membership('Admin')

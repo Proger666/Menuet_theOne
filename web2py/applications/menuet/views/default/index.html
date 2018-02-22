@@ -32,10 +32,11 @@
 
                 {{else:}}
                 {{for user in found_users:}}
-                    <div class="card-block" id="div_rst">
+                    <div class="card-footer" id="div_rst">
                         <label class="font-weight-bold">Found Users:</label> <br>
                         <label class="font-weight-bold">{{=user.username}}</label>
-                        <button type="submit" class="btn btn-danger" onclick="reset_lock({{=user.id}})">RESET</button>
+                        <input type="button" value="RESET" class="btn btn-danger" onclick="reset_lock({{=user.id}})">
+
                         <br>
                     {{pass}}
                     {{pass}}
@@ -67,6 +68,7 @@
                 return data
             },
             error: function (data) {
+
                 window.location.reload();
                 return data
 
