@@ -176,7 +176,6 @@ def reset_lock():
     result = {'user': request.vars.user, 'status': 'ERR'}
 
     try:
-        assert len(request.vars.user) > 0
         rows = db(db.t_restaraunt.modified_by == request.vars.user['id']).select()
         if len(rows) == 0:
             session.flash = T('Failure = USER HAS NO LOCKS')

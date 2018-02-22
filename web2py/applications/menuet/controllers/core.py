@@ -164,7 +164,6 @@ def menus():
 
 @auth.requires_login()
 def lock_rest():
-    assert request.vars.rest['r_id'] != None
     row = db(db.t_restaraunt.id == request.vars.rest['r_id']).select().first()
     row.update_record(modified_by=auth.user.id)
     result = {'status': 'OK'}

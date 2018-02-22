@@ -88,6 +88,9 @@
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Тип меню</label>
+                        <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="right"
+                                title="Напитки/вино/Чай/кофе/мясо/рыба и т.д. - все в основное меню" style="color:red">
+                        </i>
                         <select id="menu_type" class="form-control">
                         {{for option_type in menu_types:}}
                             <option value="{{=option_type.id}}">{{=option_type.f_name}}</option>
@@ -132,6 +135,9 @@
                 $('#seasonal_div').fadeOut('slow');
 
         });
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
     });
 
 
