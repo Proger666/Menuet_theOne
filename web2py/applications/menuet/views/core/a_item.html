@@ -1,120 +1,5 @@
 {{extend "layout.html"}}
-<style>
-    .ui-autocomplete-loading {
-        background: white url("{{=URL('static', 'images/ui-anim_basic_16x16.gif')}}") right center no-repeat;
 
-    ul.bs-autocomplete-menu {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        max-height: 200px;
-        overflow: auto;
-        z-index: 9999;
-        border: 1px solid #eeeeee;
-        border-radius: 4px;
-        background-color: #fff;
-        box-shadow: 0px 1px 6px 1px rgba(0, 0, 0, 0.4);
-    }
-
-    ul.bs-autocomplete-menu a {
-        font-weight: normal;
-        color: #333333;
-    }
-
-    .ui-helper-hidden-accessible {
-        border: 0;
-        clip: rect(0 0 0 0);
-        height: 1px;
-        margin: -1px;
-        overflow: hidden;
-        padding: 0;
-        position: absolute;
-        width: 1px;
-    }
-
-    .ui-state-active,
-    .ui-state-focus {
-        color: #23527c;
-        background-color: #eeeeee;
-    }
-
-    .bs-autocomplete-feedback {
-        width: 1.5em;
-        height: 1.5em;
-        overflow: hidden;
-        margin-top: .5em;
-        margin-right: .5em;
-    }
-
-    .loader {
-        font-size: 10px;
-        text-indent: -9999em;
-        width: 1.5em;
-        height: 1.5em;
-        border-radius: 50%;
-        background: #333;
-        background: -moz-linear-gradient(left, #333333 10%, rgba(255, 255, 255, 0) 42%);
-        background: -webkit-linear-gradient(left, #333333 10%, rgba(255, 255, 255, 0) 42%);
-        background: -o-linear-gradient(left, #333333 10%, rgba(255, 255, 255, 0) 42%);
-        background: -ms-linear-gradient(left, #333333 10%, rgba(255, 255, 255, 0) 42%);
-        background: linear-gradient(to right, #333333 10%, rgba(255, 255, 255, 0) 42%);
-        position: relative;
-        -webkit-animation: load3 1.4s infinite linear;
-        animation: load3 1.4s infinite linear;
-        -webkit-transform: translateZ(0);
-        -ms-transform: translateZ(0);
-        transform: translateZ(0);
-    }
-
-    .loader:before {
-        width: 50%;
-        height: 50%;
-        background: #333;
-        border-radius: 100% 0 0 0;
-        position: absolute;
-        top: 0;
-        left: 0;
-        content: '';
-    }
-
-    .loader:after {
-        background: #fff;
-        width: 75%;
-        height: 75%;
-        border-radius: 50%;
-        content: '';
-        margin: auto;
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-    }
-
-    @-webkit-keyframes load3 {
-        0% {
-            -webkit-transform: rotate(0deg);
-            transform: rotate(0deg);
-        }
-        100% {
-            -webkit-transform: rotate(360deg);
-            transform: rotate(360deg);
-        }
-    }
-
-    @keyframes load3 {
-        0% {
-            -webkit-transform: rotate(0deg);
-            transform: rotate(0deg);
-        }
-        100% {
-            -webkit-transform: rotate(360deg);
-            transform: rotate(360deg);
-        }
-    }
-
-</style>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
 <div class="container">
@@ -122,9 +7,9 @@
     <h1>Новый предмет в меню</h1>
 {{else:}}
     <h1>Изменить предмет</h1>
-    {{pass}}
+{{pass}}
     <div class="row">
-        <div class="col-sm-4">
+        <div class="col-sm-5">
 
             <div class="card" id="suda">
                 <div class="card-header">
@@ -135,24 +20,41 @@
                         <input type="text" id="item_name" value="{{=item.name}}" class="form-control">
                         <em class="text-muted">Например, равиоли с моцарелой</em>
                     </div>
-                    <div class="form-group input-group">
-                        <span class="input-group-addon"><i class="fas fa-ruble-sign"
-                                                           style="width: 20px;height: 16px"></i> </span>
-                        <input type="number" id="item_price" value="{{=item.price}}" class="form-control" placeholder="Цена">
-                    </div>
+
                     <div class="form-group input-group">
                         <span class="input-group-addon"><i class="fas fa-balance-scale"></i> </span>
-                        <input type="number" id="item_weight" value="{{=item.weight}}" class="form-control" placeholder="Вес / Объем">
+                        <input type="number" id="item_weight" value="{{=item.weight}}" class="form-control"
+                               placeholder="Вес / Объем">
                         <span class="input-group-addon"><select id="item_weight">
                             <option>Выберите...</option>
-                            {{for opt in units:}}
+                        {{for opt in units:}}
                             <option value="{{=opt.id}}">{{=opt.f_name}}, {{=opt.f_description}}</option>
-                            {{pass}}
+                        {{pass}}
                         </select></span>
                     </div>
+                    <form class="price_group" id="price_group_id">
+                        <div class="form-group input-group">
+
+                            <span class="input-group-addon"><i class="fas fa-chart-pie"
+                                                               style="width: 20px;height: 16px"></i> </span>
+                            <select id="portion_size" class="form-control">
+                                <option value="1">Стандартная</option>
+                                <option value="2">Большая</option>
+                                <div class="form-group input-group">
+                                    <input type="number" id="item_price" value="{{=item.price}}" class="form-control"
+                                           placeholder="Цена">
+                                    <div id="add_portion" class="form-group"></div>
+                                    <input class="btn btn-success" id="addrow_id0" type="button" value=" + "
+                                           title="Добавить еще порцию" onclick="addRow()">
+                                </div>
+                            </select>
+
+                        </div>
+                    </form>
                     <div class="form-group">
                         <label class="font-weight-bold">Описание</label>
-                        <textarea type="text" placeholder="{{=item.desc}}" id="item_desc" class="form-control"></textarea>
+                        <textarea type="text" placeholder="{{=item.desc}}" id="item_desc"
+                                  class="form-control"></textarea>
                         <em class="text-muted">Фирменная паста с креветками, кальмарами и мидиями в сливочном...</em>
                     </div>
                     <div class="form-group">
@@ -170,6 +72,33 @@
     </div>
 </div>
 <script>
+    var counter = 0;
+
+    function addRow() {
+        var d = document.getElementById('price_group_id');
+        d.innerHTML += '<div class="form-group input-group">' +
+                '<span class="input-group-addon"><i class="fas fa-chart-pie" style="width: 20px;height: 16px"></i> </span>' +
+                '<select id="portion_size' + counter + '" class="form-control">' +
+                '<option value="1">Стандартная</option>' +
+                '<option value="2">Большая</option>' +
+                '<div class="form-group input-group">' +
+                '<input type="number" id="item_price' + counter + '" value="{{=item.price}}" class="form-control" placeholder="Цена">' +
+                '<div id="add_portion' + counter + '" class="form-group"></div>' +
+                '<input class="btn btn-success" id="addrow_id' + counter + '" type="button" value=" + " title="Добавить еще порцию" onclick="addRow()"></div></select></div>';
+
+        if (counter === 0) {
+            var btn_row_id = document.getElementById('addrow_id0');
+        }
+        else {
+            var counter_temp = counter - 1;
+            var btn_row_id = document.getElementById('addrow_id' + counter_temp);
+        }
+
+        btn_row_id.remove();
+        counter++;
+    }
+
+
     $(function () {
         function split(val) {
             return val.split(/,\s*/);
@@ -253,7 +182,7 @@
                     .data('ui-autocomplete')._renderItem = function (ul, item) {
                 return $('<li></li>')
                         .data("item.autocomplete", item)
-                        .append('<li>' + item.label + +'</li><br> ')
+                        .append('<li>' + item.value + '</li><br> ')
                         .appendTo(ul);
             };
             // end autocomplete
@@ -291,6 +220,23 @@
             }
         });
 
+    }
+
+
+    function add_row() {
+        var i = 1;
+        $("#add_portion").click(function () {
+            $('#addr' + i).html("" +
+                    "<button id='delete' class='btn btn-default pull-left remove'>Delete Ingr</button></div>");
+
+            $('#tab_ingredients').append('<tr id="addr' + (i + 1) + '"></tr>');
+            i++;
+        });
+
+        $('#ingredients').on('click', '.remove', function () {
+            $(this).parent().remove();
+            i = i - 1;
+        });
     }
 </script>
 
