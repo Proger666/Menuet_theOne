@@ -23,7 +23,12 @@
                     <div class="form-group input-group">
                         <span class="input-group-addon"><i class="fas fa-balance-scale"></i> </span>
                         <input type="number" id="item_weight" value="{{=item.weight}}" class="form-control"
-                               placeholder="Вес / Объем">
+                               placeholder="Вес / Объем"><i class="fa fa-question-circle"
+                                                            data-toggle="tooltip"
+                                                            data-placement="right"
+                                                            title="Если вес неизвестен - оставьте 0"
+                                                            style="color:red">
+                    </i>
                         <span class="input-group-addon"><select id="item_weight">
                             <option>Выберите...</option>
                         {{for opt in units:}}
@@ -36,18 +41,23 @@
 
                             <span class="input-group-addon"><i class="fas fa-chart-pie"
                                                                style="width: 20px;height: 16px"></i> </span>
-                            <select id="portion_size" class="form-control">
+                            <select id="portion_size0" name="portion_size" class="form-control">
                             {{for portion in portions:}}
                                 <option value="{{=portion.id}}">{{=portion.f_name}}</option>
                             {{pass}}
-                                <input type="number" id="item_price" value="{{=item.price}}" class="form-control"
+                                <input type="number" id="item_price0" name="portion_price" value="{{=item.price}}"
+                                       class="form-control"
                                        placeholder="Цена">
                                 <div id="add_portion" class="form-group"></div>
-                                <input class="btn btn-success" id="addrow_id0" type="button" value=" + "
-                                       title="Добавить еще порцию" onclick="addRow()">
+
                             </select>
+
                         </div>
+
                     </form>
+                    <input class="btn btn-success form-control" id="addrow_id0" type="button"
+                           value=" Еще одна порция "
+                           title="Добавить еще порцию" onclick="addRow()">
                     <div class="form-group">
                         <label class="font-weight-bold">Описание</label>
                         <textarea type="text" placeholder="{{=item.desc}}" id="item_desc"
@@ -74,19 +84,18 @@
     </div>
 </div>
 <script>
-    var counter = 0;
+    var counter = 1;
 
     function addRow() {
         var d = document.getElementById('price_group_id');
-        d.innerHTML += '<div class="form-group input-group">' +
+        $('#price_group_id').append('<div class="form-group input-group">' +
                 '<span class="input-group-addon"><i class="fas fa-chart-pie" style="width: 20px;height: 16px"></i> </span>' +
-                '<select id="portion_size' + counter + '" class="form-control">' +
-                 {{for portion in portions:}}
-                '<option value="{{=portion.id}}">{{=portion.f_name}}</option>'+{{pass}}
+                '<select name="portion_size" id="portion_size' + counter + '" class="form-control">' +
+        {{for portion in portions:}}
+                '<option value="{{=portion.id}}">{{=portion.f_name}}</option>' +{{pass}}
                 '<div class="form-group input-group">' +
-                '<input type="number" id="item_price' + counter + '" value="{{=item.price}}" class="form-control" placeholder="Цена">' +
-                '<div id="add_portion' + counter + '" class="form-group"></div>' +
-                '<input class="btn btn-success" id="addrow_id' + counter + '" type="button" value=" + " title="Добавить еще порцию" onclick="addRow()"></div></select></div>';
+                '<input type="number" name="portion_price" id="portion_price' + counter + '" value="{{=item.price}}" class="form-control" placeholder="Цена">' +
+                '<div id="add_portion' + counter + '" class="form-group"></div>');
 
         if (counter === 0) {
             var btn_row_id = document.getElementById('addrow_id0');
@@ -96,7 +105,6 @@
             var btn_row_id = document.getElementById('addrow_id' + counter_temp);
         }
 
-        btn_row_id.remove();
         counter++;
     }
 
@@ -199,7 +207,6 @@
 
     function save_item() {
         var item = {};
-        item.price = document.getElementById('item_price').value;
         item.name = document.getElementById('item_name').value;
         item.weight = document.getElementById('item_weight').value;
         item.desc = document.getElementById('item_desc').value;
@@ -207,26 +214,47 @@
         item.change_factor = 'add';
         item.m_id = "{{=request.vars.m_id}}";
         item.ingrs = document.getElementById('item_ingrs').value;
+        item.portions_size = document.getElementsByName('portion_size');
+        item.portions_price = document.getElementsByName('portion_price');
+        item.portions = [];
+        var counter = 0;
+        item.portions_price.forEach(function (element) {
+            if (element.value && item.portions_price[counter].value) {
+                item.portions.push({
+                    'portion_size': item.portions_size[counter].value,
+                    'portion_price': element.value
+                });
+                $(element.parentElement).removeClass('has-danger');
+                counter += 1;
 
-        var DTO = {'item': item};
-        var data = JSON.stringify(DTO);
-
-        $.ajax({
-            type: 'POST',
-            url: '{{=URL('menu_works', 'save_item')}}',
-            scriptCharset: "utf-8",
-            contentType: "application/json",
-            dataType: 'json',
-            data: data,
-            success: function (data) {
-                $('#suda').removeClass('has-danger');
-                window.location = '{{=URL('core', 'e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}'
-
-            },
-            error: function (data) {
-                $('#suda').addClass('has-danger');
+            }
+            else {
+                $(element.parentElement).addClass('has-danger');
+                throw new Error('Something happened');
             }
         });
+
+
+
+    var DTO = {'item': item};
+    var data = JSON.stringify(DTO);
+
+    $.ajax({
+        type: 'POST',
+        url: '{{=URL('menu_works', 'save_item')}}',
+        scriptCharset: "utf-8",
+        contentType: "application/json",
+        dataType: 'json',
+        data: data,
+        success: function (data) {
+            $('#suda').removeClass('has-danger');
+            window.location = '{{=URL('core', 'e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}'
+
+        },
+        error: function (data) {
+            $('#suda').addClass('has-danger');
+        }
+    });
 
     }
 </script>

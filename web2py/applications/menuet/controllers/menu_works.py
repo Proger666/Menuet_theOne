@@ -52,7 +52,7 @@ def ajax_success():
 
 def ajax_error():
     session.flash = T("Failure!")
-    return simplejson.dumps("{'status':'ERR'}")
+    return {}
 
 
 @auth.requires_login()
