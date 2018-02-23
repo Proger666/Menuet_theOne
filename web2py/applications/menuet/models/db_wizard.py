@@ -16,6 +16,15 @@ db.define_table('t_menu_type',
                 migrate=settings.migrate)
 ########################################
 
+db.define_table('t_network',
+                Field('f_name', type='string',
+                      label=T('Network Name')),
+                Field('f_syn', type='list:string',
+                      label=T('synonyms')),
+                auth.signature, format='%(f_name)s',
+                migrate=settings.migrate)
+########################################
+
 db.define_table('t_restaraunt',
                 Field('f_q_id', type='string',
                       label=T('q_id')),
@@ -39,6 +48,8 @@ db.define_table('t_restaraunt',
                       label=T('Coord Y')),
                 Field('f_is_network', type='boolean',
                       label=T('Is Network?')),
+                Field('f_network_name', 'reference:t_network', default=5,
+                      label=T('Network_Name')),
                 Field('f_image', 'upload'),
                 Field('f_img', type='blob',
                       label=T('img')),

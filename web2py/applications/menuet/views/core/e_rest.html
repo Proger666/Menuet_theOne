@@ -19,24 +19,37 @@
                             <label>
                             {{if rest.is_network:}}
                                 <input type="checkbox" id="is_network" checked> Сетевой ?
-                                <div id="is_network_div" class="form-group input-group">
-                                    <input id="search_net" name="search_net" type="text"
-                                           placeholder="Введите имя сети..." class="form-control">
-                                </div>
+                                <input type="hidden" id="network_id">
                             {{else:}}
                                 <input type="checkbox" id="is_network"> Сетевой ?
                             {{pass}}
                             </label>
                         </div>
                         <div class="form-group">
+                            <div id="is_network_div">
+
+                                <label class="font-weight-bold">Имя сети</label>
+                                <div class="input-group">
+                                <span class="input-group-addon"><i
+                                        class="fas fa-sitemap"></i></span>
+                                    <input class="form-control" placeholder="Выберите сеть" required name="search_net"
+                                           id="search_net"
+                                           value="{{=rest.f_network_name}}">
+                                </div>
+                                <p class="text-muted"><em>Например: Грабли </em></p>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="font-weight-bold">Адрес ресторана</label>
                             <div class="input-group">
                                 <span class="input-group-addon"><i
-                                        class="fas fa-map-marker-alt"></i></span>
+                                        class="fas fa-location-arrow"></i></span>
                                 <input class="form-control" required name="rest_addr" id="rest_addr"
                                        value="{{=rest.addr}}"></div>
-                            <p class="text-muted"><em>Например: Москва, ул. </em></p>
+                            <p class="text-muted"><em>Например: Улица Маши-парываевой, д. 6 </em></p>
                         </div>
+
+
                         <input type="button" class="btn btn-primary" onclick="submitForm()" value="Сохранить!">
                     </form>
                 </div>
@@ -172,24 +185,40 @@
         });
     }
 
-    $("#rest_addr").suggestions({
+    function fill_network(net) {
+        var rest = {};
+        rest.id = "{{=request.vars.r_id}}}";
+        var network = {};
+        network.id = net.id;
+
+        var DTO = {'network': net, 'rest': rest};
+        var data = JSON.stringify(DTO);    //Using the toJSON plugin by Mark Gibson
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('menu_works', 'fill_net')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json; charset=utf-8",
+            data: data,
+            dataType: 'json',
+            success: function (data) {
+                location.reload();
+            },
+            error: function (data) {
+                location.reload();
+            }
+        });
+
+    }
+
+    $("#search_net").suggestions({
         token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
-        type: "ADDRESS",
+        type: "NETWORK",
         count: 5,
         onSelect: function (suggestion) {
-            console.log(suggestion);
+            fill_network(suggestion.data)
         }
     });
-
-    $("#search_net").huections({
-        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
-        type: "ADDRESS",
-        count: 5,
-        onSelect: function (suggestion) {
-            console.log(suggestion);
-        }
-    });
-
 
     function add_menu() {
         var menu = {};

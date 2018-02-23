@@ -236,6 +236,7 @@ def e_rest():
         rest.img = _rest.f_img
         rest.is_network = _rest.f_is_network
         rest.modified_on = _rest.modified_on
+        rest.f_network_name = db.t_network[_rest.f_network_name].f_name
 
         # Get all menus for this restaraunt
         tmp = db(

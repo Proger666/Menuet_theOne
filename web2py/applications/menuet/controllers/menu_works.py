@@ -5,20 +5,30 @@ def get_network_sugg(q):
     result = {}
     if q != None:
         result = []
-        rows = db(db.t_restaraunt.f_name.contains(q.encode('utf-8'))).select()
+        rows = db(db.t_network.f_syn.contains(q.encode('utf-8'))).select()
         for row in rows:
             result.append({
                 'unrestricted_value': row.f_name,
             'value': row.f_name})
     return result
 
+@auth.requires_login()
+def fill_net():
+    try:
+        rest_from_net = db(db.t_restaraunt.f_network_name == request.vars.network['id']).select().first()
+
+    except:
+        logger.warn('Something happend with network fullfilment for user ' + auth.user.username)
+        return {}
+    return {}
 
 @auth.requires_login()
 @request.restful()
 def api():
     def POST(*args, **vars):
-        suggestions = get_network_sugg(request.vars.get('query'))
-        return dict(suggestions=suggestions)
+        if request.args[1] == 'network':
+            huections = get_network_sugg(request.vars.get('query'))
+        return dict(suggestions=huections)
     try:
         result = db()
     except:
