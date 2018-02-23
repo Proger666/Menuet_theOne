@@ -337,12 +337,13 @@ def save_rest():
             db.commit()
             return ajax_success()
         elif rest != None:
-            db(db.t_restaraunt.id == rest_id).update(f_name=rest_name, f_active=True, f_is_network=rest_is_network, f_address=rest_addr)
+            db(db.t_restaraunt.id == rest_id).update(f_name=rest_name, f_active=True, f_is_network=rest_is_network,
+                                                     f_address=rest_addr)
             db.commit()
             return ajax_success()
         else:
             session.flash = T('Ресторан с таким именем уже существует')
-            logger.warn('User:' + auth.user.username + " tried create existing rest")
+            logger.warn('User:' + auth.user.username + " tried create existing rest " + " request was " + str(request))
             return ajax_success()
     except:
         session.flash = T('FAILURE!!!! Exception')
@@ -353,9 +354,24 @@ def save_rest():
 @auth.requires_login()
 def save_menu():
     try:
+
         menu_type = int(request.vars.menu['type'])
+        if request.vars.rest['is_network']:
+            network = db.t_network[request.vars.rest['network_id']]
+            if network == None:
+                session.flash = "Ошибка! Не задана сеть."
+                logger.error("Someone messed with the network menu creation. user is " + auth.user.username + " request was " + str(request))
+                return {}
+            # Get Menu type name and fill menu namu for DB savings
+            menu_name = db.t_menu_type[menu_type].f_name + ' для сети ' + network.f_name
+            # update network for this rest
+            _tmp = db.t_restaraunt[request.vars.rest['id']]
+            _tmp.update_record(f_network_name=network.id)
+            db.commit()
+            del _tmp
         ### Fill some variables
-        menu_name = db(db.t_menu_type.id == menu_type).select().first().f_name + "_Menu_" + \
+        else:
+            menu_name = db(db.t_menu_type.id == menu_type).select().first().f_name + "_Menu_" + \
                     request.vars.rest['name'].encode('utf-8')
         rest_id = request.vars.rest['id']
         comment = '' if request.vars.menu.get('comment') == u'None' else request.vars.menu['comment']

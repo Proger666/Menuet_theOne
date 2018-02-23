@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+### required - do no delete
+
 from gluon.contrib import simplejson
 
 # define this DB SHIT!
@@ -152,12 +155,12 @@ def menus():
     menus = Storage(menus)
     _tmp = db((db.t_rest_menu.t_menu == t_menu.id) &
               (t_rest_menu.t_rest == t_restaraunt.id) &
-              (t_restaraunt.id == request.vars.r_id)).select()
+              (t_restaraunt.id == request.vars.r_id)).select(orderby=~db.t_menu.modified_on)
 
     for row in _tmp:
         menus.menus.append({"id": row.t_menu.id, "name": row.t_menu.f_name, "created_on": row.t_menu.created_on,
                             "rest_name": row.t_restaraunt.f_name, "rest_addr": row.t_restaraunt.f_address,
-                            "r_id": row.t_restaraunt.id})
+                            "r_id": row.t_restaraunt.id, "active": row.t_menu.f_current})
     menu_disp = [x for x in menus.menus]
     return locals()
 
@@ -237,6 +240,7 @@ def e_rest():
         rest.is_network = _rest.f_is_network
         rest.modified_on = _rest.modified_on
         rest.f_network_name = db.t_network[_rest.f_network_name].f_name
+        rest.f_network_id = db.t_network[_rest.f_network_name].id
 
         # Get all menus for this restaraunt
         tmp = db(

@@ -6,9 +6,21 @@
     {{menu = Storage(menu)}}
         <div class="col-sm-4">
 
-            <div class="card text-center">
+            <div class="card text-center
+                        {{if not menu.active:}}
+                        text-muted
+{{else:}}
+{{pass}}
+">
                 <div class="card-block">
-                    <h4 class="card-title">{{=menu.name}}</h4>
+                    <h5 class="card-title">
+                    {{=menu.name}}
+                    {{if not menu.active:}}
+                        <span class="badge badge-default">Неактивно</span>
+                    {{else:}}
+                        <span class="badge badge-info">Текущее</span>
+{{pass}}
+                    </h5>
                     <p class="card-text">
                         <em>{{=menu.rest_name}}</em><br/>
                         <em>{{=menu.rest_addr}}</em><br/>

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+### required - do no delete
 from gluon.contrib import simplejson
 
 
@@ -8,6 +10,7 @@ def get_network_sugg(q):
         rows = db(db.t_network.f_syn.contains(q.encode('utf-8'))).select()
         for row in rows:
             result.append({
+                'id' : row.id,
                 'unrestricted_value': row.f_name,
             'value': row.f_name})
     return result
@@ -15,11 +18,24 @@ def get_network_sugg(q):
 @auth.requires_login()
 def fill_net():
     try:
+        # Find ANY restaraunt from this network
         rest_from_net = db(db.t_restaraunt.f_network_name == request.vars.network['id']).select().first()
-
+        network = db.t_network[request.vars.network['id']]
+        # if nothing found - show - Create menu
+        if rest_from_net == None:
+            # create menu for network
+            session.flash = "Меню не найдено, создайте меню"
+            return {}
+        else:
+            # find current menu or menus for this network
+            net_menus = db( (db.t_rest_menu.t_restaraunt == request.vars.rest['id'])&
+                (db.t_rest_menu.t_menu == db.t_menu.id)      )
+            db.t_rest_menu.insert(t_menu=1, t_rest=request.vars.rest['id'])
+            db.commit()
     except:
         logger.warn('Something happend with network fullfilment for user ' + auth.user.username)
         return {}
+    logger.error("Error in fill_net() - final failure approached for user " + auth.user.username)
     return {}
 
 @auth.requires_login()

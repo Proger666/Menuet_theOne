@@ -17,9 +17,10 @@
                         </div>
                         <div class="checkbox">
                             <label>
+                                <input type="hidden" id="network_id" value="{{=rest.f_network_id}}">
+
                             {{if rest.is_network:}}
                                 <input type="checkbox" id="is_network" checked> Сетевой ?
-                                <input type="hidden" id="network_id">
                                 <div id="net_div"></div>
                             {{else:}}
                                 <input type="checkbox" id="is_network"> Сетевой ?
@@ -31,6 +32,7 @@
                                         <label class="font-weight-bold">Имя сети</label>
                                         <div class="input-group">
                                             <span class="input-group-addon"><i class="fas fa-sitemap"></i></span>
+
                                             <input class="form-control" placeholder="Выберите сеть" required
                                                    name="search_net"
                                                    id="search_net"
@@ -212,7 +214,7 @@
                 location.reload();
             },
             error: function (data) {
-                location.reload();
+                $(document.body).append('<div class="w2p_flash alert alert-dismissable" style="display: block;">Меню не найдено, создайте меню<span id="closeflash"> × </span></div>')
             }
         });
 
@@ -223,7 +225,8 @@
         type: "NETWORK",
         count: 5,
         onSelect: function (suggestion) {
-            fill_network(suggestion.data)
+            $('#network_id').val(suggestion.id);
+            fill_network(suggestion)
         }
     });
 
@@ -234,7 +237,10 @@
         rest.id = document.getElementById('rest_id').value;
         menu.type = $("#menu_type").find("option:selected").val();
         menu.comment = document.getElementById('comment').value;
-
+        rest.is_network = document.getElementById('is_network').checked;
+        if (rest.is_network) {
+            rest.network_id = document.getElementById('network_id').value;
+        }
         var DTO = {'menu': menu, 'rest': rest};
         var data = JSON.stringify(DTO);    //Using the toJSON plugin by Mark Gibson
 
