@@ -5,8 +5,8 @@
 # (possibly rewritten) incoming URL
 #
 default_application = 'menuet'    # ordinarily set in base routes.py
-default_controller = 'default'  # ordinarily set in app-specific routes.py
-default_function = 'index'      # ordinarily set in app-specific routes.py
+default_controller = 'core'  # ordinarily set in app-specific routes.py
+default_function = 'rest'      # ordinarily set in app-specific routes.py
 
 # routes_app is a tuple of tuples.  The first item in each is a regexp that will
 # be used to match the incoming request URL. The second item in the tuple is

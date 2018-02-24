@@ -323,14 +323,19 @@ def save_rest():
     try:
         rest_name = request.vars.rest['name']
         rest_addr = request.vars.rest['addr']
-        rest_is_network = request.vars.rest['is_network']
         rest_id = request.vars.rest.get('r_id')
         rest_town = request.vars.rest.get('town')
         _rst_net = request.vars.rest.get('network')
+        rest_is_network = request.vars.rest['is_network']
+
         if _rst_net != u'None' and _rst_net != None:
-            rest_network = _rst_net if str.isdigit(_rst_net.encode('utf-8')) else 5
+            rest_network = _rst_net.encode('utf-8') if str.isdigit(_rst_net.encode('utf-8')) else 5
+
         else:
             rest_network = 5
+        if rest_is_network and rest_network == 5:
+            session.flash = ("Сеть не указана!")
+            return {}
         if rest_town == None:
             logger.warn('save_Rest failed, town not on request. for user ' + auth.user.username + " request was " + str(
                 request))
