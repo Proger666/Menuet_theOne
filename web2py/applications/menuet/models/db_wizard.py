@@ -1,4 +1,5 @@
 ### we prepend t_ to tablenames and f_ to fieldnames for disambiguity
+########################################
 
 
 ########################################
@@ -128,8 +129,7 @@ db.define_table('t_item',
                       label=T('Item Name')),
                 Field('f_desc', type='string',
                       label=T('Item desc')),
-                Field('f_price', type='integer', default=0,
-                      label=T('Price Name')),
+
                 Field('f_t_start', type='time', default='00:00:00',
                       label=T('work from ....')),
                 Field('f_t_end', type='time', default='00:00:00',
@@ -144,6 +144,16 @@ db.define_table('t_item',
                       label=T('Unit')),
                 Field('tags', 'list:reference tag'),
                 auth.signature, format='%(f_name)s',
+                migrate=settings.migrate)
+########################################
+db.define_table('t_item_prices',
+                Field('f_price', type='integer',
+                      label=T('Price')),
+                Field('f_item', 'reference:t_item',
+                      label=T('Item')),
+                Field('f_portion', 'reference:t_portion',
+                      label=T('Linked portion')),
+                auth.signature, format='%(f_portion)s',
                 migrate=settings.migrate)
 ########################################
 db.define_table('t_item_price_archive',
