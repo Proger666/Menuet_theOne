@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ### required - do no delete
-
 from gluon.contrib import simplejson
+
 
 # define this DB SHIT!
 t_menu = db.t_menu
@@ -50,10 +50,21 @@ def rest():
 
 @auth.requires_login()
 def getMenu_forRest(rest_id, menu_id):
-    menu = db((t_menu.id == menu_id) &
-              (t_restaraunt.id == rest_id) &
-              (t_rest_menu.t_menu == t_menu.id) &
-              (t_rest_menu.t_rest == t_restaraunt.id)).select(t_menu.ALL).first()
+    # is rest from network ?
+    _rest_net = db.t_restaraunt[rest_id]
+    if _rest_net != None:
+        if _rest_net.f_is_network:
+            # just get all menus for network
+            menu = db.t_menu[menu_id]
+        else:
+            # oh shit seems we need to get M-t-M
+            menu = db((t_menu.id == menu_id) &
+                      (t_restaraunt.id == rest_id) &
+                      (t_rest_menu.t_menu == t_menu.id) &
+                      (t_rest_menu.t_rest == t_restaraunt.id)).select(t_menu.ALL).first()
+    else:
+        logger.error("Rest not found in getMenu_forRest, supplied rest_id seems to be corrupted " + logUser_and_request())
+        return {}
     return menu
 
 
@@ -90,9 +101,11 @@ def get_ingrs_for_item(item_id):
         ingrs.append(ingr)
     return ingrs
 
+
 def add_rest():
     # reuse existing
     return locals()
+
 
 @auth.requires_login()
 def e_menu():
@@ -123,9 +136,11 @@ def e_menu():
                 menu_items.append(item)
             return locals()
         else:
+            logger.error("in e_menu, exception happened! " + logUser_and_request())
             raise HTTP(500)
     except HTTP:
-        logger.warn('Missing one or all ids on page e_menu, menu id or rest id are missing ' + str(request.vars))
+        logger.warn('Missing one or all ids on page e_menu, menu id or rest id are missing ' + str(
+            request.vars) + logUser_and_request())
         return None
 
 
@@ -188,7 +203,7 @@ def a_item():
         item.name = _tmp.f_name
         item.weight = _tmp.f_unit.f_name
     else:
-        item.desc = item.name = item.price =  ''
+        item.desc = item.name = item.price = ''
         item.weight = 0
         units = db().select(db.t_unit.ALL)
     portions = db(db.t_portion).select()
@@ -233,6 +248,7 @@ def e_rest():
         rest = Storage()
         # fill the attr
         rest.name = _rest.f_name
+        rest.town = _rest.f_town
         rest.addr = _rest.f_address
         rest.id = _rest.id
         rest.created_on = _rest.created_on
@@ -243,10 +259,16 @@ def e_rest():
         rest.f_network_id = db.t_network[_rest.f_network_name].id
 
         # Get all menus for this restaraunt
-        tmp = db(
-            (db.t_menu.id == db.t_rest_menu.t_menu) & (db.t_restaraunt.id == db.t_rest_menu.t_rest)
-        )
-        menus = [menux.t_menu for menux in tmp(db.t_restaraunt.id == rest.id).select()]
+        if rest.is_network:
+            # gets network menu insted of per rest menu
+            tmp = db(
+                (t_menu.f_network == rest.f_network_id)).select()
+            menus = tmp
+        else:
+            tmp = db(
+                (db.t_menu.id == db.t_rest_menu.t_menu) & (db.t_restaraunt.id == db.t_rest_menu.t_rest)
+            )
+            menus = [menux.t_menu for menux in tmp(db.t_restaraunt.id == rest.id).select()]
         # create menu object
         menu_disp = []
         for _menu in menus:

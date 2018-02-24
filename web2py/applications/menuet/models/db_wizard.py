@@ -168,6 +168,8 @@ db.define_table('t_menu',
                       label=T('Menu Type')),
                 Field('f_seosanal_type', 'list:reference t_seosanal_type',
                       label=T('Seosanal Type')),
+                Field('f_network', 'reference:t_network',
+                      label=T('Network if is networks menu'), default=5),
                 auth.signature, format='%(f_name)s',
                 migrate=settings.migrate)
 ########################################

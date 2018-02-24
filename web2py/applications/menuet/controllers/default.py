@@ -2,7 +2,6 @@
 ### required - do no delete
 from __future__ import print_function
 
-import random
 
 import concurrent.futures
 
@@ -11,7 +10,6 @@ from time import gmtime, strftime
 import requests
 
 from gluon.contrib import simplejson
-import hashlib
 
 ### GLOBALS
 
@@ -105,6 +103,7 @@ def ajax_success():
 
 
 def ajax_error():
+    session.flashT("FAILURE!")
     return {}
 
 
@@ -320,6 +319,9 @@ def save_course():
     return ajax_success()
 
 
+
+
+
 @auth.requires_login()
 def save_rest():
     try:
@@ -327,28 +329,46 @@ def save_rest():
         rest_addr = request.vars.rest['addr']
         rest_is_network = request.vars.rest['is_network']
         rest_id = request.vars.rest.get('r_id')
-        if rest_id != None:
+        rest_town = request.vars.rest.get('town')
+        rest_network = request.vars.rest.get(
+            'network') if str.isdigit(request.vars.rest.get('network').encode('utf-8')) else 5
+        if rest_town == None:
+            logger.warn('save_Rest failed, town not on request. for user ' + auth.user.username + " request was " + str(
+                request))
+            return ajax_error()
+        if rest_id != u'None' and rest_id != None:
             rest_id = int(request.vars.rest['r_id'])
         # just create menu TODO: redesign
-        # Check if Menu already exists
+        # Check if rest already exists
         rest = db(db.t_restaraunt.f_name.like(rest_name)).select().first()
         if rest is None:
-            db.t_restaraunt.insert(f_name=rest_name, f_active=True, f_is_network=rest_is_network, f_address=rest_addr)
-            db.commit()
-            return ajax_success()
+            # create new rest if nothing found
+            if int(rest_network):
+                db.t_restaraunt.insert(f_name=rest_name, f_active=True, f_is_network=rest_is_network,
+                                       f_address=rest_addr,
+                                       f_town=rest_town, f_network_name=rest_network)
+                db.commit()
+                return ajax_success()
+            else:
+                logger.error("save_Rest failure!!! rest_network doesnt filled as number!!!" + logUser_and_request())
+                return ajax_error()
         elif rest != None:
+            # UPDATE existing rest
             db(db.t_restaraunt.id == rest_id).update(f_name=rest_name, f_active=True, f_is_network=rest_is_network,
-                                                     f_address=rest_addr)
+                                                     f_address=rest_addr, f_town=rest_town, f_network_name=rest_network)
             db.commit()
             return ajax_success()
+
         else:
             session.flash = T('Ресторан с таким именем уже существует')
             logger.warn('User:' + auth.user.username + " tried create existing rest " + " request was " + str(request))
             return ajax_success()
+
     except:
         session.flash = T('FAILURE!!!! Exception')
-        logger.warn('Problem in save_rest - Exception occured')
-        return ajax_error()
+        logger.warn('Problem in save_rest - Exception occurred' + str(
+            Exception.message) + ' for user ' + auth.user.username + " request was " + str(request))
+    return ajax_error()
 
 
 @auth.requires_login()
@@ -356,23 +376,7 @@ def save_menu():
     try:
 
         menu_type = int(request.vars.menu['type'])
-        if request.vars.rest['is_network']:
-            network = db.t_network[request.vars.rest['network_id']]
-            if network == None:
-                session.flash = "Ошибка! Не задана сеть."
-                logger.error("Someone messed with the network menu creation. user is " + auth.user.username + " request was " + str(request))
-                return {}
-            # Get Menu type name and fill menu namu for DB savings
-            menu_name = db.t_menu_type[menu_type].f_name + ' для сети ' + network.f_name
-            # update network for this rest
-            _tmp = db.t_restaraunt[request.vars.rest['id']]
-            _tmp.update_record(f_network_name=network.id)
-            db.commit()
-            del _tmp
-        ### Fill some variables
-        else:
-            menu_name = db(db.t_menu_type.id == menu_type).select().first().f_name + "_Menu_" + \
-                    request.vars.rest['name'].encode('utf-8')
+
         rest_id = request.vars.rest['id']
         comment = '' if request.vars.menu.get('comment') == u'None' else request.vars.menu['comment']
         # just create menu TODO: redesign
@@ -380,23 +384,45 @@ def save_menu():
 
         # Lets find old menu and make it inactive
         # Find all active menus with given type
-        _old_menu = db((db.t_menu.f_current == True) & (db.t_rest_menu.t_rest == db.t_restaraunt.id) & (
-                db.t_rest_menu.t_menu == db.t_menu.id) & (
-                           db.t_menu.f_type.belongs(request.vars.menu['type']))).select()
+        _old_menu = db((db.t_menu.f_current == True) &
+                       (db.t_rest_menu.t_rest == db.t_restaraunt.id) &
+                       (db.t_rest_menu.t_menu == db.t_menu.id) &
+                       (db.t_menu.f_type.belongs(request.vars.menu['type']))).select()
         for item in _old_menu:
             item.t_menu.f_current = False
             item.t_menu.update_record()
         # and create new menu and set it to active
-
-        _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type],
-                                     f_comment=comment)
-        db.t_rest_menu.insert(t_menu=_new_menu, t_rest=rest_id)
-        db.commit()
+        if request.vars.rest['is_network']:
+            network = db.t_network[request.vars.rest['network_id']]
+            if network == None:
+                session.flash = "Ошибка! Не задана сеть."
+                logger.error(
+                    "Someone messed with the network menu creation. user is " + auth.user.username + " request was " + str(
+                        request))
+                return {}
+            # Get Menu type name and fill menu namu for DB savings
+            menu_name = db.t_menu_type[menu_type].f_name + ' для сети ' + network.f_name
+            # update network for this rest
+            _tmp = db.t_restaraunt[request.vars.rest['id']]
+            _tmp.update_record(f_network_name=network.id)
+            _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type],
+                                         f_comment=comment, f_network=network.id)
+            db.commit()
+            del _tmp
+        ### Fill some variables
+        else:
+            menu_name = db(db.t_menu_type.id == menu_type).select().first().f_name + "_Menu_" + \
+                        request.vars.rest['name'].encode('utf-8')
+            _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type],
+                                         f_comment=comment)
+            db.t_rest_menu.insert(t_menu=_new_menu, t_rest=rest_id)
+            db.commit()
         return ajax_success()
     except AssertionError:
+        logger.error('Exception happened in save_menu for user ' + auth.user.username + " request was " + str(request))
         return ajax_error()
     except Exception, e:
-        logger.warn('Error in save_menu' + str(e))
+        logger.warn('Error in save_menu' + str(e) + ' for user ' + auth.user.username + " request was " + str(request))
         return ajax_error()
 
 

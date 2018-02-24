@@ -99,6 +99,8 @@ import logging
 logger = logging.getLogger("web2py.app.menuet")
 logger.setLevel(logging.DEBUG)
 
+def logUser_and_request():
+    return " for user " + auth.user.username + " and request was " + str(request)
 # -------------------------------------------------------------------------
 # configure email
 # -------------------------------------------------------------------------

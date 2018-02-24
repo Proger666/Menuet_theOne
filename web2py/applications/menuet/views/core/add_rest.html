@@ -16,19 +16,49 @@
                         </div>
                         <div class="checkbox">
                             <label>
+                                <input type="hidden" id="network_id" value="">
                                 <input type="checkbox" id="is_network"> Сетевой ?
+                                <div id="net_div"></div>
+                                <div class="form-group">
+                                    <div id="is_network_div" hidden>
+                                        <label class="font-weight-bold">Имя сети</label>
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><i class="fas fa-sitemap"></i></span>
+
+                                            <input class="form-control" placeholder="Выберите сеть" required
+                                                   name="search_net"
+                                                   id="search_net"
+                                                   value="">
+                                        </div>
+                                        <p class="text-muted"><em>Например: Грабли </em></p>
+                                    </div>
+                                </div>
                             </label>
                         </div>
+
                         <div class="form-group">
+                            <label class="font-weight-bold">Город</label>
+                            <div class="input-group">
+
+                                <span class="input-group-addon">
+                                    <i class="fas fa-building"></i>
+                                                                    </span>
+
+                                <input class="form-control" required id="rest_town" value=""
+                                       type="text">
+                            </div>
+                            <p class="text-muted"><em>Например: Волгоград</em></p>
+
                             <label class="font-weight-bold">Адрес ресторана</label>
                             <div class="input-group">
                                 <span class="input-group-addon"><i
-                                        class="fas fa-map-marker-alt"></i></span>
+                                        class="fas fa-location-arrow"></i></span>
                                 <input class="form-control" required name="rest_addr" id="rest_addr"
-                                       onchange="get_addr()"></div>
-                            <p class="text-muted"><em>Например: Москва, ул. </em></p>
+                                       value=""></div>
+                            <p class="text-muted"><em>Например: Улица Маши-парываевой, д. 6 </em></p>
                         </div>
-                        <input type="button" value="Сохранить!" class="btn btn-primary" onclick="submitForm()">
+
+                        <input type="button" class="btn btn-primary" onclick="submitForm()" value="Сохранить!">
                     </form>
                 </div>
             </div>
@@ -44,13 +74,38 @@
 <![endif]-->
 <script type="text/javascript"
         src="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/js/jquery.suggestions.min.js"></script>
+<script type="text/javascript" src="{{=URL('static', 'js/shadow_sugg.min.js')}}"></script>
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/css/suggestions.min.css" type="text/css"
+      rel="stylesheet"/>
 
 <script>
+
+    $(document).ready(function () {
+
+        $('#is_network').change(function () {
+            if (this.checked) {
+                $('#is_network_div').removeAttr('hidden');
+                $('#is_network_div').fadeIn('slow');
+            }
+            else
+                $('#is_network_div').fadeOut('slow');
+
+        });
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+    });
+
     function submitForm() {
         var rest = {};
         rest.name = document.getElementById('rest_name').value;
         rest.addr = document.getElementById('rest_addr').value;
         rest.is_network = document.getElementById('is_network').checked;
+        rest.r_id = "{{=request.vars.r_id}}";
+        rest.town = document.getElementById('rest_town').value;
+        rest.network = document.getElementById('network_id').value;
 
         var DTO = {'rest': rest};
         var data = JSON.stringify(DTO);
@@ -63,21 +118,27 @@
             dataType: 'json',
             data: data,
             success: function (data) {
-                window.location = '{{=URL('core','rest')}}'
+                window.location.reload();
+                return data
+
             },
             error: function (data) {
-                window.location.reload()
+                window.location.reload();
+                return data
 
             }
         });
     }
 
-    $("#rest_addr").suggestions({
+
+    $("#search_net").suggestions({
         token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
-        type: "ADDRESS",
+        type: "NETWORK",
         count: 5,
         onSelect: function (suggestion) {
-            console.log(suggestion);
+            $('#network_id').val(suggestion.id);
         }
     });
+
+
 </script>
