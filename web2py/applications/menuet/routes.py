@@ -14,7 +14,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # To enable this route file you must do the steps:
 # 1. rename <web2py-root-dir>/examples/routes.parametric.example.py to routes.py
-# 2. rename this APP/routes.example.py to APP/routes.py (where APP - is your application directory)
+# 2. rename this APP/routes.py to APP/routes.py (where APP - is your application directory)
 # 3. restart web2py (or reload routes in web2py admin interface)
 #
 # YOU CAN COPY THIS FILE TO ANY APPLICATION'S ROOT DIRECTORY WITHOUT CHANGES!
@@ -31,7 +31,9 @@ possible_languages = read_possible_languages(abspath('applications', app))
 routers = {
     app: dict(
         default_language=possible_languages['default'][0],
-        languages=[lang for lang in possible_languages if lang != 'default']
+        languages=[lang for lang in possible_languages if lang != 'default'],
+        # default_controller='core',
+        # default_function='rest',
     )
 }
 
