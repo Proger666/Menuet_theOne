@@ -9,142 +9,139 @@
                     <i class="fas fa-utensils"></i> {{=rest.name}}
                 </div>
                 <div class="card-block">
-                    <form name="new_rest" id="new_rest">
                         <div class="form-group">
                             <label class="font-weight-bold">Имя ресторана</label>
                             <input class="form-control" required name="rest_name" value="{{=rest.name}}" id="rest_name">
                             <p class="text-muted"><em>Например: Чайхона №1</em></p>
                         </div>
                         <div class="checkbox">
-                            <label>
-                                <input type="hidden" id="network_id" value="{{=rest.f_network_id}}">
+                            <input type="hidden" id="network_id" value="{{=rest.f_network_id}}">
 
-                            {{if rest.is_network:}}
-                                <input type="checkbox" id="is_network" checked> Сетевой ?
-                                <div id="net_div"></div>
-                            {{else:}}
-                                <input type="checkbox" id="is_network"> Сетевой ?
-                                <div id="net_div"></div>
+                        {{if rest.is_network:}}
+                            <input type="checkbox" id="is_network" checked> Сетевой ?
+                            <div id="net_div"></div>
+                        {{else:}}
+                            <input type="checkbox" id="is_network"> Сетевой ?
+                            <div id="net_div"></div>
 
-                            {{pass}}
-                                <div class="form-group">
-                                    <div id="is_network_div" hidden>
-                                        <label class="font-weight-bold">Имя сети</label>
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="fas fa-sitemap"></i></span>
+                        {{pass}}
+                        </div>
+                        <div class="form-group">
+                            <div id="is_network_div" hidden>
+                                <label class="font-weight-bold">Имя сети</label>
+                                <div class="input-group">
+                                    <span class="input-group-addon"><i class="fas fa-sitemap"></i></span>
 
-                                            <input class="form-control" placeholder="Выберите сеть" required
-                                                   name="search_net"
-                                                   id="search_net"
-                                                   value="{{=rest.f_network_name}}">
-                                        </div>
-                                        <p class="text-muted"><em>Например: Грабли </em></p>
-                                    </div>
+                                    <input class="form-control" placeholder="Выберите сеть" required
+                                           name="search_net"
+                                           id="search_net"
+                                           value="{{=rest.f_network_name}}">
                                 </div>
-                            </label>
+                                <p class="text-muted"><em>Например: Грабли </em></p>
+                            </div>
                         </div>
 
-                        <div class="form-group">
-                            <label class="font-weight-bold">Город</label>
-                            <div class="input-group">
+                <div class="form-group">
+                    <label class="font-weight-bold">Город</label>
+                    <div class="input-group">
 
                                 <span class="input-group-addon">
                                     <i class="fas fa-building"></i>
                                                                     </span>
 
-                                <input class="form-control" required id="rest_town" value="{{=rest.town}}"
-                                       type="text">
-                            </div>
-                                                            <p class="text-muted"><em>Например: Волгоград</em></p>
+                        <input class="form-control" required id="rest_town" value="{{=rest.town}}"
+                               type="text">
+                    </div>
+                    <p class="text-muted"><em>Например: Волгоград</em></p>
 
-                            <label class="font-weight-bold">Адрес ресторана</label>
-                            <div class="input-group">
+                    <label class="font-weight-bold">Адрес ресторана</label>
+                    <div class="input-group">
                                 <span class="input-group-addon"><i
                                         class="fas fa-location-arrow"></i></span>
-                                <input class="form-control" required name="rest_addr" id="rest_addr"
-                                       value="{{=rest.addr}}"></div>
-                            <p class="text-muted"><em>Например: Улица Маши-парываевой, д. 6 </em></p>
-                        </div>
-
-
-                        <input type="button" class="btn btn-primary" onclick="submitForm()" value="Сохранить!">
-                    </form>
+                        <input class="form-control" required name="rest_addr" id="rest_addr"
+                               value="{{=rest.addr}}"></div>
+                    <p class="text-muted"><em>Например: Улица Маши-парываевой, д. 6 </em></p>
                 </div>
+
+
+                <input type="button" class="btn btn-primary" onclick="submitForm()" value="Сохранить!">
+                </form>
             </div>
         </div>
-        <div class="col-sm-4">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-utensils"></i> Актуальные меню
-                </div>
-                <!-- /.panel-heading -->
-                <div class="card-block">
-                    <div class="list-group">
-                    {{i=0}}
-                    {{for menu in menu_disp:}}
-                    {{if i >= 10:
-                    break
-                    }}
-                        <a href="{{=URL('core', 'e_menu', vars=dict(r_id=rest.id,m_id=menu.id))}}"
-                           class="list-group-item-action">
-                            <i class="fas fa-utensils"></i> {{=menu.name}}
-                            <span class="float-right text-muted small"><em>{{=menu.created_on}}</em>
+    </div>
+    <div class="col-sm-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-utensils"></i> Актуальные меню
+            </div>
+            <!-- /.panel-heading -->
+            <div class="card-block">
+                <div class="list-group">
+                {{i=0}}
+                {{for menu in menu_disp:}}
+                {{if i >= 10:
+                break
+                }}
+                    <a href="{{=URL('core', 'e_menu', vars=dict(r_id=rest.id,m_id=menu.id))}}"
+                       class="list-group-item-action">
+                        <i class="fas fa-utensils"></i> {{=menu.name}}
+                        <span class="float-right text-muted small"><em>{{=menu.created_on}}</em>
                                     </span>
-                        </a>
-                    {{i+=1}}
-                    {{pass}}
-                    </div>
-                    <!-- /.list-group -->
-                {{if menu_disp.__len__() != 0:}}
-                    <a href="{{=URL('core', 'menus', vars=dict(r_id=rest.id,m_id=menu.id))}}"
-                       class="btn btn-default btn-block">Остальные...</a>
-                {{else:}}
-                    <input class="btn btn-block" type="button" value="Ничего нет :(">
+                    </a>
+                {{i+=1}}
                 {{pass}}
                 </div>
-                <!-- /.panel-body -->
+                <!-- /.list-group -->
+            {{if menu_disp.__len__() != 0:}}
+                <a href="{{=URL('core', 'menus', vars=dict(r_id=rest.id,m_id=menu.id))}}"
+                   class="btn btn-default btn-block">Остальные...</a>
+            {{else:}}
+                <input class="btn btn-block" type="button" value="Ничего нет :(">
+            {{pass}}
             </div>
-
-        </div>
-        <div class="col-sm-4">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-utensil-spoon"></i> Новое меню
-                </div>
-                <div class="card-block">
-                    <div class="form-group">
-                        <input class="form-control" required name="rest_id" value="{{=rest.id}}" id="rest_id"
-                               type="hidden">
-                        <input class="form-control" required name="rest_name" value="{{=rest.name}}" id="rest_name"
-                               type="hidden">
-
-                    </div>
-                    <div class="form-group">
-                        <label class="font-weight-bold">Тип меню</label>
-                        <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="right"
-                           title="Напитки/вино/Чай/кофе/мясо/рыба и т.д. - все в основное меню" style="color:red">
-                        </i>
-                        <select id="menu_type" class="form-control">
-                        {{for option_type in menu_types:}}
-                            <option value="{{=option_type.id}}">{{=option_type.f_name}}</option>
-                        {{pass}}
-                        </select>
-                    </div>
-                    <div class="form-group">
-
-                        <label class="font-weight-bold">Комментарий</label>
-
-                        <input class="form-control" name="comment" placeholder="Необязательно" id="comment"
-                               type="text"><br>
-                        <input type="button" id="add_menu" class="btn btn-primary" onclick="add_menu()"
-                               value="Создать!">
-                    </div>
-
-                </div>
-            </div>
+            <!-- /.panel-body -->
         </div>
 
     </div>
+    <div class="col-sm-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-utensil-spoon"></i> Новое меню
+            </div>
+            <div class="card-block">
+                <div class="form-group">
+                    <input class="form-control" required name="rest_id" value="{{=rest.id}}" id="rest_id"
+                           type="hidden">
+                    <input class="form-control" required name="rest_name" value="{{=rest.name}}" id="rest_name"
+                           type="hidden">
+
+                </div>
+                <div class="form-group">
+                    <label class="font-weight-bold">Тип меню</label>
+                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="right"
+                       title="Напитки/вино/Чай/кофе/мясо/рыба и т.д. - все в основное меню" style="color:red">
+                    </i>
+                    <select id="menu_type" class="form-control">
+                    {{for option_type in menu_types:}}
+                        <option value="{{=option_type.id}}">{{=option_type.f_name}}</option>
+                    {{pass}}
+                    </select>
+                </div>
+                <div class="form-group">
+
+                    <label class="font-weight-bold">Комментарий</label>
+
+                    <input class="form-control" name="comment" placeholder="Необязательно" id="comment"
+                           type="text"><br>
+                    <input type="button" id="add_menu" class="btn btn-primary" onclick="add_menu()"
+                           value="Создать!">
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
 </div>
 
 

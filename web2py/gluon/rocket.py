@@ -583,8 +583,11 @@ class Listener(Thread):
                 sock, addr = self.listener.accept()
 
                 if self.secure:
-                    sock = self.wrap_socket(sock)
-
+                    try:
+                        sock = self.wrap_socket(sock)
+                    except:
+                        print('Roket crashed')
+                        pass
                 self.active_queue.put(((sock, addr),
                                        self.interface[1],
                                        self.secure))
