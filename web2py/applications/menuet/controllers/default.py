@@ -329,11 +329,11 @@ def save_rest():
         rest_is_network = request.vars.rest['is_network']
 
         if _rst_net != u'None' and _rst_net != None:
-            rest_network = _rst_net if str.isdigit(_rst_net.encode('utf-8')) else 5
+            rest_network = _rst_net.encode('utf-8') if str.isdigit(_rst_net.encode('utf-8')) else 5
 
         else:
             rest_network = 5
-        if rest_is_network:
+        if rest_is_network and rest_network == 5:
             session.flash = ("Сеть не указана!")
             return {}
         if rest_town == None:
