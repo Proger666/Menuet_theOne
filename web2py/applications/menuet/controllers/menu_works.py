@@ -119,7 +119,7 @@ def save_item():
         for ingr in ingrs_list:
             found = db(db.t_ingredient.f_name.like(ingr)).select().first()
             ingrs_to_commit = Storage()
-            if found != None:
+            if found is not None:
                 ingrs_to_commit.ingr = found.id
                 ingrs_to_commit.f_curate = False
                 ingrs_to_commit_list.append(ingrs_to_commit)
@@ -133,13 +133,15 @@ def save_item():
 
             # Create new recipe
             _tmp_obj.recipe_id = db.t_recipe.insert(f_name=item_source.name + '_recipe')
-            item_source.desc = "" if item_source.desc == None else item_source.desc
+            item_source.desc = "" if item_source.desc is None else item_source.desc
             # Create new Item
             _tmp_obj.item_id = db.t_item.insert(f_name=item_source.name,
                                                 f_weight=item_source.weight,
                                                 f_price=item_source.price,
                                                 f_unit=item_source.unit, f_recipe=_tmp_obj.recipe_id,
                                                 f_desc=item_source.desc)
+
+
 
             _tmp_obj.item_unit_id = item_source.unit
             _tmp_obj._new_menu_item_id = db.t_menu_item.insert(t_menu=item_source.m_id,

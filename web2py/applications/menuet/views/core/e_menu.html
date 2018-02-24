@@ -26,8 +26,55 @@
     <div class="row">
         <div class="col-sm-12">
             <div class="card-columns">
-            {{for item in menu_items:}}
 
+                <table class="table table-bordered table-hover" id="menu_list">
+                    <tr>
+                        <th class="text-center">
+                            Блюдо
+                        </th>
+                        <th class="text-center">
+                            Описание
+                        </th>
+                        <th class="text-center">
+                            Порция
+                        </th>
+                        <th class="text-center">
+                            Цена
+                        </th>
+                        <th class="text-center">
+                            -
+                        </th>
+                        </th>
+                        <th class="text-center">
+                            -
+                        </th>
+                    </tr>
+                {{for item in menu_items:}}
+                    <tr>
+                        <td>
+                        {{=item.name}}
+                        </td>
+                        <td>
+                        {{=item.desc}}
+                        </td>
+                        <td>
+
+                        </td>
+                        <td>
+                        {{=item.price}}
+                        </td>
+                         <td>
+
+                             <button class="btn btn-primary" value="Поправить" type="button" onclick="go_to_item(this)"><i class="fas fa-ruble-sign"></i></button>
+                        </td>
+                         <td>
+                        <input value="{{=item.id}}" id="item_id" type="hidden">
+                        <input class="btn btn-primary" value="Удалить" type="button" onclick="">
+                        </td>
+                    </tr>
+
+
+<!--
                 <div class="card">
                     <div class="card-header">
                         <label class="font-weight-bold">{{=item.name}}</label>
@@ -51,7 +98,10 @@
                         <input class="btn btn-primary" value="Поправить" type="button" onclick="go_to_item(this)">
                     </div>
                 </div>
+ -->
             {{pass}}
+                                  </table>
+
             </div>
         </div>
     </div>

@@ -130,7 +130,7 @@ def e_menu():
                 item.name = menu_item.f_name
                 item.id = menu_item.id
                 item.unit = None if menu_item.f_unit is None else db.t_unit[menu_item.f_unit].f_name
-                item.desc = menu_item.f_desc
+                item.desc = ' '.join(menu_item.f_desc.split()[:4])  # ограничиваем 4 словами вывод
                 item.price = menu_item.f_price
                 item.ingrs = get_ingrs_for_item(item.id)
                 menu_items.append(item)
