@@ -2,7 +2,6 @@
 ### required - do no delete
 from __future__ import print_function
 
-
 import concurrent.futures
 
 from time import gmtime, strftime
@@ -319,9 +318,6 @@ def save_course():
     return ajax_success()
 
 
-
-
-
 @auth.requires_login()
 def save_rest():
     try:
@@ -330,8 +326,11 @@ def save_rest():
         rest_is_network = request.vars.rest['is_network']
         rest_id = request.vars.rest.get('r_id')
         rest_town = request.vars.rest.get('town')
-        rest_network = request.vars.rest.get(
-            'network') if str.isdigit(request.vars.rest.get('network').encode('utf-8')) else 5
+        _rst_net = request.vars.rest.get('network')
+        if _rst_net != u'None' and _rst_net != None:
+            rest_network = _rst_net if str.isdigit(_rst_net.encode('utf-8')) else 5
+        else:
+            rest_network = 5
         if rest_town == None:
             logger.warn('save_Rest failed, town not on request. for user ' + auth.user.username + " request was " + str(
                 request))
@@ -382,16 +381,7 @@ def save_menu():
         # just create menu TODO: redesign
         # Check if Menu already exists for this rest by name and type
 
-        # Lets find old menu and make it inactive
-        # Find all active menus with given type
-        _old_menu = db((db.t_menu.f_current == True) &
-                       (db.t_rest_menu.t_rest == db.t_restaraunt.id) &
-                       (db.t_rest_menu.t_menu == db.t_menu.id) &
-                       (db.t_menu.f_type.belongs(request.vars.menu['type']))).select()
-        for item in _old_menu:
-            item.t_menu.f_current = False
-            item.t_menu.update_record()
-        # and create new menu and set it to active
+        #  create new menu and set it to active
         if request.vars.rest['is_network']:
             network = db.t_network[request.vars.rest['network_id']]
             if network == None:
@@ -400,7 +390,15 @@ def save_menu():
                     "Someone messed with the network menu creation. user is " + auth.user.username + " request was " + str(
                         request))
                 return {}
+            # Lets find old menu and make it inactive
+            # Find all active menus with given type
+            _old_menu = db((db.t_menu.f_network == network.id) &
+                           (db.t_menu.f_type.belongs(request.vars.menu['type']))).select()
+            for item in _old_menu:
+                item.f_current = False
+                item.update_record()
             # Get Menu type name and fill menu namu for DB savings
+
             menu_name = db.t_menu_type[menu_type].f_name + ' для сети ' + network.f_name
             # update network for this rest
             _tmp = db.t_restaraunt[request.vars.rest['id']]
@@ -411,6 +409,15 @@ def save_menu():
             del _tmp
         ### Fill some variables
         else:
+            # Lets find old menu and make it inactive
+            # Find all active menus with given type
+            _old_menu = db((db.t_menu.f_current == True) &
+                           (db.t_rest_menu.t_rest == db.t_restaraunt.id) &
+                           (db.t_rest_menu.t_menu == db.t_menu.id) &
+                           (db.t_menu.f_type.belongs(request.vars.menu['type']))).select()
+            for item in _old_menu:
+                item.t_menu.f_current = False
+                item.t_menu.update_record()
             menu_name = db(db.t_menu_type.id == menu_type).select().first().f_name + "_Menu_" + \
                         request.vars.rest['name'].encode('utf-8')
             _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type],

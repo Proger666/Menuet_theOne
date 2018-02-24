@@ -2,7 +2,6 @@
 ### required - do no delete
 from gluon.contrib import simplejson
 
-
 # define this DB SHIT!
 t_menu = db.t_menu
 t_restaraunt = db.t_restaraunt
@@ -51,9 +50,9 @@ def rest():
 @auth.requires_login()
 def getMenu_forRest(rest_id, menu_id):
     # is rest from network ?
-    _rest_net = db.t_restaraunt[rest_id]
-    if _rest_net != None:
-        if _rest_net.f_is_network:
+    network_menu = db.t_menu[menu_id]
+    if network_menu != None:
+        if network_menu.f_network:
             # just get all menus for network
             menu = db.t_menu[menu_id]
         else:
@@ -63,7 +62,8 @@ def getMenu_forRest(rest_id, menu_id):
                       (t_rest_menu.t_menu == t_menu.id) &
                       (t_rest_menu.t_rest == t_restaraunt.id)).select(t_menu.ALL).first()
     else:
-        logger.error("Rest not found in getMenu_forRest, supplied rest_id seems to be corrupted " + logUser_and_request())
+        logger.error(
+            "Rest not found in getMenu_forRest, supplied rest_id seems to be corrupted " + logUser_and_request())
         return {}
     return menu
 
@@ -113,7 +113,7 @@ def e_menu():
         # get something or NONE
         menu_id = request.vars.get('m_id')
         rest_id = request.vars.get('r_id')
-        if rest_id == None and menu_id == None:
+        if rest_id == None or menu_id == None:
             # just throw them exception in the face
             raise HTTP(500)
             # are u really a digit ? dont you ?
@@ -168,14 +168,23 @@ def rests():
 def menus():
     menus = {"menus": []}
     menus = Storage(menus)
-    _tmp = db((db.t_rest_menu.t_menu == t_menu.id) &
-              (t_rest_menu.t_rest == t_restaraunt.id) &
-              (t_restaraunt.id == request.vars.r_id)).select(orderby=~db.t_menu.modified_on)
+    _menu = db.t_menu[request.vars.m_id]
+    if _menu.f_network != 5:
+        network = db.t_network[_menu.f_network]
+        _tmp = db(db.t_menu.f_network == _menu.f_network).select()
+        for row in _tmp:
+            menus.menus.append({"id": row.id, "name": row.f_name, "created_on": row.created_on,
+                                "rest_name": network.f_name, "rest_addr": "",
+                                "r_id": network.id, "active": row.f_current})
+    else:
+        _tmp = db((db.t_rest_menu.t_menu == t_menu.id) &
+                  (t_rest_menu.t_rest == t_restaraunt.id) &
+                  (t_restaraunt.id == request.vars.r_id)).select(orderby=~db.t_menu.modified_on)
 
-    for row in _tmp:
-        menus.menus.append({"id": row.t_menu.id, "name": row.t_menu.f_name, "created_on": row.t_menu.created_on,
-                            "rest_name": row.t_restaraunt.f_name, "rest_addr": row.t_restaraunt.f_address,
-                            "r_id": row.t_restaraunt.id, "active": row.t_menu.f_current})
+        for row in _tmp:
+            menus.menus.append({"id": row.t_menu.id, "name": row.t_menu.f_name, "created_on": row.t_menu.created_on,
+                                "rest_name": row.t_restaraunt.f_name, "rest_addr": row.t_restaraunt.f_address,
+                                "r_id": row.t_restaraunt.id, "active": row.t_menu.f_current})
     menu_disp = [x for x in menus.menus]
     return locals()
 
