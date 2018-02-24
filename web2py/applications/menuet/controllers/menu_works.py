@@ -10,21 +10,36 @@ def get_network_sugg(q):
         rows = db(db.t_network.f_syn.contains(q.encode('utf-8'))).select()
         for row in rows:
             result.append({
-                'id' : row.id,
+                'id': row.id,
                 'unrestricted_value': row.f_name,
-            'value': row.f_name})
+                'value': row.f_name})
     return result
+
 
 @auth.requires_login()
 def fill_net():
     try:
+        network = db.t_network[request.vars.network['id']]
         # check if request for rest adding
         if 'rest' not in request.vars:
-            network = db.t_network[request.vars.network['id']]
             if network == None:
-                logger.error("fill_net FAILURE !!! Network can't be found. DATABASE ERROR!!! for user " + auth.user.username + " and request was " + str(request))
+                logger.error(
+                    "fill_net FAILURE !!! Network can't be found. DATABASE ERROR!!! for user " + auth.user.username + " and request was " + str(
+                        request))
                 return {}
-
+        else:
+            rest_id = int(request.vars.rest['id'].encode('utf-8'))
+            _old_menu = db((db.t_menu.f_current == True) &
+                           (db.t_rest_menu.t_rest == db.t_restaraunt.id) &
+                           (db.t_rest_menu.t_menu == db.t_menu.id) &
+                           (db.t_restaraunt.id == rest_id)).select()
+            for item in _old_menu:
+                item.t_menu.f_current = False
+                item.t_menu.update_record()
+            # let's add network to rest
+            _row = db.t_restaraunt[rest_id]
+            _row.update_record(f_network_name=network.id, f_is_network=True)
+            db.commit()
         # Find ANY restaraunt from this network
         rest_from_net = db(db.t_restaraunt.f_network_name == request.vars.network['id']).select().first()
         # if nothing found - show - Create menu
@@ -33,13 +48,14 @@ def fill_net():
             session.flash = "Меню не найдено, создайте меню"
             return {}
         else:
-
             db.commit()
+            return simplejson.dumps({"status": 'ok'})
     except:
         logger.warn('Something happend with network fullfilment for user ' + auth.user.username)
         return {}
     logger.error("Error in fill_net() - final failure approached for user " + auth.user.username)
     return {}
+
 
 @auth.requires_login()
 @request.restful()
@@ -48,11 +64,13 @@ def api():
         if request.args[1] == 'network':
             huections = get_network_sugg(request.vars.get('query'))
         return dict(suggestions=huections)
+
     try:
         result = db()
     except:
         logger.warn('suggestion for Network failed for user ' + auth.user.username)
     return locals()
+
 
 @auth.requires_login()
 def change_price_item():
