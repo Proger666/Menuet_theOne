@@ -216,10 +216,11 @@
         item.ingrs = document.getElementById('item_ingrs').value;
         item.portions_size = document.getElementsByName('portion_size');
         item.portions_price = document.getElementsByName('portion_price');
+
         item.portions = [];
         var counter = 0;
         item.portions_price.forEach(function (element) {
-            if (element.value && item.portions_price[counter].value) {
+            if (element.value != '' && item.portions_size[counter].value) {
                 item.portions.push({
                     'portion_size': item.portions_size[counter].value,
                     'portion_price': element.value
