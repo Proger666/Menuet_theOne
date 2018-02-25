@@ -36,14 +36,10 @@
                             Описание
                         </th>
                         <th class="text-center">
-                            Порция
-                        </th>
-                        <th class="text-center">
                             Цена
                         </th>
                         <th class="text-center">
                             -
-                        </th>
                         </th>
                         <th class="text-center">
                             -
@@ -57,51 +53,23 @@
                         <td>
                         {{=item.desc}}
                         </td>
-                        <td>
-
+                        <td style="white-space: nowrap">
+                        {{for item_p in item.portions:}}
+                        {{=item_p["portion_size"]}} : <b> {{=item_p["portion_price"]}}</b> <i class="fas fa-ruble-sign"></i><br>
+                        {{pass}}
                         </td>
                         <td>
-
-                        </td>
-                        <td>
-                            <button class="btn btn-primary" value="Поправить" type="button" onclick="go_to_item(this)">
+                            <button class="btn btn-primary" value="Поправить" title="Изменить элемент" type="button"
+                                    onclick="go_to_item({{=item.id}})">
                                 <i class="fas fa-edit"></i></button>
                         </td>
                         <td>
-                            <button class="btn btn-primary" value="Удалить" type="button"
-                                    onclick="delete_row({{=item.id}})"><i class="fas fa-times"></i></button>
+                            <button class="btn btn-danger" value="Удалить" title="Удалить элемент" type="button"
+                                    onclick="delete_row('{{=item.id}}', this)"><i class="fas fa-times"></i></button>
                         </td>
                     </tr>
-
-
-                    <!--
-                <div class="card">
-                    <div class="card-header">
-                        <label class="font-weight-bold">{{=item.name}}</label>
-                        <span class="float-right"><i class="fas fa-ruble-sign"></i> {{=item.price}}</span>
-                        <br>
-                        <em class="text-muted">{{=item.desc}}</em>
-                    </div>
-                    <div class="card-block">
-                        <div class="form-group">
-                            <label class="font-weight-bold"></label>
-                        </div>
-                    {{for ingr in item.ingrs:}}
-                        <div class="form-group">
-                            <label class="font-weight-bold">{{=ingr.name}}</label>
-                            <em class="text-muted">{{=ingr.unit}}</em>
-                        </div>
-                    {{pass}}
-                    </div>
-                    <div class="card-footer">
-                        <input value="{{=item.id}}" id="item_id" type="hidden">
-                        <input class="btn btn-primary" value="Поправить" type="button" onclick="go_to_item(this)">
-                    </div>
-                </div>
- -->
                 {{pass}}
                 </table>
-
             </div>
         </div>
     </div>
@@ -114,30 +82,39 @@
         </div>
     </div>
 {{pass}}
+    <input type="hidden" id="sure" value="0">
 </div>
 
 <script>
     function go_to_item(obj) {
-        window.location = '{{=URL("core", "e_item")}}' + '?itm_id=' + obj.previousElementSibling.value
+        window.location = '{{=URL("core", "e_item")}}' + '?itm_id=' + obj
     }
 
-    function delete_row(id) {
-        var data = id;
-        $.ajax({
-            type: 'POST',
-            url: '/menuet/menu_works/delete_menu_item',
-            scriptCharset: "utf-8",
-            contentType: "text/html; charset=utf-8",
-            data: data,
-            dataType: 'text',
-            success: function (data) {
-                alert('Saved!');
-                location.reload();
-            },
-            error: function () {
-                alert('Shit happens!');
-                location.reload();
-            }
-        });
+    function delete_row(id, obj) {
+        id = parseInt(id);
+        if ($('#sure').value === 0) {
+            obj += ' <button class="btn btn-danger" value="Шур?" title="Изменить элемент" type="button"         onclick="go_to_item({{=item.id}})"> ';
+            return;
+        }
+        if (confirm('Вы действительно хотите удалить блюдо?')) {
+            var temp = {"data_id": id};
+            var datas = JSON.stringify(temp);
+            $.ajax({
+                type: 'POST',
+                url: '/menuet/menu_works/delete_menu_item',
+                scriptCharset: "utf-8",
+                contentType: "application/json; charset=utf-8",
+                data: datas,
+                dataType: 'text',
+                success: function (response) {
+                    location.reload();
+                },
+                error: function () {
+                    location.reload();
+                }
+            });
+        } else {
+            // Do nothing!
+        }
     }
 </script>

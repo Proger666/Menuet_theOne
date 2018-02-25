@@ -101,16 +101,21 @@ def ajax_error():
     session.flash = T("Failure!")
     return {}
 
+
 @auth.requires_login()
 def delete_menu_item():
     # Delete menu item from
     try:
-        item = request.vars.get('data')
+        item = request.vars.get('data_id')
         if item != None:
-            cursor = db.cursor()
-           # cursor.execute("DELETE FROM `t_item` where id = " + item + " limit 1")
+            # Check for exist item in t_menu
+            check_exist = db(db.t_item.id == item).count()
+            if check_exist > 0:
+                db(db.t_item.id == item).delete()
     except:
+        logger.warn('Failure in item delete ' + logUser_and_request())
         return {}
+    logger.warn('Failure in item delete - final except ' + logUser_and_request())
     return {}
 
 
@@ -152,9 +157,11 @@ def save_item():
                                                 f_unit=item_source.unit, f_recipe=_tmp_obj.recipe_id,
                                                 f_desc=item_source.desc)
 
-            _tmp_obj.t_item_prices_id = db.t_item_prices(f_price=item_source.portions[0]['portion_price'],
-                                                         f_portion=item_source.portions[0]['portion_size'],
-                                                         f_item=_tmp_obj.item_id)
+            for step in item_source.portions:
+                _tmp_obj.t_item_prices_id = db.t_item_prices.insert(
+                    f_price=int(step['portion_price'].encode('utf-8')),
+                    f_portion=int(step['portion_size'].encode('utf-8')),
+                    f_item=_tmp_obj.item_id)
 
             _tmp_obj.item_unit_id = item_source.unit
             _tmp_obj._new_menu_item_id = db.t_menu_item.insert(t_menu=item_source.m_id,

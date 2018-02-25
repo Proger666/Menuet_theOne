@@ -11,6 +11,7 @@ t_seosanal_type = db.t_seosanal_type
 t_menu_type = db.t_menu_type
 t_menu_item = db.t_menu_item
 t_item = db.t_item
+t_item_prices = db.t_item_prices
 
 
 @auth.requires_login()
@@ -132,6 +133,17 @@ def e_menu():
                 item.unit = None if menu_item.f_unit is None else db.t_unit[menu_item.f_unit].f_name
                 item.desc = ' '.join(menu_item.f_desc.split()[:4])  # ограничиваем 4 словами вывод
                 item.ingrs = get_ingrs_for_item(item.id)
+                item.portions = []
+                # get portions name from DB
+                _portions = db(t_item_prices.f_item == item.id).select(t_item_prices.f_price, t_item_prices.f_portion)
+                if _portions != None:
+                    # fill array with price and portion name
+                    for step in _portions:
+                        portion = db.t_portion[step.f_portion].f_name
+                        item.portions.append({'portion_size': portion, "portion_price": step.f_price})
+                else:
+                    logger.warn('No portions in request ' + logUser_and_request())
+                    return {}
                 menu_items.append(item)
             return locals()
         else:

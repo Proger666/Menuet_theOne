@@ -29,7 +29,7 @@
                                                             title="Если вес неизвестен - оставьте 0"
                                                             style="color:red">
                     </i>
-                        <span class="input-group-addon"><select id="item_weight">
+                        <span class="input-group-addon"><select id="item_unit">
                             <option>Выберите...</option>
                         {{for opt in units:}}
                             <option value="{{=opt.id}}">{{=opt.f_name}}, {{=opt.f_description}}</option>
@@ -210,17 +210,37 @@
         item.name = document.getElementById('item_name').value;
         item.weight = document.getElementById('item_weight').value;
         item.desc = document.getElementById('item_desc').value;
-        item.unit = $("#item_weight").find("option:selected").val();
+        item.unit = $("#item_unit").find("option:selected").val();
         item.change_factor = 'add';
         item.m_id = "{{=request.vars.m_id}}";
         item.ingrs = document.getElementById('item_ingrs').value;
         item.portions_size = document.getElementsByName('portion_size');
         item.portions_price = document.getElementsByName('portion_price');
 
+        if (item.name !== '') {
+            $(document.getElementById('item_name').parentElement).removeClass('has-danger')
+        }
+        else {
+             $(document.getElementById('item_name').parentElement).addClass('has-danger')
+        }
+
+        if (item.ingrs !== '') {
+            var arrayOfStrings = item.ingrs.split(',');
+            if (arrayOfStrings.length === 0) {
+                $(document.getElementById('item_ingrs').parentElement).addClass('has-danger');
+            }
+            else {
+                $(document.getElementById('item_ingrs').parentElement).removeClass('has-danger');
+            }
+        }
+        else {
+            $(document.getElementById('item_ingrs').parentElement).addClass('has-danger');
+        }
+
         item.portions = [];
         var counter = 0;
         item.portions_price.forEach(function (element) {
-            if (element.value != '' && item.portions_size[counter].value) {
+            if (element.value !== '' && item.portions_size[counter].value) {
                 item.portions.push({
                     'portion_size': item.portions_size[counter].value,
                     'portion_price': element.value
@@ -236,26 +256,25 @@
         });
 
 
+        var DTO = {'item': item};
+        var data = JSON.stringify(DTO);
 
-    var DTO = {'item': item};
-    var data = JSON.stringify(DTO);
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('menu_works', 'save_item')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json",
+            dataType: 'json',
+            data: data,
+            success: function (data) {
+                $('#suda').removeClass('has-danger');
+                window.location = '{{=URL('core', 'e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}'
 
-    $.ajax({
-        type: 'POST',
-        url: '{{=URL('menu_works', 'save_item')}}',
-        scriptCharset: "utf-8",
-        contentType: "application/json",
-        dataType: 'json',
-        data: data,
-        success: function (data) {
-            $('#suda').removeClass('has-danger');
-            window.location = '{{=URL('core', 'e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}'
-
-        },
-        error: function (data) {
-            $('#suda').addClass('has-danger');
-        }
-    });
+            },
+            error: function (data) {
+                $('#suda').addClass('has-danger');
+            }
+        });
 
     }
 </script>
