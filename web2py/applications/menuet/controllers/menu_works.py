@@ -101,6 +101,18 @@ def ajax_error():
     session.flash = T("Failure!")
     return {}
 
+@auth.requires_login()
+def delete_menu_item():
+    # Delete menu item from
+    try:
+        item = request.vars.get('data')
+        if item != None:
+            cursor = db.cursor()
+           # cursor.execute("DELETE FROM `t_item` where id = " + item + " limit 1")
+    except:
+        return {}
+    return {}
+
 
 @auth.requires_login()
 def save_item():
