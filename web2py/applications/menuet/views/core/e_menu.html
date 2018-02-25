@@ -61,20 +61,20 @@
 
                         </td>
                         <td>
-                        {{=item.price}}
-                        </td>
-                         <td>
 
-                             <button class="btn btn-primary" value="Поправить" type="button" onclick="go_to_item(this)"><i class="fas fa-ruble-sign"></i></button>
                         </td>
-                         <td>
-                        <input value="{{=item.id}}" id="item_id" type="hidden">
-                        <input class="btn btn-primary" value="Удалить" type="button" onclick="">
+                        <td>
+                            <button class="btn btn-primary" value="Поправить" type="button" onclick="go_to_item(this)">
+                                <i class="fas fa-edit"></i></button>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary" value="Удалить" type="button"
+                                    onclick="delete_row({{=item.id}})"><i class="fas fa-times"></i></button>
                         </td>
                     </tr>
 
 
-<!--
+                    <!--
                 <div class="card">
                     <div class="card-header">
                         <label class="font-weight-bold">{{=item.name}}</label>
@@ -99,8 +99,8 @@
                     </div>
                 </div>
  -->
-            {{pass}}
-                                  </table>
+                {{pass}}
+                </table>
 
             </div>
         </div>
@@ -119,5 +119,25 @@
 <script>
     function go_to_item(obj) {
         window.location = '{{=URL("core", "e_item")}}' + '?itm_id=' + obj.previousElementSibling.value
+    }
+
+    function delete_row(id) {
+        var data = id;
+        $.ajax({
+            type: 'POST',
+            url: '/menuet/menu_works/delete_menu_item',
+            scriptCharset: "utf-8",
+            contentType: "text/html; charset=utf-8",
+            data: data,
+            dataType: 'text',
+            success: function (data) {
+                alert('Saved!');
+                location.reload();
+            },
+            error: function () {
+                alert('Shit happens!');
+                location.reload();
+            }
+        });
     }
 </script>

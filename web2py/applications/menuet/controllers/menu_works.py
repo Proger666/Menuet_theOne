@@ -101,6 +101,18 @@ def ajax_error():
     session.flash = T("Failure!")
     return {}
 
+@auth.requires_login()
+def delete_menu_item():
+    # Delete menu item from
+    try:
+        item = request.vars.get('data')
+        if item != None:
+            cursor = db.cursor()
+           # cursor.execute("DELETE FROM `t_item` where id = " + item + " limit 1")
+    except:
+        return {}
+    return {}
+
 
 @auth.requires_login()
 def save_item():
@@ -137,11 +149,12 @@ def save_item():
             # Create new Item
             _tmp_obj.item_id = db.t_item.insert(f_name=item_source.name,
                                                 f_weight=item_source.weight,
-                                                f_price=item_source.price,
                                                 f_unit=item_source.unit, f_recipe=_tmp_obj.recipe_id,
                                                 f_desc=item_source.desc)
 
-
+            _tmp_obj.t_item_prices_id = db.t_item_prices(f_price=item_source.portions[0]['portion_price'],
+                                                         f_portion=item_source.portions[0]['portion_size'],
+                                                         f_item=_tmp_obj.item_id)
 
             _tmp_obj.item_unit_id = item_source.unit
             _tmp_obj._new_menu_item_id = db.t_menu_item.insert(t_menu=item_source.m_id,
