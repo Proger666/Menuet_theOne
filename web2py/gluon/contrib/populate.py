@@ -137,8 +137,6 @@ def populate_generator(table, default=True, compute=False, contents={}):
                 continue
             elif field.type == 'upload':
                 continue
-            elif field.compute is not None:
-                continue
             elif default and not field.default in (None, ''):
                 record[fieldname] = field.default
             elif compute and field.compute:

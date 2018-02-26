@@ -18,11 +18,10 @@ import pkgutil
 import logging
 from cgi import escape
 from threading import RLock
-
+from gluon.utf8 import Utf8
 from gluon.utils import local_html_escape
 
 from gluon._compat import copyreg, PY2, maketrans, iterkeys, unicodeT, to_unicode, to_bytes, iteritems, to_native, pjoin
-
 from pydal.contrib.portalocker import read_locked, LockedFile
 
 from gluon.fileutils import listdir
@@ -50,10 +49,8 @@ DEFAULT_CONSTRUCT_PLURAL_FORM = lambda word, plural_id: word
 
 if PY2:
     NUMBERS = (int, long, float)
-    from gluon.utf8 import Utf8
 else:
     NUMBERS = (int, float)
-    Utf8 = str
 
 # pattern to find T(blah blah blah) expressions
 PY_STRING_LITERAL_RE = r'(?<=[^\w]T\()(?P<name>'\
@@ -110,17 +107,15 @@ def markmin(s):
 
 
 def upper_fun(s):
-    return to_unicode(s).upper()
+    return unicode(s, 'utf-8').upper().encode('utf-8')
 
 
 def title_fun(s):
-    return to_unicode(s).title()
+    return unicode(s, 'utf-8').title().encode('utf-8')
 
 
 def cap_fun(s):
-    return to_unicode(s).capitalize()
-
-
+    return unicode(s, 'utf-8').capitalize().encode('utf-8')
 ttab_in = maketrans("\\%{}", '\x1c\x1d\x1e\x1f')
 ttab_out = maketrans('\x1c\x1d\x1e\x1f', "\\%{}")
 

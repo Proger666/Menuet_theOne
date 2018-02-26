@@ -35,7 +35,6 @@ if PY2:
     from gluon.contrib import ipaddress
     BytesIO = StringIO
     reduce = reduce
-    reload = reload
     hashlib_md5 = hashlib.md5
     iterkeys = lambda d: d.iterkeys()
     itervalues = lambda d: d.itervalues()
@@ -64,7 +63,7 @@ if PY2:
             return None
         if isinstance(obj, (bytes, bytearray, buffer)):
             return bytes(obj)
-        if hasattr(obj, 'encode'):
+        if isinstance(obj, unicode):
             return obj.encode(charset, errors)
         raise TypeError('Expected bytes')
 
@@ -78,7 +77,6 @@ else:
     import pickle
     from io import StringIO, BytesIO
     import copyreg
-    from importlib import reload
     from functools import reduce
     from html.parser import HTMLParser
     from http import cookies as Cookie
@@ -124,7 +122,7 @@ else:
             return None
         if isinstance(obj, (bytes, bytearray, memoryview)):
             return bytes(obj)
-        if hasattr(obj, 'encode'):
+        if isinstance(obj, str):
             return obj.encode(charset, errors)
         raise TypeError('Expected bytes')
 
@@ -153,7 +151,7 @@ def with_metaclass(meta, *bases):
 def to_unicode(obj, charset='utf-8', errors='strict'):
     if obj is None:
         return None
-    if not hasattr(obj, 'decode'):
+    if not isinstance(obj, bytes):
         return text_type(obj)
     return obj.decode(charset, errors)
 

@@ -25,52 +25,55 @@
 
     <div class="row">
         <div class="col-sm-12">
-            <div class="card-columns">
 
-                <table class="table table-bordered table-hover" id="menu_list">
-                    <tr>
-                        <th class="text-center">
-                            Блюдо
-                        </th>
-                        <th class="text-center">
-                            Описание
-                        </th>
-                        <th class="text-center">
-                            Цена
-                        </th>
-                        <th class="text-center">
-                            -
-                        </th>
-                        <th class="text-center">
-                            -
-                        </th>
-                    </tr>
+            <table class="table table-bordered table-hover" id="menu_list">
+                <thead>
+                <tr>
+                    <th class="text-center">
+                        Блюдо
+                    </th>
+                    <th class="text-center">
+                        Описание
+                    </th>
+                    <th class="text-center">
+                        Цена
+                    </th>
+                    <th class="text-center">
+                        -
+                    </th>
+                    <th class="text-center">
+                        -
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
                 {{for item in menu_items:}}
-                    <tr>
-                        <td>
-                        {{=item.name}}
-                        </td>
-                        <td>
-                        {{=item.desc}}
-                        </td>
-                        <td style="white-space: nowrap">
-                        {{for item_p in item.portions:}}
-                        {{=item_p["portion_size"]}} : <b> {{=item_p["portion_price"]}}</b> <i class="fas fa-ruble-sign"></i><br>
-                        {{pass}}
-                        </td>
-                        <td>
-                            <button class="btn btn-primary" value="Поправить" title="Изменить элемент" type="button"
-                                    onclick="go_to_item({{=item.id}})">
-                                <i class="fas fa-edit"></i></button>
-                        </td>
-                        <td>
-                            <button class="btn btn-danger" value="Удалить" title="Удалить элемент" type="button"
-                                    onclick="delete_row('{{=item.id}}', this)"><i class="fas fa-times"></i></button>
-                        </td>
-                    </tr>
+                <tr>
+                    <td>
+                    {{=item.name}}
+                    </td>
+                    <td>
+                    {{=item.desc}}
+                    </td>
+                    <td style="white-space: nowrap">
+                    {{for item_p in item.portions:}}
+                    {{=item_p["portion_size"]}} : <b> {{=item_p["portion_price"]}}</b> <i
+                            class="fas fa-ruble-sign"></i><br>
+                    {{pass}}
+                    </td>
+                    <td>
+                        <button class="btn btn-primary" value="Поправить" title="Изменить элемент" type="button"
+                                onclick="go_to_item({{=item.id}})">
+                            <i class="fas fa-edit"></i></button>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger" value="Удалить" title="Удалить элемент" type="button"
+                                onclick="delete_row('{{=item.id}}', this)"><i class="fas fa-times"></i></button>
+                    </td>
+                </tr>
                 {{pass}}
-                </table>
-            </div>
+                </tbody>
+            </table>
         </div>
     </div>
 {{else:}}
@@ -93,7 +96,7 @@
     function delete_row(id, obj) {
         id = parseInt(id);
         if ($('#sure').value === 0) {
-            obj += ' <button class="btn btn-danger" value="Шур?" title="Изменить элемент" type="button"         onclick="go_to_item({{=item.id}})"> ';
+            obj += ' <button class="btn btn-danger" value="Шур?" title="Изменить элемент" type="button"         "> ';
             return;
         }
         if (confirm('Вы действительно хотите удалить блюдо?')) {

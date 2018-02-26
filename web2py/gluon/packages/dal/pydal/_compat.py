@@ -10,7 +10,6 @@ if PY2:
     import cPickle as pickle
     from cStringIO import StringIO
     import copy_reg as copyreg
-    from urllib import unquote
     BytesIO = StringIO
     reduce = reduce
     hashlib_md5 = hashlib.md5
@@ -52,7 +51,6 @@ else:
     from io import StringIO, BytesIO
     import copyreg
     from functools import reduce
-    from urllib.parse import unquote
     hashlib_md5 = lambda s: hashlib.md5(bytes(s, 'utf8'))
     iterkeys = lambda d: iter(d.keys())
     itervalues = lambda d: iter(d.values())

@@ -129,10 +129,11 @@ import socket
 import threading
 import time
 import traceback
+import urllib
 from uuid import uuid4
 
 from ._compat import PY2, pickle, hashlib_md5, pjoin, copyreg, integer_types, \
-    with_metaclass, long, unquote
+    with_metaclass, long
 from ._globals import GLOBAL_LOCKER, THREAD_LOCAL, DEFAULT
 from ._load import OrderedDict
 from .helpers.classes import Serializable, SQLCallableList, BasicStorage, \
