@@ -38,7 +38,7 @@ buildOptions = dict(
         'ABOUT',
         'LICENSE',
         'VERSION',
-        'logging.conf',
+        'logging.example.conf',
         'options_std.py',
         'app.example.yaml',
         'queue.example.yaml',

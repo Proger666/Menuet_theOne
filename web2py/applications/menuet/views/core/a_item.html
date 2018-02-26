@@ -222,12 +222,14 @@
         }
         else {
              $(document.getElementById('item_name').parentElement).addClass('has-danger')
+            return;
         }
 
         if (item.ingrs !== '') {
             var arrayOfStrings = item.ingrs.split(',');
             if (arrayOfStrings.length === 0) {
                 $(document.getElementById('item_ingrs').parentElement).addClass('has-danger');
+                return;
             }
             else {
                 $(document.getElementById('item_ingrs').parentElement).removeClass('has-danger');
@@ -235,6 +237,7 @@
         }
         else {
             $(document.getElementById('item_ingrs').parentElement).addClass('has-danger');
+            return;
         }
 
         item.portions = [];

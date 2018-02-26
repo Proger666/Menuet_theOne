@@ -7,7 +7,7 @@ def get_network_sugg(q):
     result = {}
     if q != None:
         result = []
-        rows = db(db.t_network.f_syn.contains(q.encode('utf-8'))).select()
+        rows = db(db.t_network.f_syn.like('%' + q.encode('utf-8') + '%')).select()
         for row in rows:
             result.append({
                 'id': row.id,
@@ -61,9 +61,14 @@ def fill_net():
 @request.restful()
 def api():
     def POST(*args, **vars):
-        if request.args[1] == 'network':
-            huections = get_network_sugg(request.vars.get('query'))
-        return dict(suggestions=huections)
+        query = request.vars.get('query')
+        if query != None:
+            # find from second letter
+            if request.args[1] == 'network' and len(query) > 2:
+                huections = get_network_sugg(query)
+                return dict(suggestions=huections)
+        else:
+            return dict(suggestions={"status" : "ok"})
 
     try:
         result = db()
