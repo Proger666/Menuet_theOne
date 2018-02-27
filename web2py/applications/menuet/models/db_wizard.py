@@ -59,11 +59,15 @@ db.define_table('t_restaraunt',
                 auth.signature, format='%(f_name)s',
                 migrate=settings.migrate)
 ########################################
-
-db.define_table('tag',
-                Field('name'),
+db.define_table('t_item_tag',
+                Field('f_name'),
                 auth.signature,
-                format='%(name)s')
+                format='%(f_name)s')
+########################################
+db.define_table('t_menu_tag',
+                Field('f_name'),
+                auth.signature,
+                format='%(f_name)s')
 ########################################
 
 db.define_table('t_unit',
@@ -142,7 +146,7 @@ db.define_table('t_item',
                       label=T('Portion')),
                 Field('f_unit', 'reference:t_unit', default=1,
                       label=T('Unit')),
-                Field('tags', 'list:reference tag'),
+                Field('f_tags', 'list:reference t_item_tag', label=T('Tags')),
                 auth.signature, format='%(f_name)s',
                 migrate=settings.migrate)
 ########################################
@@ -178,6 +182,7 @@ db.define_table('t_menu',
                       label=T('Menu Type')),
                 Field('f_seosanal_type', 'list:reference t_seosanal_type',
                       label=T('Seosanal Type')),
+                Field('f_tags', 'list:reference t_menu_tag', label=T('Tags')),
                 Field('f_network', 'reference:t_network',
                       label=T('Network if is networks menu'), default=5),
                 auth.signature, format='%(f_name)s',

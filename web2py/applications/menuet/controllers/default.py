@@ -381,13 +381,16 @@ def save_menu():
 
         menu_type = int(request.vars.menu['type'])
         menu_name = request.vars.menu.get('name')
-        if menu_name is None and menu_type != 3:
-            logger.error(
-                'Exception happened in save_menu for user ' + auth.user.username + " request was " + str(request))
-            session.flash = "Ошибка - Имя меню не задано"
-            return ajax_error()
-        else:
-            menu_name = menu_name.encode('utf-8')
+        # if menu_name is None and menu_type != 3:
+        #     logger.error(
+        #         'Exception happened in save_menu for user ' + auth.user.username + " request was " + str(request))
+        #     session.flash = "Ошибка - Имя меню не задано"
+        #     return ajax_error()
+        # else:
+        menu_name = menu_name.encode('utf-8') if menu_name is not None else None
+        m_tags = request.vars.menu.get('tags')
+        # parse tags ids
+        tags = m_tags.split(",") if m_tags != None else ""
 
         rest_id = request.vars.rest['id']
         comment = '' if request.vars.menu.get('comment') == u'None' else request.vars.menu['comment']
@@ -412,12 +415,14 @@ def save_menu():
                 item.update_record()
             # Get Menu type name and fill menu namu for DB savings
 
-            menu_name = menu_name + ' для сети ' + network.f_name
+            # set menu name its typed name or TYPE as name
+            menu_name = (menu_name if (menu_name != None and menu_name != "") else db.t_menu_type[
+                menu_type].f_name) + ' для сети ' + network.f_name
             # update network for this rest
             _tmp = db.t_restaraunt[request.vars.rest['id']]
             _tmp.update_record(f_network_name=network.id)
             _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type],
-                                         f_comment=comment, f_network=network.id)
+                                         f_comment=comment, f_network=network.id, f_tags=tags)
             db.commit()
             del _tmp
         ### Fill some variables
@@ -432,9 +437,12 @@ def save_menu():
                 item.t_menu.f_current = False
                 item.t_menu.update_record()
 
-            menu_name = menu_name + ' для  ' + request.vars.rest['name'].encode('utf-8')
+            # set menu name its typed name or TYPE as name
+            menu_name = (menu_name if (menu_name != None and menu_name != "") else db.t_menu_type[
+                menu_type].f_name) + ' для  ' + \
+                        request.vars.rest['name'].encode('utf-8')
             _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type],
-                                         f_comment=comment)
+                                         f_comment=comment, f_tags=tags)
             db.t_rest_menu.insert(t_menu=_new_menu, t_rest=rest_id)
             db.commit()
         return ajax_success()

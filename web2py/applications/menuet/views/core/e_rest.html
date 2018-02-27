@@ -134,7 +134,7 @@
                         <input class="form-control" name="menu_name" placeholder="Наименование меню" id="menu_name"
                                type="text">
                     </div>
-                     <div class="form-group">
+                    <div class="form-group">
                         <label class="font-weight-bold">Тэги</label>
 
                         <input class="form-control" name="menu_tags" placeholder="Завтрак, острое..." id="menu_tags"
@@ -158,7 +158,7 @@
 
     </div>
 </div>
-
+<input type="hidden" value="" id="menu_tags_id">
 
 <link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/css/suggestions.min.css" type="text/css"
       rel="stylesheet"/>
@@ -171,6 +171,15 @@
 <script type="text/javascript" src="{{=URL('static', 'js/shadow_sugg.min.js')}}"></script>
 <script>
     $(document).ready(function () {
+
+        function split(val) {
+            return val.split(/,\s*/);
+        }
+
+        function extractLast(term) {
+            return split(term).pop();
+        }
+
     {{if rest.is_network:}}
         $('#is_network_div').removeAttr('hidden');
     {{pass}}
@@ -276,6 +285,19 @@
             fill_network(suggestion)
         }
     });
+    $("#menu_tags").suggestions({
+        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
+        type: "M_TAGS",
+        count: 5,
+        onSelect: function (suggestion) {
+
+            $('#menu_tags_id').val(function () {
+                return this.value + ',' + suggestion.id;
+            });
+
+        }
+    });
+
 
     function add_menu() {
         var menu = {};
@@ -284,14 +306,7 @@
         rest.id = document.getElementById('rest_id').value;
         menu.type = $("#menu_type").find("option:selected").val();
         menu.name = document.getElementById('menu_name').value;
-
-        if (menu.name !== '') {
-            $(document.getElementById('menu_name').parentElement).removeClass('has-danger')
-        }
-        else {
-            $(document.getElementById('menu_name').parentElement).addClass('has-danger')
-            return;
-        }
+        menu.tags = document.getElementById('menu_tags_id').value;
 
         menu.comment = document.getElementById('comment').value;
         rest.is_network = document.getElementById('is_network').checked;

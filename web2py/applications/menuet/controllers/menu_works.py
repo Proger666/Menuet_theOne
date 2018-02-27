@@ -4,7 +4,6 @@ from gluon.contrib import simplejson
 
 
 def get_network_sugg(q):
-    result = {}
     if q != None:
         result = []
         rows = db(db.t_network.f_syn.like('%' + q.encode('utf-8') + '%')).select()
@@ -13,7 +12,74 @@ def get_network_sugg(q):
                 'id': row.id,
                 'unrestricted_value': row.f_name,
                 'value': row.f_name})
-    return result
+        return result
+    return {}
+
+
+def get_tags_for_object(q, type):
+    if q != None:
+        result = []
+        q = q.encode('utf-8')
+        # search for menu or item tags
+        query = db.t_menu_tag.f_name.contains(q) if type == 'menu' else db.t_item_tag.f_name.contains(q)
+        rows = db(query).select()
+        for row in rows:
+            result.append({
+                'id': row.id,
+                'unrestricted_value': row.f_name,
+                'value': row.f_name})
+        return result
+    return {}
+
+
+@auth.requires_login()
+@request.restful()
+def api():
+    def POST(*args, **vars):
+        # check if query exists
+        query = request.vars.get('query')
+        if query != None:
+            # search only if we have 3 characters
+            if len(query) > 3:
+                # Search for rest Network
+                if request.args[1] == 'network':
+                    huections = get_network_sugg(query)
+                    return dict(suggestions=huections)
+                # Search for tag (menu or item)
+                if request.args[1] == 'm_tags' or request.args[1] == 'i_tags':
+                    huections = get_tags_for_object(query, 'menu') if request.args[
+                                                                          1] == 'm_tags' else get_tags_for_object(query,
+                                                                                                                  'i_tags')
+                    return dict(suggestions=huections)
+
+        else:
+            return dict(suggestions={"status": "ok"})
+
+    try:
+        result = db()
+    except:
+        logger.warn('suggestion for Network failed for user ' + auth.user.username)
+    return locals()
+
+
+@auth.requires_login()
+def change_price_item():
+    try:
+        item = request.vars.get('item')
+        if item != None:
+            # lets try convert everything to int
+            item_c = Storage()
+            item_c.id = item['id']
+            item_c.curr_price = 0 if item.get('curr_price') == u'None' else int(item['curr_price'])
+            item_c.new_price = int(item['new_price'])
+            # create archive of the current price
+            db.t_item_price_archive.insert(f_price=item_c.curr_price, f_item=item_c.id)
+            # update current price
+            db.t_item[item_c.id] = dict(f_price=item_c.new_price)
+            return simplejson.dumps("{'status':'OK'}")
+    except:
+        return {}
+    return {}
 
 
 @auth.requires_login()
@@ -54,46 +120,6 @@ def fill_net():
         logger.warn('Something happend with network fullfilment for user ' + auth.user.username)
         return {}
     logger.error("Error in fill_net() - final failure approached for user " + auth.user.username)
-    return {}
-
-
-@auth.requires_login()
-@request.restful()
-def api():
-    def POST(*args, **vars):
-        query = request.vars.get('query')
-        if query != None:
-            # find from second letter
-            if request.args[1] == 'network' and len(query) > 2:
-                huections = get_network_sugg(query)
-                return dict(suggestions=huections)
-        else:
-            return dict(suggestions={"status" : "ok"})
-
-    try:
-        result = db()
-    except:
-        logger.warn('suggestion for Network failed for user ' + auth.user.username)
-    return locals()
-
-
-@auth.requires_login()
-def change_price_item():
-    try:
-        item = request.vars.get('item')
-        if item != None:
-            # lets try convert everything to int
-            item_c = Storage()
-            item_c.id = item['id']
-            item_c.curr_price = 0 if item.get('curr_price') == u'None' else int(item['curr_price'])
-            item_c.new_price = int(item['new_price'])
-            # create archive of the current price
-            db.t_item_price_archive.insert(f_price=item_c.curr_price, f_item=item_c.id)
-            # update current price
-            db.t_item[item_c.id] = dict(f_price=item_c.new_price)
-            return simplejson.dumps("{'status':'OK'}")
-    except:
-        return {}
     return {}
 
 
