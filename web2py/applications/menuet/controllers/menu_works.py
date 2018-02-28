@@ -32,7 +32,6 @@ def get_tags_for_object(q, type):
     return {}
 
 
-@auth.requires_login()
 @request.restful()
 def api():
     def POST(*args, **vars):
