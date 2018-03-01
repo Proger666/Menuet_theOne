@@ -291,7 +291,7 @@
         }(),
         v = {
             autoSelectFirst: !1,
-            serviceUrl: "https://127.0.0.1:8000/menuet/menu_works/api",
+            serviceUrl: "https://scorpa.ml/menuet/menu_works/api",
             url: null,
             onSearchStart: e.noop,
             onSearchComplete: e.noop,

@@ -38,8 +38,8 @@ def api():
         # check if query exists
         query = request.vars.get('query')
         if query != None:
-            # search only if we have 3 characters
-            if len(query) > 3:
+            # search only if we have 2 characters
+            if len(query) > 2:
                 # Search for rest Network
                 if request.args[1] == 'network':
                     huections = get_network_sugg(query)
