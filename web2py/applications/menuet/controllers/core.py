@@ -145,6 +145,7 @@ def e_menu():
                     logger.warn('No portions in request ' + logUser_and_request())
                     return {}
                 menu_items.append(item)
+            tags = db.t_menu[menu_id].f_tags
             return locals()
         else:
             logger.error("in e_menu, exception happened! " + logUser_and_request())

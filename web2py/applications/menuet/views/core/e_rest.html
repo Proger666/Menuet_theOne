@@ -137,8 +137,8 @@
                     <div class="form-group">
                         <label class="font-weight-bold">Тэги</label>
 
-                        <input class="form-control" name="menu_tags" placeholder="Завтрак, острое..." id="menu_tags"
-                               type="text">
+                        <textarea class="form-control" name="menu_tags" placeholder="Завтрак, острое..." id="menu_tags"
+                                  type="text"></textarea>
                     </div>
 
 
@@ -306,7 +306,8 @@
         rest.id = document.getElementById('rest_id').value;
         menu.type = $("#menu_type").find("option:selected").val();
         menu.name = document.getElementById('menu_name').value;
-        menu.tags = document.getElementById('menu_tags_id').value;
+        menu.tags_id = document.getElementById('menu_tags_id').value;
+        menu.tags_name = document.getElementById('menu_tags').value;
 
         menu.comment = document.getElementById('comment').value;
         rest.is_network = document.getElementById('is_network').checked;

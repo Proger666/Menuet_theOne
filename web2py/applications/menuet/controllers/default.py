@@ -381,6 +381,8 @@ def save_menu():
 
         menu_type = int(request.vars.menu['type'])
         menu_name = request.vars.menu.get('name')
+        menu_tags_id = request.vars.menu.get('tags_id')
+        menu_tags = request.vars.menu.get('tags_name')
         # if menu_name is None and menu_type != 3:
         #     logger.error(
         #         'Exception happened in save_menu for user ' + auth.user.username + " request was " + str(request))
@@ -388,12 +390,23 @@ def save_menu():
         #     return ajax_error()
         # else:
         menu_name = menu_name.encode('utf-8') if menu_name is not None else None
-        m_tags = request.vars.menu.get('tags')
-        # parse tags ids
-        tags = m_tags.split(",") if m_tags != None else ""
 
         rest_id = request.vars.rest['id']
         comment = '' if request.vars.menu.get('comment') == u'None' else request.vars.menu['comment']
+        # Create tags
+        if menu_tags == None or menu_tags_id == None:
+            logger.warn("User failed to fill tags " + logUser_and_request())
+            session.flash = T("ТЭГИ НЕ УКАЗАНЫ!")
+            return {}
+        else:
+            menu_tags = menu_tags.split(",")
+            _new_tags = []
+        for tag in menu_tags:
+            _r_t = db(db.t_menu_tag.f_name == tag).select().first()
+            if _r_t == None and tag != "":
+                _new_tags.append(db.t_menu_tag.insert(f_name=tag))
+            elif _r_t != None:
+                _new_tags.append(_r_t.id)
         # just create menu TODO: redesign
         # Check if Menu already exists for this rest by name and type
 
@@ -422,7 +435,7 @@ def save_menu():
             _tmp = db.t_restaraunt[request.vars.rest['id']]
             _tmp.update_record(f_network_name=network.id)
             _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type],
-                                         f_comment=comment, f_network=network.id, f_tags=tags)
+                                         f_comment=comment, f_network=network.id, f_tags=_new_tags)
             db.commit()
             del _tmp
         ### Fill some variables
@@ -442,7 +455,7 @@ def save_menu():
                 menu_type].f_name) + ' для  ' + \
                         request.vars.rest['name'].encode('utf-8')
             _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type],
-                                         f_comment=comment, f_tags=tags)
+                                         f_comment=comment, f_tags=_new_tags)
             db.t_rest_menu.insert(t_menu=_new_menu, t_rest=rest_id)
             db.commit()
         return ajax_success()

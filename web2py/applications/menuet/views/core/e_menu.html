@@ -9,7 +9,14 @@
                     <div class="col-sm-12 text-center">
                         <p class="font-weight-bold">
                         <h1>{{=menu.f_name}}</h1>
-                        <br></div>
+                        <br>
+                        <p>
+                            <em class="text-muted">
+                                {{for tag in tags:}}
+                                {{=tag.f_name}};
+                                {{pass}}
+                            </em>
+                        </p></div>
                 </div>
             </div>
         {{if len(menu_items) > 0 :}}
