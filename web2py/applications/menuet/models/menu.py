@@ -9,3 +9,5 @@ response.meta.description = settings.description
 response.menu = [
 (T(u'Начало'),URL('core','rest')==URL(),URL('core','rest'),[]),
 ]
+
+response.menu.append((T('Admin'), URL('default','admin_area')==URL(),URL('default','admin_area'),[]))

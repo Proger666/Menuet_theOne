@@ -235,8 +235,9 @@ def save_item():
             else:
                 ingrs_to_commit.f_curate = True
                 # commit new ingr
-                ingrs_to_commit.ingr = db.t_ingredient.insert(f_name=ingr, f_curate=True)
-                ingrs_to_commit_list.append(ingrs_to_commit)
+                if len(ingr) > 0:
+                    ingrs_to_commit.ingr = db.t_ingredient.insert(f_name=ingr, f_curate=True)
+                    ingrs_to_commit_list.append(ingrs_to_commit)
 
         if item_source.change_factor == 'add':
 
@@ -255,13 +256,14 @@ def save_item():
                     f_portion=int(step['portion_size'].encode('utf-8')),
                     f_item=_tmp_obj.item_id)
 
-            _tmp_obj.item_unit_id = item_source.unit
             _tmp_obj._new_menu_item_id = db.t_menu_item.insert(t_menu=item_source.m_id,
                                                                t_item=_tmp_obj.item_id)
 
+            # lets commit !!!!!STEPS!!!! to DB
+            # ATTACH ALL INGRS TO ITEM
             for step in ingrs_to_commit_list:
                 # create new step
-                _tmp_obj._new_step_id = db.t_step.insert(f_ingr=step.ingr)
+                _tmp_obj._new_step_id = db.t_step.insert(f_ingr=step.ingr,f_unit=item_source.unit)
                 # create new M-t-M
                 _tmp_obj._t_step_ing_new_id = \
                     db.t_step_ing.update_or_insert(t_step=_tmp_obj._new_step_id, t_recipe=_tmp_obj.recipe_id)
@@ -274,12 +276,12 @@ def save_item():
         # Get m-t-m relation - get all steps for given recipe id
         steps_ing = db((db.t_recipe.id == _tmp_obj.recipe_id) & (db.t_step.id == db.t_step_ing.t_step) & (
                 db.t_recipe.id == db.t_step_ing.t_recipe))
-
-        # lets commit steps to DB
-        _tmp_obj._new_step_id = db.t_step.update_or_insert(f_unit=_tmp_obj.unit_id,
-                                                           f_ingr=_tmp_obj.ingr_id)
-        _tmp_obj._t_step_ing_new_id = \
-            db.t_step_ing.update_or_insert(t_step=_tmp_obj._new_step_id, t_recipe=_tmp_obj.recipe_id)
+        # for ingr in ingrs_list:
+        #     # Create new step
+        #     _tmp_obj._new_step_id = db.t_step.update_or_insert(f_unit=_tmp_obj.unit_id,
+        #                                                    f_ingr=_tmp_obj.ingr_id)
+        # _tmp_obj._t_step_ing_new_id = \
+        #     db.t_step_ing.update_or_insert(t_step=_tmp_obj._new_step_id, t_recipe=_tmp_obj.recipe_id)
         db.commit()
 
         return ajax_success()

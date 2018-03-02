@@ -1650,7 +1650,7 @@
                 i = !1;
             e.each(F, function (e, t) {
                 if (i = t == n) return !1
-            }), i || (n = t.owner.isMobile ? F.CLEAR : F.SPINNER), n != t.type && (t.type = n, t.$el.attr("data-addon-type", n), t.toggle(!0))
+            }), i || (n = t.owner.isMobile ? F.CLEAR : F.NONE), n != t.type && (t.type = n, t.$el.attr("data-addon-type", n), t.toggle(!0))
         },
         toggle: function (e) {
             var t, n = this;

@@ -60,7 +60,12 @@
                     {{=item.name}}
                     </td>
                     <td>
-                    {{=item.desc}}
+                    {{=item.desc}}<br>
+                        <p><em class="text-muted">
+                            {{for ingr in item.ingrs:}}
+                            {{=ingr.name}};
+                            {{pass}}
+                        </em></p>
                     </td>
                     <td style="white-space: nowrap">
                     {{for item_p in item.portions:}}

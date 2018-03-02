@@ -191,9 +191,8 @@ def reset_lock():
         return ajax_error()
     return ajax_error()
 
-
 @auth.requires_membership('Admin')
-def index():
+def admin_area():
     if "rst_all" in request.vars:
         rows = db(db.t_restaraunt).select()
         for r in rows:
@@ -208,6 +207,10 @@ def index():
         username = None
         found_users = None
     username = None
+    return locals()
+
+@auth.requires_login()
+def index():
     return locals()
 
 

@@ -91,7 +91,7 @@ db.define_table('t_ingredient',
 ########################################
 
 db.define_table('t_step',
-                Field('f_ingr', 'reference:t_ingredient',
+                Field('f_ingr', 'reference:t_ingredient',required=True,
                       label=T('ingr link')),
                 Field('f_qty', type='integer', default=0,
                       label=T('Quantity')),
@@ -111,9 +111,9 @@ db.define_table('t_recipe',
 ########################################
 
 db.define_table('t_step_ing',
-                Field('t_step', 'reference:t_step',
+                Field('t_step', 'reference:t_step',required=True,
                       label=T('step link')),
-                Field('t_recipe', 'reference:t_recipe',
+                Field('t_recipe', 'reference:t_recipe',required=True,
                       label=T('recipe link')),
                 auth.signature,
                 migrate=settings.migrate)
