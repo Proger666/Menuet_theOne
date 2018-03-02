@@ -91,7 +91,9 @@
     </div>
 </div>
 
-<input type="hidden" value="" id="item_tag_id">
+<input type="hidden" value="0" id="item_tag_id">
+<input type="hidden" value="0" id="item_ingrs_id">
+
 <script type="text/javascript" src="{{=URL('static', 'js/shadow_sugg.js')}}"></script>
 
 <script>
@@ -128,104 +130,24 @@
 
     });
 
-
-    $(function () {
-        function split(val) {
-            return val.split(/,\s*/);
-        }
-
-        function extractLast(term) {
-            return split(term).pop();
-        }
-
-        $.widget("ui.autocomplete", $.ui.autocomplete, {
-
-            _renderMenu: function (ul, items) {
-                var that = this;
-                ul.attr("class", "nav nav-pills nav-stacked  bs-autocomplete-menu");
-                $.each(items, function (index, item) {
-                    that._renderItemData(ul, item);
-                });
-            },
-
-            _resizeMenu: function () {
-                var ul = this.menu.element;
-                ul.outerWidth(Math.min(
-                        // Firefox wraps long text (possibly a rounding bug)
-                        // so we add 1px to avoid the wrapping (#7513)
-                        ul.width("").outerWidth() + 1,
-                        this.element.outerWidth()
-                ));
-            }
-
-        });
-
-
-        $('.bs-autocomplete').each(function () {
-            var _this = $(this),
-                    _data = _this.data(),
-                    _hidden_field = $('#' + _data.hidden_field_id);
-
-            _this.after('<div class="bs-autocomplete-feedback form-control-feedback"><div class="loader">Loading...</div></div>')
-                    .parent('.form-group').addClass('has-feedback');
-
-            var feedback_icon = _this.next('.bs-autocomplete-feedback');
-            feedback_icon.hide();
-
-            _this.autocomplete({
-                minLength: 2,
-                autoFocus: true,
-
-                source: function (request, response) {
-                    var BC_URI = "{{=URL('core', 'get_ingrs')}} + ?";
-                    $.getJSON(BC_URI, {
-                        q: extractLast(request.term),
-                        format: "json"
-                    }, response)
-                },
-
-                search: function () {
-                    feedback_icon.show();
-                },
-
-                response: function () {
-                    feedback_icon.hide();
-                },
-
-                focus: function () {
-                    // prevent value inserted on focus
-                    return false;
-                },
-
-                select: function (event, ui) {
-                    var terms = split(this.value);
-                    // remove the current input
-                    terms.pop();
-                    // add the selected item
-                    terms.push(ui.item.value);
-                    // add placeholder to get the comma-and-space at the end
-                    terms.push("");
-                    this.value = terms.join(", ");
-                    return false;
-                }
-            })
-                    .data('ui-autocomplete')._renderItem = function (ul, item) {
-                return $('<li></li>')
-                        .data("item.autocomplete", item)
-                        .append('<li>' + item.label + '</li>')
-                        .appendTo(ul);
-            };
-            // end autocomplete
-        });
-    });
-
-
     $("#item_tags").suggestions({
         token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
         type: "I_TAGS",
         count: 5,
         onSelect: function (suggestion) {
             $('#item_tags_id').val(function () {
+                return this.value + ',' + suggestion.id;
+            });
+
+        }
+    });
+
+    $("#item_ingrs").suggestions({
+        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
+        type: "INGREDIENTS",
+        count: 5,
+        onSelect: function (suggestion) {
+            $('#item_ingrs_id').val(function () {
                 return this.value + ',' + suggestion.id;
             });
 
@@ -244,6 +166,8 @@
         item.ingrs = document.getElementById('item_ingrs').value;
         item.portions_size = document.getElementsByName('portion_size');
         item.portions_price = document.getElementsByName('portion_price');
+        item.tags_id = document.getElementById('item_tag_id').value;
+        item.tags_name = document.getElementById('item_tags').value;
 
         if (item.name !== '') {
             $(document.getElementById('item_name').parentElement).removeClass('has-danger')

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ### required - do no delete
 from gluon.contrib import simplejson
-
+import pymorphy2
 
 def get_network_sugg(q):
     if q != None:
@@ -32,6 +32,21 @@ def get_tags_for_object(q, type):
     return {}
 
 
+def get_sugg_for_ingrs(q):
+    if q != None:
+        result = []
+        q = q.encode('utf-8')
+        #lets find ingredients
+        rows = db(db.t_ingredient.f_name.contains(q)).select()
+        for row in rows:
+            result.append({
+                'id': row.id,
+                'unrestricted_value': row.f_name,
+                'value': row.f_name})
+        return result
+    return {}
+
+
 @request.restful()
 def api():
     def POST(*args, **vars):
@@ -45,10 +60,13 @@ def api():
                     huections = get_network_sugg(query)
                     return dict(suggestions=huections)
                 # Search for tag (menu or item)
-                if request.args[1] == 'm_tags' or request.args[1] == 'i_tags':
+                elif request.args[1] == 'm_tags' or request.args[1] == 'i_tags':
                     huections = get_tags_for_object(query, 'menu') if request.args[
                                                                           1] == 'm_tags' else get_tags_for_object(query,
                                                                                                                   'i_tags')
+                    return dict(suggestions=huections)
+                elif request.args[1] == 'ingredients':
+                    huections = get_sugg_for_ingrs(query)
                     return dict(suggestions=huections)
 
         else:
@@ -149,19 +167,64 @@ def delete_menu_item():
     return {}
 
 
+def normalize_words(ingrs_list):
+    # Do we have ingrs list ?
+    if ingrs_list == None:
+        # TODO: redesign, add more checks
+        logger.warn("Ingredient list has been pushed for normalize_words function " + logUser_and_request())
+        return ajax_error()
+    morph = pymorphy2.MorphAnalyzer()
+    result = []
+    for ingr in ingrs_list:
+        # lets get normal form of the word
+        try:
+            # bad design of library it will set exception if it doesnt know word
+            result.append(morph.parse(ingr)[0].inflect({'plur'}).word)
+        except AttributeError:
+            logger.error("Could not find plural form for ingredient! " + logUser_and_request())
+            result.append(ingr)
+    if len(ingrs_list) > 0:
+        return result
+    return ajax_error()
+
+
 @auth.requires_login()
 def save_item():
     # Create storage class for item
     item = Storage()
     # lets get our item from request
     item_source = request.vars.get('item')
+
     if item_source != None:
         item_source = Storage(item_source)
         _tmp_obj = Storage()
         # Lets gather stones
 
+        # Lets play with tags
+        # Create tags
+        item_tags = item_source['tags_name']
+        item_tags_id = item_source['tags_id']
+
+        if item_tags == None:
+            logger.warn("User failed to fill tags for item " + logUser_and_request())
+            session.flash = T("ТЭГИ НЕ УКАЗАНЫ!")
+            return {}
+        else:
+            item_tags = item_tags.split(",")
+            _new_tags = []
+        for tag in item_tags:
+            _r_t = db(db.t_item_tag.f_name == tag).select().first()
+            if _r_t == None and tag != "":
+                _new_tags.append(db.t_item_tag.insert(f_name=tag))
+            elif _r_t != None:
+                _new_tags.append(_r_t.id)
+
+        # Lets play with ingrs
+        ####################### ADD INGREDIENTS #####################################
+
         ingrs_list = [x.strip() for x in item_source.ingrs.split(',')]
         ingrs_to_commit_list = []
+        ingrs_list = normalize_words(ingrs_list)
         # Lets find ingrs one by one
         for ingr in ingrs_list:
             found = db(db.t_ingredient.f_name.like(ingr)).select().first()
@@ -185,7 +248,7 @@ def save_item():
             _tmp_obj.item_id = db.t_item.insert(f_name=item_source.name,
                                                 f_weight=item_source.weight,
                                                 f_unit=item_source.unit, f_recipe=_tmp_obj.recipe_id,
-                                                f_desc=item_source.desc)
+                                                f_desc=item_source.desc, f_tags=_new_tags)
 
             for step in item_source.portions:
                 _tmp_obj.t_item_prices_id = db.t_item_prices.insert(
@@ -207,13 +270,13 @@ def save_item():
 
         else:
             _tmp_obj.recipe_id = item_source.recipe_id
-        ####################### ADD INGREDIENTS #####################################
+        ####################### ADD M-M relations for item #####################################
         step = db(db.t_step.id == db.t_ingredient.id).select()
         # Get m-t-m relation - get all steps for given recipe id
         steps_ing = db((db.t_recipe.id == _tmp_obj.recipe_id) & (db.t_step.id == db.t_step_ing.t_step) & (
                 db.t_recipe.id == db.t_step_ing.t_recipe))
 
-        # lets commit ingrs to db
+        # lets commit steps to DB
         _tmp_obj._new_step_id = db.t_step.update_or_insert(f_unit=_tmp_obj.unit_id,
                                                            f_ingr=_tmp_obj.ingr_id)
         _tmp_obj._t_step_ing_new_id = \

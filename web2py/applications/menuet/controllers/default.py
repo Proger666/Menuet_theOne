@@ -394,8 +394,8 @@ def save_menu():
         rest_id = request.vars.rest['id']
         comment = '' if request.vars.menu.get('comment') == u'None' else request.vars.menu['comment']
         # Create tags
-        if menu_tags == None or menu_tags_id == None:
-            logger.warn("User failed to fill tags " + logUser_and_request())
+        if menu_tags == None:
+            logger.warn("User failed to fill tags for menu " + logUser_and_request())
             session.flash = T("ТЭГИ НЕ УКАЗАНЫ!")
             return {}
         else:
