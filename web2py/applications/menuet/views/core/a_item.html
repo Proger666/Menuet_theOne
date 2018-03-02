@@ -92,6 +92,7 @@
 </div>
 
 <input type="hidden" value="" id="item_tag_id">
+<script type="text/javascript" src="{{=URL('static', 'js/shadow_sugg.js')}}"></script>
 
 <script>
     var counter = 1;
@@ -219,13 +220,12 @@
     });
 
 
-    $("#menu_tags").suggestions({
+    $("#item_tags").suggestions({
         token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
-        type: "M_TAGS",
+        type: "I_TAGS",
         count: 5,
         onSelect: function (suggestion) {
-
-            $('#menu_tags_id').val(function () {
+            $('#item_tags_id').val(function () {
                 return this.value + ',' + suggestion.id;
             });
 
