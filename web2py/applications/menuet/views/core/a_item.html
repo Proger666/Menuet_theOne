@@ -83,7 +83,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <input class="btn btn-primary" type="button" value="Добавить!" onclick="save_item()">
+                    <input class="btn btn-primary" type="button" value="Добавить!" id="add_butt" onclick="save_item()">
                 </div>
             </div>
         </div>
@@ -173,6 +173,10 @@
 
 
     function save_item() {
+        $("#add_butt")
+                .attr("disabled", true)
+                .val("Работаем...");
+
         var item = {};
         item.name = document.getElementById('item_name').value;
         item.weight = document.getElementById('item_weight').value;

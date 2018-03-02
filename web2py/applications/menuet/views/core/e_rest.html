@@ -64,7 +64,8 @@
                     </div>
 
 
-                    <input type="button" class="btn btn-primary" onclick="submitForm()" value="Сохранить!">
+                    <input type="button" class="btn btn-primary" id="save_rest" onclick="submitForm()"
+                           value="Сохранить!">
                     </form>
                 </div>
             </div>
@@ -193,27 +194,21 @@
 
             var elem = $("#menu_type").find("option:selected").val();
             if (elem === '3') {
-                $('#menu_name').attr('disabled', true);
-                $('#menu_name').val('');
+                $('#menu_name').attr('disabled', true)
+                        .val('');
             }
             else
                 $('#menu_name').prop('disabled', false);
         });
 
-        $("#menu_type").change(function () {
 
-            var elem = $("#menu_type").find("option:selected").val();
-            if (elem === '2') {
-                $('#menu_name').attr('disabled', true);
-                $('#menu_name').val('');
-            }
-            else
-                $('#menu_name').prop('disabled', false);
-        });
     });
 
 
     function submitForm() {
+        $("#save_rest")
+                .attr("disabled", true)
+                .val("Работаем...");
         var rest = {};
         rest.name = document.getElementById('rest_name').value;
         rest.addr = document.getElementById('rest_addr').value;
@@ -292,6 +287,9 @@
 
 
     function add_menu() {
+        $("#add_menu")
+                .attr("disabled", true)
+                .val("Работаем...");
         var menu = {};
         var rest = {};
         rest.name = document.getElementById('rest_name').value;

@@ -31,7 +31,9 @@
                 <div class="card-footer">
                     <input type="submit" value="Править"
                            onclick="window.location='{{=URL('core', 'e_menu', vars=dict(m_id=menu.id,r_id=menu.r_id))}}'"
-                           class="btn btn-primary">
+                     {{if not menu.active:}}class="btn btn-secondary" disabled
+                            {{else:}}
+                           class="btn btn-primary"{{pass}} >
                 </div>
             </div>
 
