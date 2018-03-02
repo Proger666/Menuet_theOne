@@ -77,8 +77,9 @@
                     <div class="form-group">
                         <label class="font-weight-bold">Тэги</label>
 
-                        <input class="form-control" name="item_tags" placeholder="Завтрак, острое..." id="item_tags"
-                               type="text">
+                        <textarea class="form-control" name="item_tags" placeholder="острое, от шеф-повара..."
+                                  id="item_tags"
+                                  type="text"></textarea>
                     </div>
                 </div>
                 <div class="card-footer">
@@ -90,7 +91,7 @@
     </div>
 </div>
 
-        <input type="hidden" value="" id="item_tag_id">
+<input type="hidden" value="" id="item_tag_id">
 
 <script>
     var counter = 1;
@@ -121,19 +122,11 @@
     $(document).ready(function () {
         $(function () {
             $('[data-toggle="tooltip"]').tooltip()
-        })
+        });
+
+
     });
 
-     $("#item_tags").suggestions({
-        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
-        type: "I_TAGS",
-        count: 5,
-        onSelect: function (suggestion) {
-            $('#item_tags_id').val(function () {
-                return this.value + suggestion.id;
-            });
-        }
-    });
 
     $(function () {
         function split(val) {
@@ -225,6 +218,21 @@
         });
     });
 
+
+    $("#menu_tags").suggestions({
+        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
+        type: "M_TAGS",
+        count: 5,
+        onSelect: function (suggestion) {
+
+            $('#menu_tags_id').val(function () {
+                return this.value + ',' + suggestion.id;
+            });
+
+        }
+    });
+
+
     function save_item() {
         var item = {};
         item.name = document.getElementById('item_name').value;
@@ -241,7 +249,7 @@
             $(document.getElementById('item_name').parentElement).removeClass('has-danger')
         }
         else {
-             $(document.getElementById('item_name').parentElement).addClass('has-danger')
+            $(document.getElementById('item_name').parentElement).addClass('has-danger')
             return;
         }
 
@@ -300,6 +308,8 @@
         });
 
     }
+
+
 </script>
 
 

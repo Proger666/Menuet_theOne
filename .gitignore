@@ -112,3 +112,4 @@ venv.bak/
 /web2py/applications/menuet/sessions/
 /web2py/applications/menuet/models/0.py
 /web2py/examples/
+/web2py/applications/menuet/views/core/e_rest_.html
