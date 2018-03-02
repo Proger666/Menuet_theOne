@@ -224,7 +224,6 @@ def save_item():
 
         ingrs_list = [x.strip() for x in item_source.ingrs.split(',')]
         ingrs_to_commit_list = []
-        ingrs_list = normalize_words(ingrs_list)
         # Lets find ingrs one by one
         for ingr in ingrs_list:
             found = db(db.t_ingredient.f_name.like(ingr)).select().first()
