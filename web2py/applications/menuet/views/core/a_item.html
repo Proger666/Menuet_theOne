@@ -194,7 +194,10 @@
             $(document.getElementById('item_name').parentElement).removeClass('has-danger')
         }
         else {
-            $(document.getElementById('item_name').parentElement).addClass('has-danger')
+            $(document.getElementById('item_name').parentElement).addClass('has-danger');
+            $("#add_butt")
+                .prop("disabled", false)
+                .val("Добавить!");
             return;
         }
 
@@ -202,6 +205,9 @@
             var arrayOfStrings = item.ingrs.split(',');
             if (arrayOfStrings.length === 0) {
                 $(document.getElementById('item_ingrs').parentElement).addClass('has-danger');
+                $("#add_butt")
+                .prop("disabled", false)
+                .val("Добавить!");
                 return;
             }
             else {
@@ -210,6 +216,9 @@
         }
         else {
             $(document.getElementById('item_ingrs').parentElement).addClass('has-danger');
+            $("#add_butt")
+                .prop("disabled", false)
+                .val("Добавить!");
             return;
         }
 
@@ -227,6 +236,9 @@
             }
             else {
                 $(element.parentElement).addClass('has-danger');
+                $("#add_butt")
+                .prop("disabled", false)
+                .val("Добавить!");
                 throw new Error('Something happened');
             }
         });
