@@ -1,5 +1,7 @@
 ### we prepend t_ to tablenames and f_ to fieldnames for disambiguity
-########################################
+
+
+
 
 
 ########################################
@@ -45,6 +47,8 @@ db.define_table('t_restaraunt',
                       label=T('Longitude')),
                 Field('f_type', type='string',
                       label=T('Type')),
+                Field('f_locked_by', 'reference:auth_user',
+                      label=T('Locked by')),
                 Field('f_coordinateX', type='string',
                       label=T('Coord X')),
                 Field('f_coordinateY', type='string',

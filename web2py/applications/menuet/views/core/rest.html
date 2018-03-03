@@ -128,8 +128,8 @@
                 asd.forEach(function (element) {
                     var user = parseInt("{{=auth.user.id}}");
                     var lock = "<i class=\"fas fa-lock\"></i>";
-                    var is_mine = ((element.modified_by !== user) ? lock : "");
-                    is_mine = ((element.modified_by === null) ? "" : is_mine);
+                    var is_mine = ((element.f_locked_by !== user) ? lock : "");
+                    is_mine = ((element.f_locked_by === null) ? "" : is_mine);
                     is_disabled = ((is_mine === "") ? "" : element.id = "#");
                     $("#add_result").append('<tr ' + is_disabled + ' onclick="e_menu(' + element.id + ')"><td>' + element.f_name + is_mine + ' <p><em class="text-muted">' + element.f_address + '</em></p></td></tr>');
                 });

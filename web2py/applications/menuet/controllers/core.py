@@ -24,11 +24,11 @@ def check_rest():
         for word in _rest_name:
             if len(word) > 2:
                 result_list.append(db(db.t_restaraunt.f_name.contains(word.encode('utf-8')) & (
-                        (db.t_restaraunt.modified_by != auth.user.id) | (
-                        db.t_restaraunt.modified_by == None))).select(db.t_restaraunt.f_name,
+                        (db.t_restaraunt.f_locked_by != auth.user.id) | (
+                        db.t_restaraunt.f_locked_by == None))).select(db.t_restaraunt.f_name,
                                                                       db.t_restaraunt.f_address,
                                                                       db.t_restaraunt.id,
-                                                                      db.t_restaraunt.modified_by).as_json())
+                                                                      db.t_restaraunt.f_locked_by).as_json())
                 # result_list.append(db(db.t_restaraunt.f_name.contains(word.encode('utf-8')), db.t_restaraunt.f_name).select())
     if len(result_list) > 0:
         return result_list
@@ -40,7 +40,7 @@ def check_rest():
 def rest():
     rests = {"rests": []}
     rests = Storage(rests)
-    _tmp = db(db.t_restaraunt.modified_by == auth.user.id).select(orderby=~db.t_restaraunt.created_on, limitby=(0, 4))
+    _tmp = db(db.t_restaraunt.f_locked_by == auth.user.id).select(orderby=~db.t_restaraunt.created_on, limitby=(0, 4))
     for row in _tmp:
         rests.rests.append({"id": row.id, "name": row.f_name, "created_on": row.created_on, "addr": row.f_address})
 
@@ -102,7 +102,7 @@ def get_ingrs_for_item(item_id):
         ingrs.append(ingr)
     return ingrs
 
-
+@auth.requires_login()
 def add_rest():
     # reuse existing
     return locals()
@@ -169,7 +169,7 @@ def e_item():
 def rests():
     rests = {"rests": []}
     rests = Storage(rests)
-    _tmp = db(db.t_restaraunt.modified_by == auth.user.id).select()
+    _tmp = db(db.t_restaraunt.f_locked_by == auth.user.id).select()
     for row in _tmp:
         rests.rests.append({"id": row.id, "name": row.f_name, "created_on": row.created_on, "addr": row.f_address})
     rest_disp = [x for x in rests.rests]
@@ -204,7 +204,7 @@ def menus():
 @auth.requires_login()
 def lock_rest():
     row = db(db.t_restaraunt.id == request.vars.rest['r_id']).select().first()
-    row.update_record(modified_by=auth.user.id)
+    row.update_record(f_locked_by=auth.user.id)
     result = {'status': 'OK'}
     return simplejson.dumps(result)
 
@@ -213,20 +213,55 @@ def test():
     return locals()
 
 
+def get_tags_for_item(id):
+    result = []
+    if id == None:
+        logger.warn('Could not fetch tags for item, id is NULL!!! ' + logUser_and_request())
+        return {}
+    # select tags via lazy fetch
+    return [x.f_name for x in db.t_item[id].f_tags]
+
+
 @auth.requires_login()
 def a_item():
     item = Storage()
     itm_id = request.vars.get('itm_id')
+    units = db().select(db.t_unit.ALL)
     if itm_id != None:
+        # fetch item by ID TODO: redesign to single SELECT
         _tmp = db.t_item[request.vars.itm_id]
-        item.desc = _tmp.f_desc
-        item.price = _tmp.f_price
+        # create class storage for item
+        item = Storage()
         item.name = _tmp.f_name
-        item.weight = _tmp.f_unit.f_name
+        item.weight = _tmp.f_weight
+        item.id = _tmp.id
+        item.unit = None if _tmp.f_unit is None else db.t_unit[_tmp.f_unit]
+        item.desc = _tmp.f_desc
+        item.ingrs = get_ingrs_for_item(item.id)
+        item.tags = get_tags_for_item(item.id)
+        item.portions = []
+        # get portions name from DB
+        _portions = db(t_item_prices.f_item == item.id).select(t_item_prices.f_price, t_item_prices.f_portion)
+        if _portions != None:
+            # fill array with price and portion name
+            for step in _portions:
+                portion = db.t_portion[step.f_portion]
+                item.portions.append({'portion_size': portion, "portion_price": step.f_price})
+        else:
+            logger.warn('No portions in request ' + logUser_and_request())
+            return locals()
     else:
-        item.desc = item.name = item.price = ''
+        item.name = ""
+        item.weight = ""
+        item.desc = ""
+        item.unit = ""
+        item.m_id = ""
+        item.ingrs = ""
+        item.portions = ""
+        item.tags_id = ""
+        item.tags_name = ""
+        item.desc = item.name =''
         item.weight = 0
-        units = db().select(db.t_unit.ALL)
     portions = db(db.t_portion).select()
     return locals()
 

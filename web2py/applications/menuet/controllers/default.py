@@ -49,7 +49,6 @@ def jsn_menu():
         with concurrent.futures.ProcessPoolExecutor() as executor:
             for item in jsn_obj:
                 executor.map(commit_to_db(item))
-        db.commit()
     return locals()
 
 
@@ -61,9 +60,13 @@ def commit_to_db(item):
     _f_coordinateY = item['geoData'].get('coordinates')[1] if item.get('geoData') else None
     _f_address = item.get('Address')
     _f_public_phone = [x['PublicPhone'] for x in item.get('PublicPhone')]
-    _f_network_name = item.get('OperatingCompany',5)
-    _tmp = db(db.t_network.f_name == _f_network_name).select().first()
-    _f_network_name = db.t_network.insert(f_name=_f_network_name) if _tmp == None else 5
+    _f_network_name = item.get('OperatingCompany',5) #alo
+    _tmp = db(db.t_network.f_name == _f_network_name).select().first() if _f_network_name != 5 else 5
+    if _tmp != 5:
+        if _tmp != None:
+            _f_network_name = _tmp.id
+        else:
+            _f_network_name = db.t_network.insert(f_name=_f_network_name)
     _f_long = item.get('Longitude_WGS84')
     _f_lat = item.get('Latitude_WGS84')
     _f_q_id = item.get('global_id')
@@ -77,6 +80,7 @@ def commit_to_db(item):
                            f_address=_f_address, f_latitude=_f_lat,
                            f_longitude=_f_long)
 
+    db.commit()
 
 def delete_menu():
     try:
@@ -255,19 +259,8 @@ def save_course():
         # TODO: make sanity checks on save = what if ingr already exists (sum ingrs) ? What if misspeled (google search) ? What if weight greater than course weight ?
         change_factor = request.vars.course['change_factor']
 
-        # create new records
-        class commit_object(object):
-            def __init__(self, **kwargs):
-                # define default attributes
-                default_attr = dict(unit_id=0)
-                # define (additional) allowed attributes with no default value
-                more_allowed_attr = ['ingr_id']
-                allowed_attr = list(default_attr.keys()) + more_allowed_attr
-                default_attr.update(kwargs)
-                self.__dict__.update((k, v) for k, v in default_attr.iteritems() if k in allowed_attr)
-
         # Create tmp object to commit to db later on after fullfilment
-        _tmp_obj = commit_object()
+        _tmp_obj = Storage()
         # add recipe ID TODO: make multiple recipe per plate
 
         if change_factor == 'add':
@@ -343,6 +336,7 @@ def save_rest():
             session.flash = ("Сеть не указана!")
             return {}
         if rest_town == None:
+            session.flash=T('ГОРОД НЕ УКАЗАН!')
             logger.warn('save_Rest failed, town not on request. for user ' + auth.user.username + " request was " + str(
                 request))
             return ajax_error()
@@ -376,7 +370,7 @@ def save_rest():
 
     except:
         session.flash = T('FAILURE!!!! Exception')
-        logger.warn('Problem in save_rest - Exception occurred' + str(
+        logger.error('Problem in save_rest - Exception occurred' + str(
             Exception.message) + ' for user ' + auth.user.username + " request was " + str(request))
     return ajax_error()
 

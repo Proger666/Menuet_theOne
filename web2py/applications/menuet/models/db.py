@@ -54,7 +54,7 @@ else:
 # by default give a view/generic.extension to all actions from localhost
 # none otherwise. a pattern can be 'controller/function.extension'
 # -------------------------------------------------------------------------
-response.generic_patterns = [] 
+response.generic_patterns = []
 if request.is_local and not configuration.get('app.production'):
     response.generic_patterns.append('*')
 
@@ -91,16 +91,22 @@ auth = Auth(db, host_names=configuration.get('host.names'))
 # -------------------------------------------------------------------------
 # create all tables needed by auth, maybe add a list of extra fields
 # -------------------------------------------------------------------------
+
+###
 auth.settings.extra_fields['auth_user'] = []
-auth.define_tables(username=True, signature=False)
+auth.define_tables(username=True, signature=True)
 
 ### Create Logger #####
 import logging
+
 logger = logging.getLogger("web2py.app.menuet")
 logger.setLevel(logging.DEBUG)
 
+
 def logUser_and_request():
     return " for user " + auth.user.username + " and request was " + str(request)
+
+
 # -------------------------------------------------------------------------
 # configure email
 # -------------------------------------------------------------------------
@@ -140,6 +146,7 @@ response.google_analytics_id = configuration.get('google.analytics_id')
 # -------------------------------------------------------------------------
 if configuration.get('scheduler.enabled'):
     from gluon.scheduler import Scheduler
+
     scheduler = Scheduler(db, heartbeat=configure.get('heartbeat'))
 
 # -------------------------------------------------------------------------
