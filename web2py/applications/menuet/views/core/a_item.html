@@ -90,7 +90,8 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <input class="btn btn-primary" type="button" value="Добавить!" id="add_butt" onclick="save_item()">
+                    <input class="btn btn-primary" type="button" value="Добавить и закрыть" id="add_butt" onclick="save_item(1)">
+                    <input class="btn btn-primary" type="button" value="Добавить!" id="add_butt" onclick="save_item(2)">
                 </div>
             </div>
         </div>
@@ -179,7 +180,7 @@
     });
 
 
-    function save_item() {
+    function save_item(flag) {
         $("#add_butt")
                 .attr("disabled", true)
                 .val("Работаем...");
@@ -264,8 +265,10 @@
             data: data,
             success: function (data) {
                 $('#suda').removeClass('has-danger');
-                window.location = '{{=URL('core', 'e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}'
-
+                if (flag===1)
+                window.location = '{{=URL('core', 'e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}';
+                else
+                    window.location.reload();
             },
             error: function (data) {
                 $('#suda').addClass('has-danger');
