@@ -1,9 +1,6 @@
 ### we prepend t_ to tablenames and f_ to fieldnames for disambiguity
 
 
-
-
-
 ########################################
 db.define_table('t_seosanal_type',
                 Field('f_name', type='string',
@@ -139,7 +136,8 @@ db.define_table('t_item',
                       label=T('Item Name')),
                 Field('f_desc', type='string',
                       label=T('Item desc')),
-
+                Field('f_cal', type='integer',
+                      label=T('Calories')),
                 Field('f_t_start', type='time', default='00:00:00',
                       label=T('work from ....')),
                 Field('f_t_end', type='time', default='00:00:00',

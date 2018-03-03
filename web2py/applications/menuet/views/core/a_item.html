@@ -3,7 +3,7 @@
 
 <div class="container">
 {{if  not 'itm_id' in request.vars:}}
-    <h1>Новый предмет в меню</h1>
+    <h1>Новый предмет в меню:<br>{{=item.menu_name}}</h1>
 {{else:}}
     <h1>Изменить предмет</h1>
 {{pass}}
@@ -23,18 +23,24 @@
                     <div class="form-group input-group">
                         <span class="input-group-addon"><i class="fas fa-balance-scale"></i> </span>
                         <input type="number" id="item_weight" value="{{=item.weight}}" class="form-control"
-                               placeholder="Вес / Объем"><i class="fa fa-question-circle"
+                               placeholder="Вес / Объем">
+
+                            <i class="fa fa-question-circle"
                                                             data-toggle="tooltip"
                                                             data-placement="right"
                                                             title="Если вес неизвестен - оставьте 0"
                                                             style="color:red">
                     </i>
                         <span class="input-group-addon"><select id="item_unit">
-                            <option value="1">Выберите...</option>
+                            <option value="1">Выберите</option>
                         {{for opt in units:}}
                             <option value="{{=opt.id}}">{{=opt.f_name}}, {{=opt.f_description}}</option>
                         {{pass}}
                         </select></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Калории</label>
+                        <input type="number" class="form-control" id="item_cal">
                     </div>
                     <form class="price_group" id="price_group_id">
                         <div class="form-group input-group">
@@ -71,7 +77,8 @@
                                                                                title="Ингридиенты будут авто-дополняться, если ингридиента нет - добавится новый"
                                                                                style="color:red">
                     </i>
-                        <textarea type="text" id="item_ingrs" class="form-control autoExpand " rows='3' data-min-rows='3'></textarea>
+                        <textarea type="text" id="item_ingrs" class="form-control autoExpand " rows='3'
+                                  data-min-rows='3'></textarea>
                         <em class="text-muted">Спагетти, кальмары, мидии, помидоры</em>
                     </div>
                     <div class="form-group">
@@ -100,18 +107,18 @@
 
 
     $(document)
-    .one('focus.autoExpand', 'textarea.autoExpand', function(){
-        var savedValue = this.value;
-        this.value = '';
-        this.baseScrollHeight = this.scrollHeight;
-        this.value = savedValue;
-    })
-    .on('input.autoExpand', 'textarea.autoExpand', function(){
-        var minRows = this.getAttribute('data-min-rows')|0, rows;
-        this.rows = minRows;
-        rows = Math.ceil((this.scrollHeight - this.baseScrollHeight) / 16);
-        this.rows = minRows + rows;
-    });
+            .one('focus.autoExpand', 'textarea.autoExpand', function () {
+                var savedValue = this.value;
+                this.value = '';
+                this.baseScrollHeight = this.scrollHeight;
+                this.value = savedValue;
+            })
+            .on('input.autoExpand', 'textarea.autoExpand', function () {
+                var minRows = this.getAttribute('data-min-rows') | 0, rows;
+                this.rows = minRows;
+                rows = Math.ceil((this.scrollHeight - this.baseScrollHeight) / 16);
+                this.rows = minRows + rows;
+            });
 
 
     var counter = 1;
@@ -189,6 +196,7 @@
         item.portions_price = document.getElementsByName('portion_price');
         item.tags_id = document.getElementById('item_tag_id').value;
         item.tags_name = document.getElementById('item_tags').value;
+        item.cal = document.getElementById('item_cal').value;
 
         if (item.name !== '') {
             $(document.getElementById('item_name').parentElement).removeClass('has-danger')
@@ -196,8 +204,8 @@
         else {
             $(document.getElementById('item_name').parentElement).addClass('has-danger');
             $("#add_butt")
-                .prop("disabled", false)
-                .val("Добавить!");
+                    .prop("disabled", false)
+                    .val("Добавить!");
             return;
         }
 
@@ -206,8 +214,8 @@
             if (arrayOfStrings.length === 0) {
                 $(document.getElementById('item_ingrs').parentElement).addClass('has-danger');
                 $("#add_butt")
-                .prop("disabled", false)
-                .val("Добавить!");
+                        .prop("disabled", false)
+                        .val("Добавить!");
                 return;
             }
             else {
@@ -217,8 +225,8 @@
         else {
             $(document.getElementById('item_ingrs').parentElement).addClass('has-danger');
             $("#add_butt")
-                .prop("disabled", false)
-                .val("Добавить!");
+                    .prop("disabled", false)
+                    .val("Добавить!");
             return;
         }
 
@@ -237,8 +245,8 @@
             else {
                 $(element.parentElement).addClass('has-danger');
                 $("#add_butt")
-                .prop("disabled", false)
-                .val("Добавить!");
+                        .prop("disabled", false)
+                        .val("Добавить!");
                 throw new Error('Something happened');
             }
         });

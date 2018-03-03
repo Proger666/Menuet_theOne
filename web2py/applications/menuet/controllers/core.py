@@ -251,6 +251,7 @@ def a_item():
             logger.warn('No portions in request ' + logUser_and_request())
             return locals()
     else:
+        item.menu_name = db.t_menu[request.vars.get('m_id',0)].f_name
         item.name = ""
         item.weight = ""
         item.desc = ""

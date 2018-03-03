@@ -192,14 +192,14 @@ def normalize_words(ingrs_list):
 def save_item():
     # Create storage class for item
     item = Storage()
-    # lets get our item from request
-    item_source = request.vars.get('item')
+    # lets get our item from request or get None
+    item_source = request.vars.get('item', None)
 
     if item_source != None:
         item_source = Storage(item_source)
         _tmp_obj = Storage()
         # Lets gather stones
-
+        _tmp_obj.cal = item_source['cal']
         # Lets play with tags
         # Create tags
         item_tags = item_source['tags_name']
@@ -245,7 +245,7 @@ def save_item():
             _tmp_obj.recipe_id = db.t_recipe.insert(f_name=item_source.name + '_recipe')
             item_source.desc = "" if item_source.desc is None else item_source.desc
             # Create new Item
-            _tmp_obj.item_id = db.t_item.insert(f_name=item_source.name,
+            _tmp_obj.item_id = db.t_item.insert(f_cal=_tmp_obj.cal,f_name=item_source.name,
                                                 f_weight=item_source.weight,
                                                 f_unit=item_source.unit, f_recipe=_tmp_obj.recipe_id,
                                                 f_desc=item_source.desc, f_tags=_new_tags)

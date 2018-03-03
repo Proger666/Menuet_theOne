@@ -197,6 +197,7 @@ class AuthAPI(object):
                                   user.get("last_name", ''))
             except:
                 return id
+
         ondelete = self.settings.ondelete
         self.signature = Table(
             self.db, 'auth_signature',
@@ -221,7 +222,7 @@ class AuthAPI(object):
                   reference_user, represent=represent,
                   default=lazy_user, update=lazy_user,
                   writable=False, readable=False,
-                  label=T('Modified By'),  ondelete=ondelete))
+                  label=T('Modified By'), ondelete=ondelete))
 
     def define_tables(self, username=None, signature=None, migrate=None,
                       fake_migrate=None):
@@ -667,7 +668,7 @@ class AuthAPI(object):
         if not group_id and self.settings.everybody_group_id and \
                 self.has_permission(name, table_name, record_id, user_id=None,
                                     group_id=self.settings.everybody_group_id):
-                return True
+            return True
 
         if not user_id and not group_id and self.user:
             user_id = self.user.id
@@ -873,7 +874,7 @@ class AuthAPI(object):
                 if isinstance(userfield_validator, list):
                     userfield_validator.append(unique_validator)
                 else:
-                    userfield_validator += (unique_validator, )
+                    userfield_validator += (unique_validator,)
         elif not isinstance(userfield_validator, IS_NOT_IN_DB):
             userfield_validator = [userfield_validator, unique_validator]
         table_user[userfield].requires = userfield_validator
@@ -988,8 +989,8 @@ class AuthAPI(object):
             requires = [requires]
         requires = list(filter(lambda t: isinstance(t, CRYPT), requires))
         if requires:
-            requires[0] = CRYPT(**requires[0].__dict__) # Copy the existing CRYPT attributes
-            requires[0].min_length = 0 # But do not enforce minimum length for the old password
+            requires[0] = CRYPT(**requires[0].__dict__)  # Copy the existing CRYPT attributes
+            requires[0].min_length = 0  # But do not enforce minimum length for the old password
 
         old_password = kwargs.get('old_password', '')
         new_password = kwargs.get('new_password', '')
