@@ -43,11 +43,13 @@ def download_url(url):
 
 def jsn_menu():
     if 'file' in request.vars:
+        data = file.read(request.vars.file.file.file)
+        jsn_obj = simplejson.loads(data,encoding='cp1251')
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
-            jsn_obj = simplejson.loads(file.read(request.vars.file.file.file))
             for item in jsn_obj:
                 executor.map(commit_to_db(item))
+        db.commit()
     return locals()
 
 
@@ -58,6 +60,10 @@ def commit_to_db(item):
     _f_coordinateX = item['geoData'].get('coordinates')[0] if item.get('geoData') else None
     _f_coordinateY = item['geoData'].get('coordinates')[1] if item.get('geoData') else None
     _f_address = item.get('Address')
+    _f_public_phone = [x['PublicPhone'] for x in item.get('PublicPhone')]
+    _f_network_name = item.get('OperatingCompany',5)
+    _tmp = db(db.t_network.f_name == _f_network_name).select().first()
+    _f_network_name = db.t_network.insert(f_name=_f_network_name) if _tmp == None else 5
     _f_long = item.get('Longitude_WGS84')
     _f_lat = item.get('Latitude_WGS84')
     _f_q_id = item.get('global_id')
@@ -66,13 +72,10 @@ def commit_to_db(item):
         net = False
     else:
         net = True
-
-        # get hash for unique record
-    db.t_restaraunt.insert(f_q_id=_f_q_id, f_name=_name, f_is_network=net, f_type=_f_type, f_active=True,
+    db.t_restaraunt.update_or_insert(db.t_restaraunt.f_q_id==_f_q_id,f_network_name=_f_network_name,f_public_phone=_f_public_phone,f_q_id=_f_q_id, f_name=_name, f_is_network=net, f_type=_f_type, f_active=True,
                            f_coordinateX=_f_coordinateX, f_coordinateY=_f_coordinateY, f_town=u'Moscow',
                            f_address=_f_address, f_latitude=_f_lat,
                            f_longitude=_f_long)
-    db.commit()
 
 
 def delete_menu():
