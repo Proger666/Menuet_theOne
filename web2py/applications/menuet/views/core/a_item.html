@@ -86,7 +86,7 @@
 
                         <textarea class="form-control " name="item_tags" placeholder="острое, от шеф-повара..."
                                   id="item_tags" rows='2' data-min-rows='2'
-                                  type="text"></textarea>
+                                  type="text">{{if 't' in request.vars:}}{{for tagg in request.vars.t:}}{{=tagg}}{{pass}}{{pass}}</textarea>
                     </div>
                 </div>
                 <div class="card-footer">
@@ -268,7 +268,8 @@
                 if (flag===1)
                 window.location = '{{=URL('core', 'e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}';
                 else
-                    window.location.reload();
+                    window.location = '{{=URL('core', 'a_item',
+                vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}' + '&t=' + item.tags_name
             },
             error: function (data) {
                 $('#suda').addClass('has-danger');
