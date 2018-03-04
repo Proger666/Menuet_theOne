@@ -114,9 +114,9 @@ db.define_table('t_recipe',
 ########################################
 
 db.define_table('t_step_ing',
-                Field('t_step', 'reference:t_step', required=True,
+                Field('t_step', 'reference:t_step', required=True,notnull=True,
                       label=T('step link')),
-                Field('t_recipe', 'reference:t_recipe', required=True,
+                Field('t_recipe', 'reference:t_recipe', required=True,notnull=True,
                       label=T('recipe link')),
                 auth.signature,
                 migrate=settings.migrate)
@@ -194,9 +194,9 @@ db.define_table('t_menu',
 ########################################
 
 db.define_table('t_rest_menu',
-                Field('t_menu', 'reference:t_menu',
+                Field('t_menu', 'reference:t_menu',notnull=True,
                       label=T('Menu link')),
-                Field('t_rest', 'reference:t_restaraunt',
+                Field('t_rest', 'reference:t_restaraunt',notnull=True,
                       label=T('Restaraunt link')),
                 auth.signature,
                 migrate=settings.migrate)
