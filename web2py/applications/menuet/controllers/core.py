@@ -220,13 +220,13 @@ def get_tags_for_object(id, type):
         return {}
     # select tags via lazy fetch
     if type == 'rest':
-        query = db.t_restaraunt[id]
+        query = db.t_restaraunt[id].f_tags
     elif type== 'item':
-        query = db.t_item[id]
+        query = db.t_item[id].f_tags
     else:
         logger.warn('Failed to get tags for object of type ' + str(type) + logUser_and_request())
         return {}
-    return [x.f_name for x in query.f_tags]
+    return [x.f_name for x in query]
 
 
 @auth.requires_login()
