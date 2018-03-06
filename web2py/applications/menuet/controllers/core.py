@@ -226,8 +226,9 @@ def get_tags_for_object(id, type):
     else:
         logger.warn('Failed to get tags for object of type ' + str(type) + logUser_and_request())
         return {}
-    return [x.f_name for x in query]
-
+    if query != None:
+        return [x.f_name for x in query]
+    return []
 
 @auth.requires_login()
 def a_item():
