@@ -213,13 +213,20 @@ def test():
     return locals()
 
 
-def get_tags_for_item(id):
+def get_tags_for_object(id, type):
     result = []
     if id == None:
-        logger.warn('Could not fetch tags for item, id is NULL!!! ' + logUser_and_request())
+        logger.warn('Could not fetch tags for object, id is NULL!!! ' + logUser_and_request())
         return {}
     # select tags via lazy fetch
-    return [x.f_name for x in db.t_item[id].f_tags]
+    if type == 'rest':
+        query = db.t_restaraunt[id]
+    elif type== 'item':
+        query = db.t_item[id]
+    else:
+        logger.warn('Failed to get tags for object of type ' + str(type) + logUser_and_request())
+        return {}
+    return [x.f_name for x in query.f_tags]
 
 
 @auth.requires_login()
@@ -238,7 +245,7 @@ def a_item():
         item.unit = None if _tmp.f_unit is None else db.t_unit[_tmp.f_unit]
         item.desc = _tmp.f_desc
         item.ingrs = get_ingrs_for_item(item.id)
-        item.tags = get_tags_for_item(item.id)
+        item.tags = get_tags_for_object(item.id,'item')
         item.portions = []
         # get portions name from DB
         _portions = db(t_item_prices.f_item == item.id).select(t_item_prices.f_price, t_item_prices.f_portion)
@@ -284,21 +291,6 @@ def get_ingrs():
 @auth.requires_login()
 def e_rest():
     if "r_id" in request.vars:
-        RU_MONTH_VALUES = {
-            'января': 1,
-            'февраля': 2,
-            'марта': 3,
-            'апреля': 4,
-            'мая': 5,
-            'июня': 6,
-            'июля': 7,
-            'августа': 8,
-            'сентября': 9,
-            'октября': 10,
-            'ноября': 10,
-            'декабря': 12,
-        }
-
         _rest = db(
             (db.t_restaraunt.created_by == auth.user.id) and (db.t_restaraunt.id == request.vars.r_id)).select().first()
         # Form rest ast class
@@ -314,6 +306,7 @@ def e_rest():
         rest.modified_on = _rest.modified_on
         rest.f_network_name = db.t_network[_rest.f_network_name].f_name
         rest.f_network_id = db.t_network[_rest.f_network_name].id
+        rest.tags = get_tags_for_object(_rest.id,'rest')
 
         # Get all menus for this restaraunt
         if rest.is_network:
