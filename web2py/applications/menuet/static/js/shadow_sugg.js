@@ -602,6 +602,82 @@
             return this.composeValue(i, n)
         }
     },
+        S.R_TAGS = {
+            urlSuffix: "r_tags",
+            noSuggestionsHint: "Неизвестный тэг",
+            matchers: [e.proxy(y.matchByNormalizedQuery, {
+                stopwords: b
+            }), e.proxy(y.matchByWordsAddress, {
+                stopwords: b
+            })],
+            dataComponents: _,
+            dataComponentsById: m.indexBy(_, "id", "index"),
+            unformattableTokens: b,
+            enrichmentEnabled: !0,
+            geoEnabled: !0,
+            isDataComplete: function (t) {
+                var n = [this.bounds.to || "flat"],
+                    i = t.data;
+                return !e.isPlainObject(i) || m.fieldsNotEmpty(i, n)
+            },
+            composeValue: function (e, t) {
+                var n = e.region_with_type || m.compact([e.region, e.region_type]).join(" ") || e.region_type_full,
+                    i = e.area_with_type || m.compact([e.area_type, e.area]).join(" ") || e.area_type_full,
+                    s = e.city_with_type || m.compact([e.city_type, e.city]).join(" ") || e.city_type_full,
+                    o = e.settlement_with_type || m.compact([e.settlement_type, e.settlement]).join(" ") || e.settlement_type_full,
+                    a = e.city_district_with_type || m.compact([e.city_district_type, e.city_district]).join(" ") || e.city_district_type_full,
+                    r = e.street_with_type || m.compact([e.street_type, e.street]).join(" ") || e.street_type_full,
+                    u = m.compact([e.house_type, e.house, e.block_type, e.block]).join(" "),
+                    l = m.compact([e.flat_type, e.flat]).join(" "),
+                    c = e.postal_box && "а/я " + e.postal_box;
+                return n === s && (n = ""), t && t.saveCityDistrict || (t && t.excludeCityDistrict ? a = "" : a && !e.city_district_fias_id && (a = "")), m.compact([n, i, s, a, o, r, u, l, c]).join(", ")
+            },
+            formatResult: function () {
+                var t = [],
+                    n = !1;
+                return e.each(_, function () {
+                    n && t.push(this.id), "city_district" === this.id && (n = !0)
+                }),
+                    function (n, i, s, o) {
+                        var a, r, u, l = this,
+                            c = s.data && s.data.city_district_with_type,
+                            d = o && o.unformattableTokens,
+                            f = s.data && s.data.history_values;
+                        return f && f.length > 0 && (a = m.getTokens(i, d), r = this.type.findUnusedTokens(a, n), (u = this.type.getFormattedHistoryValues(r, f)) && (n += u)), n = l.highlightMatches(n, i, s, o), n = l.wrapFormattedValue(n, s), c && (!l.bounds.own.length || l.bounds.own.indexOf("street") >= 0) && !e.isEmptyObject(l.copyDataComponents(s.data, t)) && (n += '<div class="' + l.classes.subtext + '">' + l.highlightMatches(c, i, s) + "</div>"), n
+                    }
+            }(),
+            findUnusedTokens: function (e, t) {
+                var n, i, s = [];
+                for (n in e) i = e[n], -1 === t.indexOf(i) && s.push(i);
+                return s
+            },
+            getFormattedHistoryValues: function (e, t) {
+                var n, i, s, o, a = [],
+                    r = "";
+                for (s in t) {
+                    o = t[s];
+                    for (n in e)
+                        if (i = e[n], o.toLowerCase().indexOf(i) >= 0) {
+                            a.push(o);
+                            break
+                        }
+                }
+                return a.length > 0 && (r = " (бывш. " + a.join(", ") + ")"), r
+            },
+            getSuggestionValue: function (e, t) {
+                var n = null;
+                return t.hasSameValues ? n = e.options.restrict_value ? this.getValueWithinConstraints(e, t.suggestion) : e.bounds.own.length ? this.getValueWithinBounds(e, t.suggestion) : t.suggestion.unrestricted_value : t.hasBeenEnriched && e.options.restrict_value && (n = this.getValueWithinConstraints(e, t.suggestion, {
+                    excludeCityDistrict: !0
+                })), n
+            },
+            getValueWithinConstraints: function (e, t, n) {
+                return this.composeValue(e.getUnrestrictedData(t.data), n)
+            },
+            getValueWithinBounds: function (e, t, n) {
+                var i = e.copyDataComponents(t.data, e.bounds.own.concat(["city_district_fias_id"]));
+                return this.composeValue(i, n)
+            }
+        },
         S.M_TAGS = {
             urlSuffix: "m_tags",
             noSuggestionsHint: "Неизвестный тэг",
@@ -679,81 +755,81 @@
             }
         },
         S.INGREDIENTS = {
-        urlSuffix: "ingredients",
-        noSuggestionsHint: "Неизвестный ингредиент",
-        matchers: [e.proxy(y.matchByNormalizedQuery, {
-            stopwords: b
-        }), e.proxy(y.matchByWordsAddress, {
-            stopwords: b
-        })],
-        dataComponents: _,
-        dataComponentsById: m.indexBy(_, "id", "index"),
-        unformattableTokens: b,
-        enrichmentEnabled: !0,
-        geoEnabled: !0,
-        isDataComplete: function (t) {
-            var n = [this.bounds.to || "flat"],
-                i = t.data;
-            return !e.isPlainObject(i) || m.fieldsNotEmpty(i, n)
-        },
-        composeValue: function (e, t) {
-            var n = e.region_with_type || m.compact([e.region, e.region_type]).join(" ") || e.region_type_full,
-                i = e.area_with_type || m.compact([e.area_type, e.area]).join(" ") || e.area_type_full,
-                s = e.city_with_type || m.compact([e.city_type, e.city]).join(" ") || e.city_type_full,
-                o = e.settlement_with_type || m.compact([e.settlement_type, e.settlement]).join(" ") || e.settlement_type_full,
-                a = e.city_district_with_type || m.compact([e.city_district_type, e.city_district]).join(" ") || e.city_district_type_full,
-                r = e.street_with_type || m.compact([e.street_type, e.street]).join(" ") || e.street_type_full,
-                u = m.compact([e.house_type, e.house, e.block_type, e.block]).join(" "),
-                l = m.compact([e.flat_type, e.flat]).join(" "),
-                c = e.postal_box && "а/я " + e.postal_box;
-            return n === s && (n = ""), t && t.saveCityDistrict || (t && t.excludeCityDistrict ? a = "" : a && !e.city_district_fias_id && (a = "")), m.compact([n, i, s, a, o, r, u, l, c]).join(", ")
-        },
-        formatResult: function () {
-            var t = [],
-                n = !1;
-            return e.each(_, function () {
-                n && t.push(this.id), "city_district" === this.id && (n = !0)
-            }),
-                function (n, i, s, o) {
-                    var a, r, u, l = this,
-                        c = s.data && s.data.city_district_with_type,
-                        d = o && o.unformattableTokens,
-                        f = s.data && s.data.history_values;
-                    return f && f.length > 0 && (a = m.getTokens(i, d), r = this.type.findUnusedTokens(a, n), (u = this.type.getFormattedHistoryValues(r, f)) && (n += u)), n = l.highlightMatches(n, i, s, o), n = l.wrapFormattedValue(n, s), c && (!l.bounds.own.length || l.bounds.own.indexOf("street") >= 0) && !e.isEmptyObject(l.copyDataComponents(s.data, t)) && (n += '<div class="' + l.classes.subtext + '">' + l.highlightMatches(c, i, s) + "</div>"), n
-                }
-        }(),
-        findUnusedTokens: function (e, t) {
-            var n, i, s = [];
-            for (n in e) i = e[n], -1 === t.indexOf(i) && s.push(i);
-            return s
-        },
-        getFormattedHistoryValues: function (e, t) {
-            var n, i, s, o, a = [],
-                r = "";
-            for (s in t) {
-                o = t[s];
-                for (n in e)
-                    if (i = e[n], o.toLowerCase().indexOf(i) >= 0) {
-                        a.push(o);
-                        break
+            urlSuffix: "ingredients",
+            noSuggestionsHint: "Неизвестный ингредиент",
+            matchers: [e.proxy(y.matchByNormalizedQuery, {
+                stopwords: b
+            }), e.proxy(y.matchByWordsAddress, {
+                stopwords: b
+            })],
+            dataComponents: _,
+            dataComponentsById: m.indexBy(_, "id", "index"),
+            unformattableTokens: b,
+            enrichmentEnabled: !0,
+            geoEnabled: !0,
+            isDataComplete: function (t) {
+                var n = [this.bounds.to || "flat"],
+                    i = t.data;
+                return !e.isPlainObject(i) || m.fieldsNotEmpty(i, n)
+            },
+            composeValue: function (e, t) {
+                var n = e.region_with_type || m.compact([e.region, e.region_type]).join(" ") || e.region_type_full,
+                    i = e.area_with_type || m.compact([e.area_type, e.area]).join(" ") || e.area_type_full,
+                    s = e.city_with_type || m.compact([e.city_type, e.city]).join(" ") || e.city_type_full,
+                    o = e.settlement_with_type || m.compact([e.settlement_type, e.settlement]).join(" ") || e.settlement_type_full,
+                    a = e.city_district_with_type || m.compact([e.city_district_type, e.city_district]).join(" ") || e.city_district_type_full,
+                    r = e.street_with_type || m.compact([e.street_type, e.street]).join(" ") || e.street_type_full,
+                    u = m.compact([e.house_type, e.house, e.block_type, e.block]).join(" "),
+                    l = m.compact([e.flat_type, e.flat]).join(" "),
+                    c = e.postal_box && "а/я " + e.postal_box;
+                return n === s && (n = ""), t && t.saveCityDistrict || (t && t.excludeCityDistrict ? a = "" : a && !e.city_district_fias_id && (a = "")), m.compact([n, i, s, a, o, r, u, l, c]).join(", ")
+            },
+            formatResult: function () {
+                var t = [],
+                    n = !1;
+                return e.each(_, function () {
+                    n && t.push(this.id), "city_district" === this.id && (n = !0)
+                }),
+                    function (n, i, s, o) {
+                        var a, r, u, l = this,
+                            c = s.data && s.data.city_district_with_type,
+                            d = o && o.unformattableTokens,
+                            f = s.data && s.data.history_values;
+                        return f && f.length > 0 && (a = m.getTokens(i, d), r = this.type.findUnusedTokens(a, n), (u = this.type.getFormattedHistoryValues(r, f)) && (n += u)), n = l.highlightMatches(n, i, s, o), n = l.wrapFormattedValue(n, s), c && (!l.bounds.own.length || l.bounds.own.indexOf("street") >= 0) && !e.isEmptyObject(l.copyDataComponents(s.data, t)) && (n += '<div class="' + l.classes.subtext + '">' + l.highlightMatches(c, i, s) + "</div>"), n
                     }
+            }(),
+            findUnusedTokens: function (e, t) {
+                var n, i, s = [];
+                for (n in e) i = e[n], -1 === t.indexOf(i) && s.push(i);
+                return s
+            },
+            getFormattedHistoryValues: function (e, t) {
+                var n, i, s, o, a = [],
+                    r = "";
+                for (s in t) {
+                    o = t[s];
+                    for (n in e)
+                        if (i = e[n], o.toLowerCase().indexOf(i) >= 0) {
+                            a.push(o);
+                            break
+                        }
+                }
+                return a.length > 0 && (r = " (бывш. " + a.join(", ") + ")"), r
+            },
+            getSuggestionValue: function (e, t) {
+                var n = null;
+                return t.hasSameValues ? n = e.options.restrict_value ? this.getValueWithinConstraints(e, t.suggestion) : e.bounds.own.length ? this.getValueWithinBounds(e, t.suggestion) : t.suggestion.unrestricted_value : t.hasBeenEnriched && e.options.restrict_value && (n = this.getValueWithinConstraints(e, t.suggestion, {
+                    excludeCityDistrict: !0
+                })), n
+            },
+            getValueWithinConstraints: function (e, t, n) {
+                return this.composeValue(e.getUnrestrictedData(t.data), n)
+            },
+            getValueWithinBounds: function (e, t, n) {
+                var i = e.copyDataComponents(t.data, e.bounds.own.concat(["city_district_fias_id"]));
+                return this.composeValue(i, n)
             }
-            return a.length > 0 && (r = " (бывш. " + a.join(", ") + ")"), r
         },
-        getSuggestionValue: function (e, t) {
-            var n = null;
-            return t.hasSameValues ? n = e.options.restrict_value ? this.getValueWithinConstraints(e, t.suggestion) : e.bounds.own.length ? this.getValueWithinBounds(e, t.suggestion) : t.suggestion.unrestricted_value : t.hasBeenEnriched && e.options.restrict_value && (n = this.getValueWithinConstraints(e, t.suggestion, {
-                excludeCityDistrict: !0
-            })), n
-        },
-        getValueWithinConstraints: function (e, t, n) {
-            return this.composeValue(e.getUnrestrictedData(t.data), n)
-        },
-        getValueWithinBounds: function (e, t, n) {
-            var i = e.copyDataComponents(t.data, e.bounds.own.concat(["city_district_fias_id"]));
-            return this.composeValue(i, n)
-        }
-    },
         S.I_TAGS = {
             urlSuffix: "i_tags",
             noSuggestionsHint: "Неизвестный тэг",

@@ -25,9 +25,18 @@ db.define_table('t_network',
                 migrate=settings.migrate)
 ########################################
 
+db.define_table('t_rest_tag',
+                Field('f_name', type='string',
+                      label=T('Tag Name')),
+                auth.signature, format='%(f_name)s',
+                migrate=settings.migrate)
+########################################
+
 db.define_table('t_restaraunt',
                 Field('f_q_id', type='string',
                       label=T('q_id')),
+                Field('f_rating', type='string',
+                      label=T('Restaraunt rating')),
                 Field('f_name', type='string',
                       label=T('Name')),
                 Field('f_public_phone', type='list:string',
@@ -55,6 +64,8 @@ db.define_table('t_restaraunt',
                 Field('f_network_name', 'reference:t_network', default=5,
                       label=T('Network_Name')),
                 Field('f_image', 'upload'),
+                Field('f_tags', 'list:reference t_rest_tag',
+                      label=T('Rest tags')),
                 Field('f_img', type='blob',
                       label=T('img')),
                 Field('f_md5hash', type='string',
@@ -114,9 +125,9 @@ db.define_table('t_recipe',
 ########################################
 
 db.define_table('t_step_ing',
-                Field('t_step', 'reference:t_step', required=True,notnull=True,
+                Field('t_step', 'reference:t_step', required=True, notnull=True,
                       label=T('step link')),
-                Field('t_recipe', 'reference:t_recipe', required=True,notnull=True,
+                Field('t_recipe', 'reference:t_recipe', required=True, notnull=True,
                       label=T('recipe link')),
                 auth.signature,
                 migrate=settings.migrate)
@@ -134,6 +145,8 @@ db.define_table('t_portion',
 db.define_table('t_item',
                 Field('f_name', type='string',
                       label=T('Item Name')),
+                Field('f_rating', type='string',
+                      label=T('Item rating')),
                 Field('f_desc', type='string',
                       label=T('Item desc')),
                 Field('f_cal', type='integer',
@@ -194,9 +207,9 @@ db.define_table('t_menu',
 ########################################
 
 db.define_table('t_rest_menu',
-                Field('t_menu', 'reference:t_menu',notnull=True,
+                Field('t_menu', 'reference:t_menu', notnull=True,
                       label=T('Menu link')),
-                Field('t_rest', 'reference:t_restaraunt',notnull=True,
+                Field('t_rest', 'reference:t_restaraunt', notnull=True,
                       label=T('Restaraunt link')),
                 auth.signature,
                 migrate=settings.migrate)

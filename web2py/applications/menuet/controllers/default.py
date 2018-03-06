@@ -254,6 +254,7 @@ def menu_edit():
 
 
 ################# Saving to DB ###################
+#######*********** DEPRECATED **** #################
 def save_course():
     try:
         # TODO: make sanity checks on save = what if ingr already exists (sum ingrs) ? What if misspeled (google search) ? What if weight greater than course weight ?
@@ -317,15 +318,33 @@ def save_course():
     return ajax_success()
 
 
+#### TODO: MOVE TO  NEW LOCATION
 @auth.requires_login()
 def save_rest():
     try:
+        # Expected structure
         rest_name = request.vars.rest['name']
         rest_addr = request.vars.rest['addr']
         rest_id = request.vars.rest.get('r_id')
         rest_town = request.vars.rest.get('town')
         _rst_net = request.vars.rest.get('network')
         rest_is_network = request.vars.rest['is_network']
+        rest_tags = request.vars.rest.get('tags', None)
+
+        # lets fill the tags
+        if rest_tags == None:
+            logger.warn("User failed to fill tags for item " + logUser_and_request())
+            session.flash = T("ТЭГИ НЕ УКАЗАНЫ!")
+            rest_tags = []
+        else:
+            rest_tags = rest_tags.split(",")
+            _new_tags = []
+        for tag in rest_tags:
+            _r_t = db(db.t_rest_tag.f_name == tag).select().first()
+            if _r_t == None and tag != "":
+                _new_tags.append(db.t_rest_tag.insert(f_name=tag))
+            elif _r_t != None:
+                _new_tags.append(_r_t.id)
 
         if _rst_net != u'None' and _rst_net != None:
             rest_network = _rst_net.encode('utf-8') if str.isdigit(_rst_net.encode('utf-8')) else 5
@@ -350,7 +369,7 @@ def save_rest():
             if int(rest_network):
                 db.t_restaraunt.insert(f_name=rest_name, f_active=True, f_is_network=rest_is_network,
                                        f_address=rest_addr,
-                                       f_town=rest_town, f_network_name=rest_network)
+                                       f_town=rest_town, f_network_name=rest_network, f_tags=_new_tags)
                 db.commit()
                 return ajax_success()
             else:

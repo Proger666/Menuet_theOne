@@ -21,7 +21,16 @@ def get_tags_for_object(q, type):
         result = []
         q = q.encode('utf-8')
         # search for menu or item tags
-        query = db.t_menu_tag.f_name.contains(q) if type == 'menu' else db.t_item_tag.f_name.contains(q)
+        if type == 'rest':
+            query =  db.t_rest_tag.f_name.contains(q)
+        elif type == 'menu':
+            query = db.t_menu_tag.f_name.contains(q)
+        elif type == 'item':
+            query = db.t_item_tag.f_name.contains(q)
+        else:
+            logger.info('Failure happened in tag suggestions ! ' + logUser_and_request())
+            return {}
+        # get suggestions from db based on type of the query
         rows = db(query).select()
         for row in rows:
             result.append({
@@ -67,6 +76,9 @@ def api():
                     return dict(suggestions=huections)
                 elif request.args[1] == 'ingredients':
                     huections = get_sugg_for_ingrs(query)
+                    return dict(suggestions=huections)
+                elif request.args[1] == 'r_tags':
+                    huections = get_tags_for_object(query,'rest')
                     return dict(suggestions=huections)
 
         else:
@@ -166,7 +178,7 @@ def delete_menu_item():
     logger.warn('Failure in item delete - final except ' + logUser_and_request())
     return {}
 
-
+### Not in use
 def normalize_words(ingrs_list):
     # Do we have ingrs list ?
     if ingrs_list == None:
@@ -203,7 +215,6 @@ def save_item():
         # Lets play with tags
         # Create tags
         item_tags = item_source['tags_name']
-        item_tags_id = item_source['tags_id']
 
         if item_tags == None:
             logger.warn("User failed to fill tags for item " + logUser_and_request())

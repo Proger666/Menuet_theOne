@@ -62,6 +62,10 @@
                                    value="{{=rest.addr}}"></div>
                         <p class="text-muted"><em>Например: Улица Маши-парываевой, д. 6 </em></p>
                     </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Тэги</label>
+                        <textarea class="form-control" id="rest_tag" rows='2' data-min-rows='2' type="text" placeholder="Доставка, фаст-фуд..."></textarea>
+                    </div>
 
 
                     <input type="button" class="btn btn-primary" id="save_rest" onclick="submitForm()"
@@ -216,6 +220,7 @@
         rest.r_id = "{{=request.vars.r_id}}";
         rest.town = document.getElementById('rest_town').value;
         rest.network = document.getElementById('network_id').value;
+        rest.tags = document.getElementById('rest_tag').value;
 
         var DTO = {'rest': rest};
         var data = JSON.stringify(DTO);
@@ -283,6 +288,13 @@
                 return this.value + ',' + suggestion.id;
             });
 
+        }
+    });
+     $("#rest_tags").suggestions({
+        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
+        type: "R_TAGS",
+        count: 5,
+        onSelect: function (suggestion) {
         }
     });
 
