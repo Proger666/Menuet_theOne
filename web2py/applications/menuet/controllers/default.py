@@ -378,7 +378,7 @@ def save_rest():
         elif rest != None:
             # UPDATE existing rest
             db(db.t_restaraunt.id == rest_id).update(f_name=rest_name, f_active=True, f_is_network=rest_is_network,
-                                                     f_address=rest_addr, f_town=rest_town, f_network_name=rest_network)
+                                                     f_address=rest_addr, f_town=rest_town, f_network_name=rest_network,f_tags=_new_tags)
             db.commit()
             return ajax_success()
 
