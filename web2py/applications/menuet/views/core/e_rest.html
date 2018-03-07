@@ -64,7 +64,9 @@
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Тэги</label>
-                        <textarea class="form-control" id="rest_tags" rows='2' data-min-rows='2' type="text" placeholder="Доставка, фаст-фуд...">{{for tagg in rest.tags:}}{{=tagg}},{{pass}}</textarea>
+                        <textarea class="form-control" id="rest_tags" rows='2' data-min-rows='2' type="text"
+                                  placeholder="Доставка, фаст-фуд...">{{for tagg in rest.tags:}}{{=tagg}}
+                            ,{{pass}}</textarea>
                     </div>
 
 
@@ -98,7 +100,7 @@
                     </div>
                     <!-- /.list-group -->
                 {{if menu_disp.__len__() != 0:}}
-                    <a href="{{=URL('core', 'menus', vars=dict(r_id=rest.id,m_id=menu.id))}}"
+                    <a href="{{=URL('core', 'menus', vars=dict(r_id=rest.id,m_id=menu.id,page=1))}}"
                        class="btn btn-default btn-block">Остальные...</a>
                 {{else:}}
                     <input class="btn btn-block" type="button" value="Ничего нет :(">
@@ -290,7 +292,7 @@
 
         }
     });
-     $("#rest_tags").suggestions({
+    $("#rest_tags").suggestions({
         token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
         type: "R_TAGS",
         count: 5,
@@ -310,7 +312,7 @@
         menu.type = $("#menu_type").find("option:selected").val();
         menu.name = document.getElementById('menu_name').value;
         menu.tags_id = document.getElementById('menu_tags_id').value;
-        menu.tags_name = document.getElementById('menu_tags').value;
+        menu.tags_name = document.getElementById('menu_tasgs').value;
 
         menu.comment = document.getElementById('comment').value;
         rest.is_network = document.getElementById('is_network').checked;

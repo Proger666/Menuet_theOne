@@ -179,11 +179,12 @@ def rests():
 @auth.requires_login()
 def menus():
     menus = {"menus": []}
+    _page = int(request.vars.get('page',1))
     menus = Storage(menus)
     _menu = db.t_menu[request.vars.m_id]
     if _menu.f_network != 5:
         network = db.t_network[_menu.f_network]
-        _tmp = db(db.t_menu.f_network == _menu.f_network).select()
+        _tmp = db(db.t_menu.f_network == _menu.f_network).select(limitby=((_page-1)*7,_page*7))
         for row in _tmp:
             menus.menus.append({"id": row.id, "name": row.f_name, "created_on": row.created_on,
                                 "rest_name": network.f_name, "rest_addr": "",
@@ -308,6 +309,8 @@ def e_rest():
         rest.f_network_name = db.t_network[_rest.f_network_name].f_name
         rest.f_network_id = db.t_network[_rest.f_network_name].id
         rest.tags = get_tags_for_object(_rest.id,'rest')
+
+
 
         # Get all menus for this restaraunt
         if rest.is_network:

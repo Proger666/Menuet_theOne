@@ -1,0 +1,10 @@
+<nav aria-label="DB Navigation">
+  <ul class="pagination justify-content-center">
+    <li class="page-item disabled">
+      <a class="page-link" href="{{=URL(vars={'page':int(request.vars.page)-1})}}" tabindex="-1">Предыдущая</a>
+    </li>
+    <li class="page-item">
+      <a class="page-link" href="{{=URL(vars={'page':int(request.vars.page)+1})}}">Следующая</a>
+    </li>
+  </ul>
+</nav>
