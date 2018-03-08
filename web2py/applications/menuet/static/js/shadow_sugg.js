@@ -1717,7 +1717,8 @@
         O = function (t) {
             var n = this,
                 i = e('<span class="suggestions-addon"/>');
-            n.owner = t, n.$el = i, n.type = F.NONE, n.visible = !1, n.initialPadding = null, i.on("click", e.proxy(n, "onClick"))
+            n.owner = t;
+                n.$el = i, n.type = F.NONE, n.visible = !1, n.initialPadding = null, i.on("click", e.proxy(n, "onClick"))
         };
     O.prototype = {
         checkType: function () {
@@ -1726,7 +1727,7 @@
                 i = !1;
             e.each(F, function (e, t) {
                 if (i = t == n) return !1
-            }), i || (n = t.owner.isMobile ? F.CLEAR : F.NONE), n != t.type && (t.type = n, t.$el.attr("data-addon-type", n), t.toggle(!0))
+            }), i || (n = t.owner.isMobile ? F.NONE : F.NONE), n != t.type && (t.type = n, t.$el.attr("data-addon-type", n), t.toggle(!0))
         },
         toggle: function (e) {
             var t, n = this;

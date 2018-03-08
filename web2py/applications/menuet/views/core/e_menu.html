@@ -1,5 +1,6 @@
 {{extend "layout.html"}}
 
+<script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
 
 <div class="container">
     <div class="row">
@@ -12,9 +13,9 @@
                         <br>
                         <p>
                             <em class="text-muted">
-                                {{for tag in tags:}}
-                                {{=tag.f_name}};
-                                {{pass}}
+                            {{for tag in tags:}}
+                            {{=tag.f_name}};
+                            {{pass}}
                             </em>
                         </p></div>
                 </div>
@@ -62,9 +63,9 @@
                     <td>
                     {{=item.desc}}<br>
                         <p><em class="text-muted">
-                            {{for ingr in item.ingrs:}}
-                            {{=ingr.name}};
-                            {{pass}}
+                        {{for ingr in item.ingrs:}}
+                        {{=ingr.name}};
+                        {{pass}}
                         </em></p>
                     </td>
                     <td style="white-space: nowrap">
@@ -86,6 +87,7 @@
                 {{pass}}
                 </tbody>
             </table>
+
         </div>
     </div>
 {{else:}}
@@ -101,6 +103,7 @@
 </div>
 
 <script>
+
     function go_to_item(obj) {
         window.location = '{{=URL("core", "a_item")}}' + '?itm_id=' + obj
     }
