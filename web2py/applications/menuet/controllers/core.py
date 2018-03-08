@@ -195,7 +195,7 @@ def menus():
         _tmp_calc = (menus_count + itm_page // 2) // itm_page
         pages_count = _tmp_calc if _tmp_calc > 0 else 1
         ###############################################
-        _tmp = query.select()
+        _tmp = query.select(orderby=~db.t_menu.f_current)
         for row in _tmp:
             item_count = db(db.t_menu_item.t_menu == row.id).count()
             menus.menus.append({"id": row.id, "name": row.f_name, "created_on": row.created_on,
@@ -204,7 +204,7 @@ def menus():
     else:
         _tmp = db((db.t_rest_menu.t_menu == t_menu.id) &
                   (t_rest_menu.t_rest == t_restaraunt.id) &
-                  (t_restaraunt.id == request.vars.r_id)).select(orderby=~db.t_menu.modified_on)
+                  (t_restaraunt.id == request.vars.r_id)).select(orderby=~db.t_menu.f_current)
 
         for row in _tmp:
             item_count = db(db.t_menu_item.t_menu == row.t_menu.id).count()

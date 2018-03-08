@@ -400,7 +400,6 @@ def save_menu():
 
         menu_type = int(request.vars.menu['type'])
         menu_name = request.vars.menu.get('name')
-        menu_tags_id = request.vars.menu.get('tags_id')
         menu_tags = request.vars.menu.get('tags_name')
         # if menu_name is None and menu_type != 3:
         #     logger.error(
@@ -438,18 +437,19 @@ def save_menu():
                     "Someone messed with the network menu creation. user is " + auth.user.username + " request was " + str(
                         request))
                 return {}
-            # Lets find old menu and make it inactive
-            # Find all active menus with given type
-            _old_menu = db((db.t_menu.f_network == network.id) &
-                           (db.t_menu.f_type.belongs(request.vars.menu['type']))).select()
-            for item in _old_menu:
-                item.f_current = False
-                item.update_record()
             # Get Menu type name and fill menu namu for DB savings
-
             # set menu name its typed name or TYPE as name
             menu_name = (menu_name if (menu_name != None and menu_name != "") else db.t_menu_type[
                 menu_type].f_name) + ' для сети ' + network.f_name
+            # Lets find old menu and make it inactive
+            # Find all active menus with given type
+            _old_menu = db((db.t_menu.f_network == network.id) &
+                           (db.t_menu.f_type.belongs(request.vars.menu['type'])) &
+                           (db.t_menu.f_name == menu_name)).select()
+            for item in _old_menu:
+                item.f_current = False
+                item.update_record()
+
             # update network for this rest
             _tmp = db.t_restaraunt[request.vars.rest['id']]
             _tmp.update_record(f_network_name=network.id)
