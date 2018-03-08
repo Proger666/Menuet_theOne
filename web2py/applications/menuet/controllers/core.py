@@ -194,25 +194,24 @@ def menus():
         # (something + divisor // 2) // divisor
         _tmp_calc = (menus_count + itm_page // 2) // itm_page
         pages_count = _tmp_calc if _tmp_calc > 0 else 1
-        pagination(_page,menus_count, itm_page)
-
-
-
         ###############################################
-        _tmp = query.select(limitby=((_page-1)*itm_page,_page*itm_page))
+        _tmp = query.select()
         for row in _tmp:
+            item_count = db(db.t_menu_item.t_menu == row.id).count()
             menus.menus.append({"id": row.id, "name": row.f_name, "created_on": row.created_on,
                                 "rest_name": network.f_name, "rest_addr": "",
-                                "r_id": network.id, "active": row.f_current})
+                                "r_id": network.id, "active": row.f_current,"item_count":item_count})
     else:
         _tmp = db((db.t_rest_menu.t_menu == t_menu.id) &
                   (t_rest_menu.t_rest == t_restaraunt.id) &
                   (t_restaraunt.id == request.vars.r_id)).select(orderby=~db.t_menu.modified_on)
 
         for row in _tmp:
+            item_count = db(db.t_menu_item.t_menu == row.t_menu.id).count()
             menus.menus.append({"id": row.t_menu.id, "name": row.t_menu.f_name, "created_on": row.t_menu.created_on,
                                 "rest_name": row.t_restaraunt.f_name, "rest_addr": row.t_restaraunt.f_address,
-                                "r_id": row.t_restaraunt.id, "active": row.t_menu.f_current})
+                                "r_id": row.t_restaraunt.id, "active": row.t_menu.f_current,"item_count":item_count})
+
     menu_disp = [x for x in menus.menus]
     return locals()
 
@@ -228,7 +227,7 @@ def pagination(c,m,d):
     l = None
     i = 1
     for i in range(1, last):
-        if i == 1 or i == last or i >= left and i < right:
+        if i == 1 or i == last or (i >= left and i < right):
             _range.append(i)
         i +=1
     for x in range(1, len(_range)):

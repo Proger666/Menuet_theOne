@@ -24,6 +24,7 @@
                     <p class="card-text">
                         <em>{{=menu.rest_name}}</em><br/>
                         <em>{{=menu.rest_addr}}</em><br/>
+                        <em>Позиций в меню: <b>{{=menu.item_count}}</b></em><br/>
 
                         <em class="text-muted">Создан: {{=menu.created_on}}</em><br/>
                     </p>
@@ -42,6 +43,5 @@
     {{pass}}
 
     </div>
-            {{include "pagination.html"}}
 
 </div>

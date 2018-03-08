@@ -85,6 +85,11 @@
     });
 
     function CheckForm() {
+        $('#butt_check')
+                .val('Ищем...')
+                .removeClass('btn-primary')
+                .addClass('btn-success')
+                .attr('disabled', true);
         var rest = {};
         rest.name = document.getElementById('rest_name').value;
 
@@ -99,12 +104,22 @@
             dataType: 'json',
             data: data,
             success: function (data) {
+                $('#butt_check')
+                        .val('Ищем...')
+                        .removeClass('btn-success')
+                        .addClass('btn-primary')
+                        .prop('disabled', false);
                 $("#add_results").html('');
 
                 show_data(data);
                 return data
             },
             error: function (data) {
+                $('#butt_check')
+                        .val('Ищем...')
+                        .removeClass('btn-success')
+                        .addClass('btn-primary')
+                        .prop('disabled', false);
                 $("#add_results").html('');
 
                 show_data("error");
@@ -123,7 +138,7 @@
                 var rest_url = "\'{{=URL('core','add_rest')}}\'";
 
                 $("#add_result").append('<tr> <td> Ничего не найдено :( </td></tr><tr><td><input class="btn btn-success" type="button" value="Добавить!" ' +
-                        'onclick="window.location = '+rest_url + '"</td></tr>');
+                        'onclick="window.location = ' + rest_url + '"</td></tr>');
             } else {
                 asd.forEach(function (element) {
                     var user = parseInt("{{=auth.user.id}}");
