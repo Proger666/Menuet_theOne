@@ -183,8 +183,23 @@ def menus():
     menus = Storage(menus)
     _menu = db.t_menu[request.vars.m_id]
     if _menu.f_network != 5:
+        # how much items per page?
+        itm_page = 7
         network = db.t_network[_menu.f_network]
-        _tmp = db(db.t_menu.f_network == _menu.f_network).select(limitby=((_page-1)*7,_page*7))
+        # lets fund all menus for this network
+        query = db(db.t_menu.f_network == _menu.f_network)
+        ############ PAGINATION #####################
+        menus_count = query.count()
+        # lets get how much pages wew wil have with round to nearest whole as
+        # (something + divisor // 2) // divisor
+        _tmp_calc = (menus_count + itm_page // 2) // itm_page
+        pages_count = _tmp_calc if _tmp_calc > 0 else 1
+        pagination(_page,menus_count, itm_page)
+
+
+
+        ###############################################
+        _tmp = query.select(limitby=((_page-1)*itm_page,_page*itm_page))
         for row in _tmp:
             menus.menus.append({"id": row.id, "name": row.f_name, "created_on": row.created_on,
                                 "rest_name": network.f_name, "rest_addr": "",
@@ -200,6 +215,32 @@ def menus():
                                 "r_id": row.t_restaraunt.id, "active": row.t_menu.f_current})
     menu_disp = [x for x in menus.menus]
     return locals()
+
+
+def pagination(c,m,d):
+    _range = []
+    current = c
+    last = m
+    delta = d
+    left = current - delta
+    right = current + delta + 1
+    rangeWithDots = []
+    l = None
+    i = 1
+    for i in range(1, last):
+        if i == 1 or i == last or i >= left and i < right:
+            _range.append(i)
+        i +=1
+    for x in range(1, len(_range)):
+        if l:
+            if x - l == delta:
+                rangeWithDots.append(l + 1)
+            elif x - l != 1:
+                rangeWithDots.append('...')
+        rangeWithDots.append(x)
+        l = x
+        x += 1
+    return rangeWithDots
 
 
 @auth.requires_login()
@@ -309,7 +350,6 @@ def e_rest():
         rest.f_network_name = db.t_network[_rest.f_network_name].f_name
         rest.f_network_id = db.t_network[_rest.f_network_name].id
         rest.tags = get_tags_for_object(_rest.id,'rest')
-
 
 
         # Get all menus for this restaraunt
