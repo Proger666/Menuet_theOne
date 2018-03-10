@@ -1,7 +1,6 @@
 # -*- coding:utf8 -*-
 # !/usr/bin/env python
 
-@request.restful()
 def botWebhook():
     def POST(*args, **vars):
         logger.error(str(request))
