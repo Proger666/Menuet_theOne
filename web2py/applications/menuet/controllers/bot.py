@@ -3,7 +3,7 @@
 from gluon.contrib import simplejson
 
 @request.restful()
-def botwebhook():
+def webhook():
     def POST(*args, **vars):
         logger.error(str(request))
         print(str(request))
