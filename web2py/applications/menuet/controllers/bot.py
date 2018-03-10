@@ -2,8 +2,8 @@
 # !/usr/bin/env python
 from gluon.contrib import simplejson
 
-
-def botWebhook():
+@request.restful()
+def botwebhook():
     def POST(*args, **vars):
         logger.error(str(request))
         print(str(request))
