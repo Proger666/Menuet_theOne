@@ -23,9 +23,9 @@ def get_tags_for_object(q, type):
         # search for menu or item tags
         if type == 'rest':
             query =  db.t_rest_tag.f_name.contains(q)
-        elif type == 'menu':
+        elif type == 'm_tags':
             query = db.t_menu_tag.f_name.contains(q)
-        elif type == 'item':
+        elif type == 'i_tags':
             query = db.t_item_tag.f_name.contains(q)
         else:
             logger.info('Failure happened in tag suggestions ! ' + logUser_and_request())
@@ -70,7 +70,7 @@ def api():
                     return dict(suggestions=huections)
                 # Search for tag (menu or item)
                 elif request.args[1] == 'm_tags' or request.args[1] == 'i_tags':
-                    huections = get_tags_for_object(query, 'menu') if request.args[
+                    huections = get_tags_for_object(query, 'm_tags') if request.args[
                                                                           1] == 'm_tags' else get_tags_for_object(query,
                                                                                                                   'i_tags')
                     return dict(suggestions=huections)
