@@ -40,8 +40,6 @@ def get_user_info(userQuery):
 @request.restful()
 def webhook():
     def POST(*args, **vars):
-        logger.error(str(request))
-        print(str(request))
         user_context = get_user_info(request.vars.originalDetectIntentRequest)
         return simplejson.dumps({
             "speech": 'lol',
