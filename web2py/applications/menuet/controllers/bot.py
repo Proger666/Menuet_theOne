@@ -10,7 +10,7 @@ def get_user_location_google(text):
     return re.search('\d+\.\d+\,\d+\.\d+', text).group(0)
 
 
-def get_user_info(userQuery):
+def get_user_info(userQuery,ll):
     # fast fail if empty req
     if userQuery == None:
         logger.error("Fullfilment failed for bot request")
@@ -18,7 +18,7 @@ def get_user_info(userQuery):
     userInfo = userQuery['payload']['data']['message']['chat']
     userInfo = Storage(userInfo)
     # apple location parsing
-    user_last_loc = get_user_location_google(userQuery['payload']['data']['message']['text'])
+    user_last_loc = ll #get_user_location_google(userQuery['payload']['data']['message']['text'])
 
     user_name = userInfo.username
     user_id = userInfo.id
@@ -43,7 +43,7 @@ def get_user_info(userQuery):
 def webhook():
     def POST(*args, **vars):
         logger.error('request is ' + str(request.vars))
-        user_context = get_user_info(request.vars.originalDetectIntentRequest)
+        user_context = get_user_info(request.vars.t['request.vars.originalDetectIntentRequest'], request.vars.ll)
         return simplejson.dumps(user_context)
 
     logger.warn("request from bot" + str(request))
