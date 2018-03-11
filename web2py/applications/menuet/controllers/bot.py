@@ -51,10 +51,5 @@ def webhook():
             "source": "apiai-weather-webhook-sample"
         })
 
-    def GET(*args, **vars):
-        logger.error(str(request))
-        print(str(request))
-        return simplejson.dumps({'speech': "lol"})
-
     logger.warn("request from bot" + str(request))
     return locals()
