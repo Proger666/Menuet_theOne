@@ -12,7 +12,7 @@ def get_user_location_google(text):
 
 def get_user_info(userQuery):
     # fast fail if empty req
-    if len(userQuery) < 1:
+    if userQuery == None:
         logger.error("Fullfilment failed for bot request" + logUser_and_request())
     # lets get current user context
     userInfo = userQuery['payload']['data']['message']['chat']
