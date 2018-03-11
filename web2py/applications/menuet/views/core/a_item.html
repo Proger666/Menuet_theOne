@@ -1,9 +1,15 @@
 {{extend "layout.html"}}
 
+<link rel="stylesheet" href="{{=URL('static', 'js/tags/tagify.css')}}">
+
+<script src="{{=URL('static', 'js/tags/tagify.js')}}"></script>
+<script src="{{=URL('static', 'js/tags/jQuery.tagify.js')}}"></script>
 
 <div class="container">
 {{if  not 'itm_id' in request.vars:}}
-    <h1>Новый предмет в меню:<br>{{=item.menu_name}}</h1>
+    <h1>Новый предмет в меню:<br><a
+            href="{{=URL('core', 'e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}">{{=item.menu_name}}</a>
+    </h1>
 {{else:}}
     <h1>Изменить предмет</h1>
 {{pass}}
@@ -51,18 +57,18 @@
                     <form class="price_group" id="price_group_id">
                         <div class="form-group input-group">
                                 <span class="input-group-addon"><i class="fas fa-chart-pie"
-                                                               style="width: 20px;height: 16px"></i></span>
-                                <select id="portion_size0" name="portion_size" class="form-control">
-                                {{for portion in portions:}}
-                                    <option value="{{=portion.id}}">{{=portion.f_name}}</option>
-                                {{pass}}
-                                    <input type="number" id="item_price0" name="portion_price" value="{{=item.price}}"
-                                           class="form-control"
-                                           placeholder="Цена">
-                                    <div id="add_portion" class="form-group"></div>
+                                                                   style="width: 20px;height: 16px"></i></span>
+                            <select id="portion_size0" name="portion_size" class="form-control">
+                            {{for portion in portions:}}
+                                <option value="{{=portion.id}}">{{=portion.f_name}}</option>
+                            {{pass}}
+                                <input type="number" id="item_price0" name="portion_price" value="{{=item.price}}"
+                                       class="form-control"
+                                       placeholder="Цена">
+                                <div id="add_portion" class="form-group"></div>
 
-                                </select>
-                            </div>
+                            </select>
+                        </div>
                     </form>
                     <input class="btn btn-success form-control" id="addrow_id0" type="button"
                            value=" Еще одна порция "
@@ -86,9 +92,8 @@
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Тэги</label>
-
                         <textarea class="form-control " name="item_tags" placeholder="острое, от шеф-повара..."
-                                  id="item_tags" rows='2' data-min-rows='2'
+                                  id="item_tags" hidden
                                   type="text">{{if 't' in request.vars:}}{{for tagg in request.vars.t:}}{{=tagg}}{{pass}}{{pass}}</textarea>
                     </div>
                 </div>
@@ -159,17 +164,27 @@
 
     });
 
-    $("#item_tags").suggestions({
-        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
-        type: "I_TAGS",
-        count: 5,
-        onSelect: function (suggestion) {
-            $('#item_tags_id').val(function () {
-                return this.value + ',' + suggestion.id;
+    var input2 = document.querySelector('textarea[id=item_tags]'),
+            tagify2 = new Tagify(input2, {
+                duplicates: true,
+                callbacks: {
+                    add: onAddTag,
+                    remove: onRemoveTag
+                }
             });
-
-        }
+    tagify2.on('add', function (e) {
+        console.log(e, e.detail);
     });
+
+    // add tag callback
+    function onAddTag(e) {
+        console.log(e, e.detail);
+    }
+
+    // remove tag callback
+    function onRemoveTag(e) {
+        console.log(e, e.detail);
+    }
 
     $("#item_ingrs").suggestions({
         token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
@@ -182,7 +197,6 @@
 
         }
     });
-
 
     function save_item(flag) {
         $("#add_butt")
