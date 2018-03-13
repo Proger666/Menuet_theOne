@@ -3,7 +3,7 @@
 ########################################
 db.define_table('t_bot_user_context',
                 Field('f_user_id', type='integer',
-                      label=T('user id from dialog Flow')),
+                      label=T('user id from Telegram')),
                 Field('f_username', type='string',
                       label=T('Username')),
                 Field('f_last_name', type='string',
@@ -11,7 +11,7 @@ db.define_table('t_bot_user_context',
                 Field('f_first_name', type='string',
                       label=T('user first name')),
                 Field('f_last_loc', type='string',
-                      label=T('user last name')),
+                      label=T('User location')),
                 auth.signature, format='%(f_username)s',
                 migrate=settings.migrate)
 ########################################
