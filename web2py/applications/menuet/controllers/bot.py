@@ -23,10 +23,10 @@ def save_user_loc_to_db(request):
 @request.restful()
 def api():
     def POST(*args, **vars):
-        if not check_token(request.token):
+        if not check_token(request.vars.token):
             logger.warning("ALARM! Some one using API !!!! " + str(request))
-        if request.action == 'save_user_loc':
-            save_user_loc_to_db(request)
+        if request.vars.action == 'save_user_loc':
+            save_user_loc_to_db(request.vars)
 
     return locals()
 
