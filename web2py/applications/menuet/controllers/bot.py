@@ -4,13 +4,37 @@ from gluon.contrib import simplejson
 import re
 
 
+def check_token(token):
+    MENUET_TOKEN = "ya29.c.El97BacMtcOVmFuQGwApUY-EikgCG8YtGI2C6oAt73Gd9AsHFBntwabQElx-9ZIQJSRvIBprUaRqDvHo2JHZCOTW8Z80u2FH8k9XlsL1Lqeg"
+    if token == MENUET_TOKEN:
+        return True
+    else:
+        return False
+
+
+def save_user_loc_to_db(request):
+    logger.warning("request to save user loc " + str(request))
+    db.t_bot_user_context.update_or_insert(f_user_id=request.user_id,f_username=request.username,f_last_loc=request.location,f_first_name=request.user_first_name)
+    pass
+
+
+@request.restful()
+def api():
+    def POST(*args, **vars):
+        if not check_token(request.token):
+            logger.warning("ALARM! Some one using API !!!! " + str(request))
+        if request.action == 'save_user_loc':
+            save_user_loc_to_db(request)
+    return locals()
+
+
 def get_user_location_google(text):
     if text == None:
         logger.error('faled to fullfill user location - parameter is empty ' + logUser_and_request())
     return re.search('\d+\.\d+\,\d+\.\d+', text).group(0)
 
 
-def get_user_info(userQuery,ll):
+def get_user_info(userQuery, ll):
     # fast fail if empty req
     if userQuery == None:
         logger.error("Fullfilment failed for bot request")
@@ -18,7 +42,7 @@ def get_user_info(userQuery,ll):
     userInfo = userQuery['payload']['data']['message']['chat']
     userInfo = Storage(userInfo)
     # apple location parsing
-    user_last_loc = ll #get_user_location_google(userQuery['payload']['data']['message']['text'])
+    user_last_loc = ll  # get_user_location_google(userQuery['payload']['data']['message']['text'])
 
     user_name = userInfo.username
     user_id = userInfo.id
