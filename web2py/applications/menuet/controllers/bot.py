@@ -9,12 +9,14 @@ def check_token(token):
     if token == MENUET_TOKEN:
         return True
     else:
+        logger.warning("TOKEN IS :" + token + "\n Menuet token is " + MENUET_TOKEN)
         return False
 
 
 def save_user_loc_to_db(request):
     logger.warning("request to save user loc " + str(request))
-    db.t_bot_user_context.update_or_insert(f_user_id=request.user_id,f_username=request.username,f_last_loc=request.location,f_first_name=request.user_first_name)
+    db.t_bot_user_context.update_or_insert(f_user_id=request.user_id, f_username=request.username,
+                                           f_last_loc=request.location, f_first_name=request.user_first_name)
     pass
 
 
@@ -25,6 +27,7 @@ def api():
             logger.warning("ALARM! Some one using API !!!! " + str(request))
         if request.action == 'save_user_loc':
             save_user_loc_to_db(request)
+
     return locals()
 
 
