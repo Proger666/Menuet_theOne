@@ -115,9 +115,11 @@ def get_food_with_loc(vars):
 @request.restful()
 def api():
     def POST(*args, **vars):
-        logger.warning("We got request:\n " + str(request))
+        logger.debug("We got request with vars:\n " + str(request.vars))
         token = request.vars.get('token')
-        print token
+        logger.warning(request.vars.token)
+        logger.warning(request.vars.get('token'))
+        logger.warning(request.vars['token'])
         if not check_token(token):
             logger.warning("ALARM! Some one using API !!!! " + str(request))
             return {'status': 'error', 'verify': 'failed'}
