@@ -116,7 +116,9 @@ def get_food_with_loc(vars):
 def api():
     def POST(*args, **vars):
         logger.warning("We got request:\n " + str(request))
-        if not check_token(request.vars.get('token')):
+        token = request.vars.get('token')
+        print token
+        if not check_token(token):
             logger.warning("ALARM! Some one using API !!!! " + str(request))
             return {'status': 'error', 'verify': 'failed'}
         if request.vars.get('action') == 'save_user_loc':
