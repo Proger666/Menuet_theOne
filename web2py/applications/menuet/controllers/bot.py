@@ -116,12 +116,12 @@ def get_food_with_loc(vars):
 def api():
     def POST(*args, **vars):
         logger.warning("We got request:\n " + str(request))
-        if not check_token(request.vars['token']):
+        if not check_token(request.vars.get('token')):
             logger.warning("ALARM! Some one using API !!!! " + str(request))
             return {'status': 'error', 'verify': 'failed'}
-        if request.vars.action == 'save_user_loc':
+        if request.vars.get('action') == 'save_user_loc':
             save_user_loc_to_db(request.vars)
-        elif request.vars.action == 'get_food_loc':
+        elif request.vars.get('action') == 'get_food_loc':
             return get_food_with_loc(request.vars)
 
     return locals()
