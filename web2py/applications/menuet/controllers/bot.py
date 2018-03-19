@@ -12,7 +12,8 @@ def check_token(token):
     if token == MENUET_TOKEN:
         return True
     else:
-        logger.warning("TOKEN IS :" + token + "\n Menuet token is " + MENUET_TOKEN)
+        logger.warning(
+            "TOKEN IS :" + token if token is not None else "no token supplied" + "\n Menuet token is " + MENUET_TOKEN)
         return False
 
 
@@ -104,7 +105,7 @@ def get_food_with_loc(vars):
     # lets get food by ingr
     result = weighted_search(vars.query)
     if result:
-       # return data from cache
+        # return data from cache
         return get_from_cache(vars.user_id)
     else:
         return False
@@ -114,6 +115,7 @@ def get_food_with_loc(vars):
 @request.restful()
 def api():
     def POST(*args, **vars):
+        logger.warning("We got request:\n " + str(request))
         if not check_token(request.vars.token):
             logger.warning("ALARM! Some one using API !!!! " + str(request))
             return {'status': 'error', 'verify': 'failed'}
