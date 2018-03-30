@@ -1,10 +1,11 @@
 # -*- coding:utf8 -*-
 # !/usr/bin/env python
+import datetime
 from gluon.contrib import simplejson
 import re
 
 ######## todo: redesign ####
-USER_CACHE = {"user_id": 1, "items": []}
+USER_CACHE = [{"user_id": 1, "items": [], 'time': datetime.datetime.now()}]
 
 
 def check_token(token):
@@ -34,7 +35,7 @@ def get_from_cache(user):
     return {}
 
 
-def weighted_search(query):
+def weighted_search(query, loc,user_id):
     result_list = []
     raw_weights = {'tag': 3, 'ingr': 1, 'item': 2}
     weights = Storage(raw_weights)
@@ -52,58 +53,63 @@ def weighted_search(query):
 
     # View of m-m-relations
     subquery = (db.t_rest_menu.t_menu == db.t_menu.id) & \
-               (db.t_rest_menu.t_rest == db.t_restaraunt.id) & \
-               (db.t_menu_item.t_item == db.t_item.id) & \
-               (db.t_menu.f_current == True) & \
-               (db.t_item.f_recipe == db.t_recipe.id) & \
-               (db.t_ingredient.id == db.t_step.f_ingr) & \
-               (db.t_step_ing.t_step == db.t_step.id) & \
-               (db.t_step_ing.t_recipe == db.t_recipe.id)
+               (db.t_rest_menu.t_rest == db.t_restaraunt.id)
+               # (db.t_menu_item.t_item == db.t_item.id) & \
+               # (db.t_menu.f_current == True) & \
+               # (db.t_item.f_recipe == db.t_recipe.id) & \
+               # (db.t_ingredient.id == db.t_step.f_ingr) & \
+               # (db.t_step_ing.t_step == db.t_step.id) & \
+               # (db.t_step_ing.t_recipe == db.t_recipe.id)
+    ############################################################################
+    ##################### CREATE LOCATION SLICE ################################
+    ##### Search by location
+    rest1k = [1,7]
+    ############
+    ### create slice
+    slice = db(db.t_restaraunt.id.belongs(rest1k) & subquery).select()
+    ############################################################################
 
-    ## filter records
-    # TODO: redesign
-    # select_filter = 'db.t_menu.ALL,db.t_item.ALL,db.t_restaraunt.ALL,db.t_ingredient.ALL'
-    ###### Find all items by tag
-    _tmp = db(db.tag.name == item).select(db.tag.id)
-    _tmpA = [x.id for x in _tmp]
-    # damn python
 
-    s_tag = db(db.t_item.tags.contains(_tmpA) & subquery).select(distinct=True)
-    # form result
-    _cur_id = None
-    _cur_menu = None
-    add_results(_cur_id, _cur_menu, result_list, s_tag, weights.tag)
 
-    # add found id via SET to exclude repeats
-    _id = set([x['t_item'].id for x in s_tag])
-    [found_items_id.append(x) for x in _id]
+    ############### Search by Name ######################
 
-    ######## find all items by item
-    s_item = db(
-        (db.t_item.f_name.like('%' + item + '%')) & (~db.t_item.id.belongs(found_items_id)) & (subquery)).select(
-        distinct=True)
 
-    add_results(_cur_id, _cur_menu, result_list, s_item, weights.item)
-    [found_items_id.append(x['t_item'].id) for x in s_item]
-    ####### find all items by ingrs
-    ingrs = find_ingr(search)
-    # find all id of ingrs
-    ingrs_id = [x.id for x in db(db.t_ingredient.f_name.belongs(ingrs)).select(db.t_ingredient.id)]
-    # filter by acive menu and ingrs_id search only once
-    s_ingrs = db((subquery) &
-                 (db.t_ingredient.id.belongs(ingrs_id)) &
-                 (~db.t_item.id.belongs(found_items_id))).select(distinct=True)
-    add_results(_cur_id, _cur_menu, result_list, s_ingrs, weights.ingr)
+    #Dump tp cache
+    cached = False
+    # add to cache
+    USER_CACHE.append(
+        {'user_id':user_id,
+         'items': result_list,
+         'time': datetime.datetime.now()}
+    )
+    cached = True
 
-    return jsonpickle.dumps(result_list, unpicklable=False)
+    # should return status rathen then actual result
+    if len(result_list) > 0 and cached:
+        return True
+    return False
 
+
+def api_error(msg):
+    return {'status':'error',"msg":msg}
+def api_success(msg):
+    return {'status':'OK', 'msg':msg}
 
 def get_food_with_loc(vars):
     if len(vars) < 1:
         logger.error("failed to get food for user, vars not supplied")
         return {}
-    # lets get food by ingr
-    result = weighted_search(vars.query)
+    if vars.query is None or vars.query == "":
+        logger.error("query is empty :(")
+        return api_error("Query is empty")
+    # lets get food WITH WEIGHTS
+    # query = food
+    # From proxy we expet to receive:
+    # payload = {'action': 'get_food_loc', 'token': MENUET_TOKEN,
+    #            'user_id': update.message.from_user.id,
+    #            'query': food,
+    #            "location": user_location}
+    result = weighted_search(vars.query, Storage(vars.location), vars.user_id)
     if result:
         # return data from cache
         return get_from_cache(vars.user_id)
@@ -117,9 +123,6 @@ def api():
     def POST(*args, **vars):
         logger.debug("We got request with vars:\n " + str(request.vars))
         token = request.vars.get('token')
-        logger.warning(request.vars.token)
-        logger.warning(request.vars.get('token'))
-        logger.warning(request.vars['token'])
         if not check_token(token):
             logger.warning("ALARM! Some one using API !!!! " + str(request))
             return {'status': 'error', 'verify': 'failed'}

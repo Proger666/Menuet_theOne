@@ -105,19 +105,21 @@
         rest.is_network = document.getElementById('is_network').checked;
         rest.r_id = "{{=request.vars.r_id}}";
         rest.town = document.getElementById('rest_town').value;
-        rest.network = document.getElementById('network_id').value;
+        rest.network_id = document.getElementById('network_id').value;
+        rest.network_name = document.getElementById('search_net').value;
 
-        var DTO = {'rest': rest};
+        var DTO = {'action':'add','rest': rest};
         var data = JSON.stringify(DTO);
 
         $.ajax({
             type: 'POST',
-            url: '{{=URL('default', 'save_rest')}}',
+            url: '{{=URL('apiv1', 'api')}}',
             scriptCharset: "utf-8",
             contentType: "application/json",
             dataType: 'json',
             data: data,
             success: function (data) {
+                window.alert(data['msg'])
                 window.location.reload();
                 return data
 
