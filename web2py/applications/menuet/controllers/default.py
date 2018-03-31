@@ -66,7 +66,7 @@ def commit_to_db(item):
         if _tmp != None:
             _f_network_name = _tmp.id
         else:
-            _f_network_name = db.t_network.insert(f_name=_f_network_name)
+            _f_network_name = db.t_network.insert(f_name=_f_network_name.lower())
     _f_long = item.get('Longitude_WGS84')
     _f_lat = item.get('Latitude_WGS84')
     _f_q_id = item.get('global_id')
@@ -75,9 +75,9 @@ def commit_to_db(item):
         net = False
     else:
         net = True
-    db.t_restaraunt.update_or_insert(db.t_restaraunt.f_q_id==_f_q_id,f_network_name=_f_network_name,f_public_phone=_f_public_phone,f_q_id=_f_q_id, f_name=_name, f_is_network=net, f_type=_f_type, f_active=True,
+    db.t_restaraunt.update_or_insert(db.t_restaraunt.f_q_id==_f_q_id,f_network_name=_f_network_name.lower(),f_public_phone=_f_public_phone,f_q_id=_f_q_id, f_name=_name.lower(), f_is_network=net, f_type=_f_type, f_active=True,
                            f_coordinateX=_f_coordinateX, f_coordinateY=_f_coordinateY, f_town=u'Moscow',
-                           f_address=_f_address, f_latitude=_f_lat,
+                           f_address=_f_address.lower(), f_latitude=_f_lat,
                            f_longitude=_f_long)
 
     db.commit()
@@ -267,9 +267,9 @@ def save_course():
         if change_factor == 'add':
 
             # Create new recipe
-            _tmp_obj.recipe_id = db.t_recipe.insert(f_name=request.vars.course['name'] + '_recipe')
+            _tmp_obj.recipe_id = db.t_recipe.insert(f_name=request.vars.course['name'].lower() + '_recipe')
             # Create new Item
-            _tmp_obj.item_id = db.t_item.insert(f_name=request.vars.course['name'],
+            _tmp_obj.item_id = db.t_item.insert(f_name=request.vars.course['name'].lower(),
                                                 f_weight=request.vars.course['weight'],
                                                 f_price=request.vars.course['price'],
                                                 f_unit=request.vars.course['unit_id'], f_recipe=_tmp_obj.recipe_id)
@@ -298,7 +298,7 @@ def save_course():
                 # commit all new ingrs
                 # do we have ingr in DB ?
                 if db.t_ingredient(f_name=request.vars.ingr[i]['name']) is None:
-                    _tmp_obj.ingr_id = db.t_ingredient.update_or_insert(f_name=request.vars.ingr[i]['name'])
+                    _tmp_obj.ingr_id = db.t_ingredient.update_or_insert(f_name=request.vars.ingr[i]['name'].lower())
 
                 else:
                     _tmp_obj.ingr_id = db.t_ingredient(f_name=request.vars.ingr[i]['name']).id
@@ -367,7 +367,7 @@ def save_rest():
         if rest is None:
             # create new rest if nothing found
             if int(rest_network):
-                db.t_restaraunt.insert(f_name=rest_name, f_active=True, f_is_network=rest_is_network,
+                db.t_restaraunt.insert(f_name=rest_name.lower(), f_active=True, f_is_network=rest_is_network,
                                        f_address=rest_addr,
                                        f_town=rest_town, f_network_name=rest_network, f_tags=_new_tags)
                 db.commit()
@@ -453,7 +453,7 @@ def save_menu():
             # update network for this rest
             _tmp = db.t_restaraunt[request.vars.rest['id']]
             _tmp.update_record(f_network_name=network.id)
-            _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type],
+            _new_menu = db.t_menu.insert(f_name=menu_name.lower(), f_current=True, f_type=[menu_type],
                                          f_comment=comment, f_network=network.id, f_tags=_new_tags)
             db.commit()
             del _tmp
@@ -473,7 +473,7 @@ def save_menu():
             menu_name = (menu_name if (menu_name != None and menu_name != "") else db.t_menu_type[
                 menu_type].f_name) + ' для  ' + \
                         request.vars.rest['name'].encode('utf-8')
-            _new_menu = db.t_menu.insert(f_name=menu_name, f_current=True, f_type=[menu_type],
+            _new_menu = db.t_menu.insert(f_name=menu_name.lower(), f_current=True, f_type=[menu_type],
                                          f_comment=comment, f_tags=_new_tags)
             db.t_rest_menu.insert(t_menu=_new_menu, t_rest=rest_id)
             db.commit()

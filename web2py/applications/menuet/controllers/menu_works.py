@@ -178,26 +178,7 @@ def delete_menu_item():
     logger.warn('Failure in item delete - final except ' + logUser_and_request())
     return {}
 
-### Not in use
-def normalize_words(ingrs_list):
-    # Do we have ingrs list ?
-    if ingrs_list == None:
-        # TODO: redesign, add more checks
-        logger.warn("Ingredient list has been pushed for normalize_words function " + logUser_and_request())
-        return ajax_error()
-    morph = pymorphy2.MorphAnalyzer()
-    result = []
-    for ingr in ingrs_list:
-        # lets get normal form of the word
-        try:
-            # bad design of library it will set exception if it doesnt know word
-            result.append(morph.parse(ingr)[0].inflect({'plur'}).word)
-        except AttributeError:
-            logger.error("Could not find plural form for ingredient! " + logUser_and_request())
-            result.append(ingr)
-    if len(ingrs_list) > 0:
-        return result
-    return ajax_error()
+
 
 
 @auth.requires_login()
@@ -247,16 +228,16 @@ def save_item():
                 ingrs_to_commit.f_curate = True
                 # commit new ingr
                 if len(ingr) > 0:
-                    ingrs_to_commit.ingr = db.t_ingredient.insert(f_name=ingr, f_curate=True)
+                    ingrs_to_commit.ingr = db.t_ingredient.insert(f_name=ingr.lower(), f_curate=True)
                     ingrs_to_commit_list.append(ingrs_to_commit)
 
         if item_source.change_factor == 'add':
 
             # Create new recipe
-            _tmp_obj.recipe_id = db.t_recipe.insert(f_name=item_source.name + '_recipe')
+            _tmp_obj.recipe_id = db.t_recipe.insert(f_name=item_source.name.lower() + '_recipe')
             item_source.desc = "" if item_source.desc is None else item_source.desc
             # Create new Item
-            _tmp_obj.item_id = db.t_item.insert(f_cal=_tmp_obj.cal,f_name=item_source.name,
+            _tmp_obj.item_id = db.t_item.insert(f_cal=_tmp_obj.cal,f_name=item_source.name.lower(),
                                                 f_weight=item_source.weight,
                                                 f_unit=item_source.unit, f_recipe=_tmp_obj.recipe_id,
                                                 f_desc=item_source.desc, f_tags=_new_tags)
