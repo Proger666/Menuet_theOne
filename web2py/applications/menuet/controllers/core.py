@@ -155,14 +155,37 @@ def e_menu():
             request.vars) + logUser_and_request())
         return None
 
-
+@auth.requires_login()
 def e_item():
-    # safely get item id if it exists else - NONE
-    item_id = request.vars.get('itm_id')
-    if str(item_id).isdigit():
-        item = t_item[item_id]
-        return dict(item=item)
-    return HTTP(404)
+    item = Storage()
+    itm_id = request.vars.get('itm_id')
+    units = db().select(db.t_unit.ALL)
+    if itm_id != None:
+        # fetch item by ID TODO: redesign to single SELECT
+        _tmp = db.t_item[request.vars.itm_id]
+        # create class storage for item
+        item = Storage()
+        item.name = _tmp.f_name
+        item.weight = _tmp.f_weight
+        item.cal = _tmp.f_cal
+        item.id = _tmp.id
+        item.unit = None if _tmp.f_unit is None else db.t_unit[_tmp.f_unit]
+        item.desc = _tmp.f_desc
+        item.ingrs = get_ingrs_for_item(item.id)
+        item.tags = get_tags_for_object(item.id,'item')
+        item.portions = []
+        # get portions name from DB
+        _portions = db(t_item_prices.f_item == item.id).select(t_item_prices.f_price, t_item_prices.f_portion)
+        if _portions != None:
+            # fill array with price and portion name
+            for step in _portions:
+                portion = db.t_portion[step.f_portion]
+                item.portions.append({'portion_size': portion, "portion_price": step.f_price})
+        else:
+            logger.warn('No portions in request ' + logUser_and_request())
+            return locals()
+    portions = db(db.t_portion).select()
+    return locals()
 
 
 @auth.requires_login()

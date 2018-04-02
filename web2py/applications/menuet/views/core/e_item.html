@@ -1,72 +1,284 @@
 {{extend "layout.html"}}
 
-
 <div class="container">
+    <h1>Изменить предмет</h1>
     <div class="row">
-        <div class="card">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-12 text-center">
-                        <p class="font-weight-bold">
-                        <h1>{{=item.f_name}}</h1>
-                        <br></div>
+        <div class="col-sm-5">
+
+            <div class="card" id="suda">
+                <div class="card-header">
                 </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row" id="price_col">
-                            <div class="col-xs-3" >
-                                <i class="fas fa-ruble-sign fa-5x"></i>
-                            </div>
-                            <div class="float-right">
-                                <div class="huge" id="cur_price">{{=item.f_price}}</div>
-
-                            </div>
-                            <input class="form-control" type="number" value=""
-                                   placeholder="Введите новую сумму" id="new_price">
-                        </div>
-
+                <div class="card-block">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Наименование</label>
+                        <input type="text" id="item_name" value="{{=item.name}}" class="form-control">
+                        <em class="text-muted">Например, равиоли с моцарелой</em>
                     </div>
 
+                    <div class="form-group input-group">
+                        <div class="row">
+                            <div class="col-sm-5 form-group input-group"><span class="input-group-addon"><i
+                                    class="fas fa-balance-scale"></i> </span>
+                                <input type="number" id="item_weight" value="{{=item.weight}}" class="form-control"
+                                       placeholder="Вес / Объем">
+                                <i class="fa fa-question-circle"
+                                   data-toggle="tooltip"
+                                   data-placement="right"
+                                   title="Если вес неизвестен - оставьте 0"
+                                   style="color:red">
+                                </i>
+                            </div>
+                            <div class="col-sm-5 form-group input-group">
+                            <span class="input-group-addon"><select id="item_unit">
+                            <option value="1">Выберите</option>
+                            {{for opt in units:}}
+                                <option value="{{=opt.id}}">{{=opt.f_name}}{{=opt.f_description}}</option>
+                            {{pass}}
+                        </select>
+                            </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Калории</label>
+                        <input type="number" class="form-control" id="item_cal" value="{{=item.cal}}">
+                    </div>
+                    <form class="price_group" id="price_group_id">
+                        <div class="form-group input-group">
+                                <span class="input-group-addon"><i class="fas fa-chart-pie"
+                                                                   style="width: 20px;height: 16px"></i></span>
+                            <select id="portion_size0" name="portion_size" class="form-control">
+                            {{for portion in portions:}}
+                                <option value="{{=portion.id}}">{{=portion.f_name}}</option>
+                            {{pass}}
+                                <input type="number" id="item_price0" name="portion_price" value="{{=item.price}}"
+                                       class="form-control"
+                                       placeholder="Цена">
+                                <div id="add_portion" class="form-group"></div>
 
+                            </select>
+                        </div>
+                    </form>
+                    <input class="btn btn-success form-control" id="addrow_id0" type="button"
+                           value=" Еще одна порция "
+                           title="Добавить еще порцию" onclick="addRow()">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Описание</label>
+                        <textarea type="text" id="item_desc"
+                                  class="form-control autoExpand">{{=item.desc}}</textarea>
+                        <em class="text-muted">Фирменная паста с креветками, кальмарами и мидиями в сливочном...</em>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Ингридиенты</label> <i class="fa fa-question-circle"
+                                                                               data-toggle="tooltip"
+                                                                               data-placement="right"
+                                                                               title="Ингридиенты будут авто-дополняться."
+                                                                               style="color:red">
+                    </i>
+                        <textarea type="text" id="item_ingrs" class="form-control autoExpand" rows='3'
+                                  data-min-rows='3'></textarea>
+                        <em class="text-muted">Спагетти, кальмары, мидии, помидоры</em>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Тэги</label>
+
+                        <textarea class="form-control " name="item_tags" placeholder="острое, от шеф-повара..."
+                                  id="item_tags" rows='2' data-min-rows='2'
+                                  type="text">{{if 't' in request.vars:}}{{for tagg in request.vars.t:}}{{=tagg}}{{pass}}{{pass}}</textarea>
+                    </div>
                 </div>
                 <div class="card-footer">
-                    <input class="btn btn-primary" type="button" value="Поправить!" onclick="change_item_price()">
+                    <input class="btn btn-primary" type="button" value="Добавить и закрыть" id="add_butt"
+                           onclick="save_item(1)">
+                    <input class="btn btn-primary" type="button" value="Добавить!" id="add_butt" onclick="save_item(2)">
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
+<input type="hidden" value="0" id="item_tag_id">
+<input type="hidden" value="0" id="item_ingrs_id">
+
+<script type="text/javascript" src="{{=URL('static', 'js/shadow_sugg.js')}}"></script>
 
 <script>
-    function change_item_price() {
+
+
+    $(document)
+            .one('focus.autoExpand', 'textarea.autoExpand', function () {
+                var savedValue = this.value;
+                this.value = '';
+                this.baseScrollHeight = this.scrollHeight;
+                this.value = savedValue;
+            })
+            .on('input.autoExpand', 'textarea.autoExpand', function () {
+                var minRows = this.getAttribute('data-min-rows') | 0, rows;
+                this.rows = minRows;
+                rows = Math.ceil((this.scrollHeight - this.baseScrollHeight) / 16);
+                this.rows = minRows + rows;
+            });
+
+
+    var counter = 1;
+
+    function addRow() {
+        var d = document.getElementById('price_group_id');
+        $('#price_group_id').append('<div class="form-group input-group">' +
+                '<span class="input-group-addon"><i class="fas fa-chart-pie" style="width: 20px;height: 16px"></i> </span>' +
+                '<select name="portion_size" id="portion_size' + counter + '" class="form-control">' +
+        {{for portion in portions:}}
+                '<option value="{{=portion.id}}">{{=portion.f_name}}</option>' +{{pass}}
+                '<div class="form-group input-group">' +
+                '<input type="number" name="portion_price" id="portion_price' + counter + '" value="{{=item.price}}" class="form-control" placeholder="Цена">' +
+                '<div id="add_portion' + counter + '" class="form-group"></div>');
+
+        if (counter === 0) {
+            var btn_row_id = document.getElementById('addrow_id0');
+        }
+        else {
+            var counter_temp = counter - 1;
+            var btn_row_id = document.getElementById('addrow_id' + counter_temp);
+        }
+
+        counter++;
+    }
+
+
+    $(document).ready(function () {
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        });
+
+
+    });
+
+    $("#item_tags").suggestions({
+        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
+        type: "I_TAGS",
+        count: 5,
+        onSelect: function (suggestion) {
+            $('#item_tags_id').val(function () {
+                return this.value + ',' + suggestion.id;
+            });
+
+        }
+    });
+
+    $("#item_ingrs").suggestions({
+        token: "bf69a05b6ce842dcd0cbc159648d19a8c49fdf33",
+        type: "INGREDIENTS",
+        count: 5,
+        onSelect: function (suggestion) {
+            $('#item_ingrs_id').val(function () {
+                return this.value + ',' + suggestion.id;
+            });
+
+        }
+    });
+
+
+    function save_item(flag) {
+        $("#add_butt")
+                .attr("disabled", true)
+                .val("Работаем...");
+
         var item = {};
-        item.id = "{{=item.id}}";
-        item.curr_price = "{{=item.f_price}}";
-        item.new_price = document.getElementById('new_price').value;
+        item.name = document.getElementById('item_name').value;
+        item.weight = document.getElementById('item_weight').value;
+        item.desc = document.getElementById('item_desc').value;
+        item.unit = $("#item_unit").find("option:selected").val();
+        item.change_factor = 'add';
+        item.m_id = "{{=request.vars.m_id}}";
+        item.ingrs = document.getElementById('item_ingrs').value;
+        item.portions_size = document.getElementsByName('portion_size');
+        item.portions_price = document.getElementsByName('portion_price');
+        item.tags_id = document.getElementById('item_tag_id').value;
+        item.tags_name = document.getElementById('item_tags').value;
+        item.cal = document.getElementById('item_cal').value;
+
+        if (item.name !== '') {
+            $(document.getElementById('item_name').parentElement).removeClass('has-danger')
+        }
+        else {
+            $(document.getElementById('item_name').parentElement).addClass('has-danger');
+            $("#add_butt")
+                    .prop("disabled", false)
+                    .val("Добавить!");
+            return;
+        }
+
+        if (item.ingrs !== '') {
+            var arrayOfStrings = item.ingrs.split(',');
+            if (arrayOfStrings.length === 0) {
+                $(document.getElementById('item_ingrs').parentElement).addClass('has-danger');
+                $("#add_butt")
+                        .prop("disabled", false)
+                        .val("Добавить!");
+                return;
+            }
+            else {
+                $(document.getElementById('item_ingrs').parentElement).removeClass('has-danger');
+            }
+        }
+        else {
+            $(document.getElementById('item_ingrs').parentElement).addClass('has-danger');
+            $("#add_butt")
+                    .prop("disabled", false)
+                    .val("Добавить!");
+            return;
+        }
+
+        item.portions = [];
+        var counter = 0;
+        item.portions_price.forEach(function (element) {
+            if (element.value !== '' && item.portions_size[counter].value) {
+                item.portions.push({
+                    'portion_size': item.portions_size[counter].value,
+                    'portion_price': element.value
+                });
+                $(element.parentElement).removeClass('has-danger');
+                counter += 1;
+
+            }
+            else {
+                $(element.parentElement).addClass('has-danger');
+                $("#add_butt")
+                        .prop("disabled", false)
+                        .val("Добавить!");
+                throw new Error('Something happened');
+            }
+        });
+
 
         var DTO = {'item': item};
         var data = JSON.stringify(DTO);
 
         $.ajax({
             type: 'POST',
-            url: '{{=URL('menu_works', 'change_price_item')}}',
+            url: '{{=URL('menu_works', 'save_item')}}',
+            scriptCharset: "utf-8",
             contentType: "application/json",
             dataType: 'json',
             data: data,
             success: function (data) {
-                $('#cur_price').text(item.new_price);
-                $('#price_col').removeClass('has-danger');
-
-                return data
+                $('#suda').removeClass('has-danger');
+                if (flag === 1)
+                    window.location = '{{=URL('core', 'e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}';
+                else
+                    window.location = '{{=URL('core', 'a_item',
+                    vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}' + '&t=' + item.tags_name
             },
             error: function (data) {
-                $('#price_col').addClass('has-danger');
-                return data
+                $('#suda').addClass('has-danger');
             }
-
         });
+
     }
+
+
 </script>
+
+
+
