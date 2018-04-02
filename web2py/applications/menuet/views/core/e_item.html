@@ -28,9 +28,9 @@
                                    style="color:red">
                                 </i>
                             </div>
-                            <div class="col-sm-5 form-group input-group">
+                            <div class="col-sm-5 form-group input-group" id="unit_selector">
                             <span class="input-group-addon"><select id="item_unit">
-                            <option value="1">Выберите</option>
+                            <option value="0">Выберите</option>
                             {{for opt in units:}}
                                 <option value="{{=opt.id}}">{{=opt.f_name}}{{=opt.f_description}}</option>
                             {{pass}}
@@ -44,20 +44,7 @@
                         <input type="number" class="form-control" id="item_cal" value="{{=item.cal}}">
                     </div>
                     <form class="price_group" id="price_group_id">
-                        <div class="form-group input-group">
-                                <span class="input-group-addon"><i class="fas fa-chart-pie"
-                                                                   style="width: 20px;height: 16px"></i></span>
-                            <select id="portion_size0" name="portion_size" class="form-control">
-                            {{for portion in portions:}}
-                                <option value="{{=portion.id}}">{{=portion.f_name}}</option>
-                            {{pass}}
-                                <input type="number" id="item_price0" name="portion_price" value="{{=item.price}}"
-                                       class="form-control"
-                                       placeholder="Цена">
-                                <div id="add_portion" class="form-group"></div>
 
-                            </select>
-                        </div>
                     </form>
                     <input class="btn btn-success form-control" id="addrow_id0" type="button"
                            value=" Еще одна порция "
@@ -76,7 +63,7 @@
                                                                                style="color:red">
                     </i>
                         <textarea type="text" id="item_ingrs" class="form-control autoExpand" rows='3'
-                                  data-min-rows='3'></textarea>
+                                  data-min-rows='3'>{{for ingr in item.ingrs:}}{{=ingr.name}},{{pass}}</textarea>
                         <em class="text-muted">Спагетти, кальмары, мидии, помидоры</em>
                     </div>
                     <div class="form-group">
@@ -84,7 +71,7 @@
 
                         <textarea class="form-control " name="item_tags" placeholder="острое, от шеф-повара..."
                                   id="item_tags" rows='2' data-min-rows='2'
-                                  type="text">{{if 't' in request.vars:}}{{for tagg in request.vars.t:}}{{=tagg}}{{pass}}{{pass}}</textarea>
+                                  type="text">{{for tag in item.tags:}}{{=tag}},{{pass}}</textarea>
                     </div>
                 </div>
                 <div class="card-footer">
@@ -121,17 +108,17 @@
             });
 
 
-    var counter = 1;
+    var counter = 0;
 
-    function addRow() {
+    function loadRow(price) {
         var d = document.getElementById('price_group_id');
         $('#price_group_id').append('<div class="form-group input-group">' +
                 '<span class="input-group-addon"><i class="fas fa-chart-pie" style="width: 20px;height: 16px"></i> </span>' +
                 '<select name="portion_size" id="portion_size' + counter + '" class="form-control">' +
-        {{for portion in portions:}}
-                '<option value="{{=portion.id}}">{{=portion.f_name}}</option>' +{{pass}}
+        {{for portion_name in portions_name:}}
+                '<option value="{{=portion_name.id}}">{{=portion_name.f_name}}</option>' +{{pass}}
                 '<div class="form-group input-group">' +
-                '<input type="number" name="portion_price" id="portion_price' + counter + '" value="{{=item.price}}" class="form-control" placeholder="Цена">' +
+                '<input type="number" name="portion_price" id="portion_price' + counter + '" value="'+price+'" class="form-control" placeholder="Цена">' +
                 '<div id="add_portion' + counter + '" class="form-group"></div>');
 
         if (counter === 0) {
@@ -145,12 +132,39 @@
         counter++;
     }
 
+    function addRow() {
+        var d = document.getElementById('price_group_id');
+        $('#price_group_id').append('<div class="form-group input-group">' +
+                '<span class="input-group-addon"><i class="fas fa-chart-pie" style="width: 20px;height: 16px"></i> </span>' +
+                '<select name="portion_size" id="portion_size' + counter + '" class="form-control">' +
+        {{for portion_name in portions_name:}}
+
+                '<option value="{{=portion_name.id}}">{{=portion_name.f_name}}</option>' +{{pass}}
+                '<div class="form-group input-group">' +
+                '<input type="number" name="portion_price" id="portion_price' + counter + '" value="{{=item.price}}" class="form-control" placeholder="Цена">' +
+                '<div id="add_portion' + counter + '" class="form-group"></div>');
+
+        if (counter === 0) {
+            var btn_row_id = document.getElementById('addrow_id0');
+        }
+        else {
+            var counter_temp = counter - 1;
+            var btn_row_id = document.getElementById('addrow_id' + counter_temp);
+        }
+        counter++;
+    }
 
     $(document).ready(function () {
         $(function () {
             $('[data-toggle="tooltip"]').tooltip()
         });
+        $("[id=item_unit]").val("{{=item.unit['id']}}");
 
+        {{for portion in item.portions:}}
+        loadRow('{{=portion['price']}}');
+        $("[id=portion_size"+(counter-1)+"]").val("{{=portion['size']['id']}}");
+
+        {{pass}}
 
     });
 

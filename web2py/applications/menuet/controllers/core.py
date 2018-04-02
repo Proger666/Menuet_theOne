@@ -180,11 +180,11 @@ def e_item():
             # fill array with price and portion name
             for step in _portions:
                 portion = db.t_portion[step.f_portion]
-                item.portions.append({'portion_size': portion, "portion_price": step.f_price})
+                item.portions.append({'size': portion, "price": step.f_price})
         else:
             logger.warn('No portions in request ' + logUser_and_request())
             return locals()
-    portions = db(db.t_portion).select()
+    portions_name = db(db.t_portion).select()
     return locals()
 
 
