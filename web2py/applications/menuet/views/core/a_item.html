@@ -4,7 +4,7 @@
 <div class="container">
 {{if  not 'itm_id' in request.vars:}}
     <h1>Новый предмет в меню:<br><a
-            href="{{=URL('core', 'e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}">{{=item.menu_name}}</a>{{=item.menu_name}}</h1>
+            href="{{=URL('core', 'e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}">{{=item.menu_name}}</a></h1>
 {{else:}}
     <h1>Изменить предмет</h1>
 {{pass}}
@@ -282,7 +282,6 @@
         });
 
     }
-
 
 </script>
 
