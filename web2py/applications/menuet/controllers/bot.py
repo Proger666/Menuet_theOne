@@ -47,22 +47,35 @@ def get_from_cache(user_id, count):
         master_file.close()
         master_file = open('applications/menuet/cache/cache_master', 'r+')
     try:
-
         cache_items = simplejson.loads(master_file.read())
     except JSONDecodeError:
         return {'msg': 'none'}
+    if len(cache_items) == 0:
+        return {'msg': 'none'}
 
-    # for item in USER_CACHE:
-    #     # find requested data for user by id
-    #     if item['user_id'] == user_id:
-    #         # if we found record - do we have data ?
-    #         if len(item['items']) == 0:
-    #             USER_CACHE[:] = [d for d in USER_CACHE if d.get('user_id') != user_id]
-    #             return {'msg': 'no more'}
-    #         else:
-    #             r = item['items'][int(item['curr_pos'])::]
-    #             item['curr_pos'] += count
-    #             return {'msg': 'ok', 'items': r}
+    try:
+        for item in cache_items:
+            # find requested data for user by id
+            if item['user_id'] == user_id:
+                # if we found record - do we have data ?
+                path = 'applications/menuet/cache/cache_' + user_id
+                with open(path, 'r+') as f:
+                    cached = simplejson.load(f)
+                    r = simplejson.loads(cached['items'])[int(cached['curr_pos'])::]
+                    cached['curr_pos'] += count
+                    if len(r) == 0:
+                        import os
+                        f.close()
+                        os.remove(path)
+                        return {'msg': 'no more'}
+                    else:
+                        f.seek(0)
+                        simplejson.dump(cached, f)
+                        return {'msg': 'ok', 'items': r}
+    except Exception as e:
+        # TODO:redesign
+        logger.error('we failed to fetch from cache with ' + str(e.message) + str(e))
+        return {'msg': 'none'}
     return {'msg': 'none'}
 
 
@@ -231,10 +244,10 @@ def create_result(by_name, by_ingr):
         # check if
         if len(element) > 0:
             if not is_exist(element, resulting_array):
-                resulting_array.append({'item': element['item']['f_name'],
-                                        'ingrs': ",".join(get_ingrs_for_item(element['item']['id'])),
-                                        'cost': get_price_for_item(element['item']['id']),
-                                        'weight': element['weight']})
+                resulting_array.append({"item": element["item"]["f_name"],
+                                        "ingrs": ",".join(get_ingrs_for_item(element["item"]["id"])),
+                                        "cost": get_price_for_item(element["item"]["id"]),
+                                        "weight": element["weight"]})
     end = datetime.datetime.now() - start
     logger.warning('create_result concluded in ' + str(end))
     return resulting_array
@@ -252,18 +265,31 @@ def write_to_cache(user_id, weighted_result):
     # add to cache
     if len(weighted_result) > 0:
         uuid_number = str(uuid.uuid4())
-        file = open('applications/menuet/cache/cache' + uuid_number, 'wb')
+        # Create new cache for the results
+        file = open('applications/menuet/cache/cache_' + user_id, 'wb')
         _ = {"user_id": user_id,
-             "items": weighted_result,
+             "items": simplejson.dumps(weighted_result),
              "curr_pos": 0}
-        print>> file, _
-        master_file = open('applications/menuet/cache/cache_master', 'wb')
-        simplejson.dump({"user_id": user_id,
-             "uuid": uuid_number,
-             "time": str(datetime.datetime.now())},master_file)
+        # dumps this results
+        simplejson.dump(_, file)
         file.close()
-        master_file.close()
-        return True
+        import os
+        # do we have master cache?
+        if os.path.isfile('applications/menuet/cache/cache_master'):
+            # create with list if doesnt have master file
+            with open('applications/menuet/cache/cache_master', mode='w') as master_file:
+                simplejson.dump([], master_file)
+
+        # populate master with info about new created cache
+        with open('applications/menuet/cache/cache_master', mode='r+') as feedsjson:
+            feedsjson.seek(0)
+            entry = {"user_id": user_id,
+                     "time": str(datetime.datetime.now())}
+            feeds = simplejson.load(feedsjson)
+            feeds.append(entry)
+            feedsjson.seek(0)
+            simplejson.dump(feeds, feedsjson)
+            return True
     return None
 
 
