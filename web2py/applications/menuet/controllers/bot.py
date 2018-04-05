@@ -10,8 +10,8 @@ import re
 ######## todo: redesign ####
 
 # View of m-m-relations
-import simplejson
-from simplejson import JSONDecodeError
+from gluon.contrib import simplejson
+from gluon.contrib.simplejson import JSONDecodeError
 
 m_t_m_rest_menu = \
     ((db.t_rest_menu.t_menu == db.t_menu.id) &
