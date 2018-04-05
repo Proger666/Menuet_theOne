@@ -263,7 +263,6 @@ def is_exist(element, resulting_array):
 def write_to_cache(user_id, weighted_result):
     # add to cache
     if len(weighted_result) > 0:
-        uuid_number = str(uuid.uuid4())
         # Create new cache for the results
         file = open('applications/menuet/cache/cache_' + user_id, 'wb')
         _ = {"user_id": user_id,
@@ -276,7 +275,7 @@ def write_to_cache(user_id, weighted_result):
         # do we have master cache?
         if os.path.isfile('applications/menuet/cache/cache_master'):
             # create with list if doesnt have master file
-            with open('applications/menuet/cache/cache_master', mode='w') as master_file:
+            with open('applications/menuet/cache/cache_master', 'w') as master_file:
                 simplejson.dump([], master_file)
 
         # populate master with info about new created cache
