@@ -49,6 +49,9 @@ def get_from_cache(user_id, count):
         cache_items = simplejson.loads(master_file.read())
     except JSONDecodeError:
         return {'msg': 'none'}
+    except Exception as e:
+        logger.error("we broke cache" + str(e) + str(e.message))
+        return {'msg': 'none'}
     if len(cache_items) == 0:
         return {'msg': 'none'}
 
