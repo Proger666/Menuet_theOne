@@ -415,8 +415,6 @@ def api():
         elif request.vars.get('action') == 'get_food_loc':
             return get_food_with_loc(request.vars)
 
-    return locals()
-
 
 def get_user_location_google(text):
     if text == None:
