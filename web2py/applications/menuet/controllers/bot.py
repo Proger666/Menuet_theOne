@@ -315,8 +315,8 @@ def weighted_search(query, loc, user_id):
     ##################### CREATE LOCATION SLICE ################################
     ##### Search by location
     # ROWS of rests
-    rest1k = db.executesql('SET @lat =' + loc['latitude'])
-    rest1k = db.executesql('SET @lng = ' + loc['longitude'])
+    rest1k = db.executesql('SET @lat =' + str(loc['latitude']))
+    rest1k = db.executesql('SET @lng = ' + str(loc['longitude']))
     rest1k = db.executesql('SELECT t_restaraunt.id,t_restaraunt.f_is_network,'
                            't_restaraunt.f_network_name,(ACOS(COS(RADIANS(@lat))'
                            '*COS(RADIANS(t_restaraunt.f_latitude))*COS(RADIANS(t_restaraunt.f_longitude)-RADIANS(@lng))+SIN(RADIANS(@lat))'
