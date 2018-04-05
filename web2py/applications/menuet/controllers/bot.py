@@ -315,8 +315,8 @@ def weighted_search(query, loc, user_id):
     ##################### CREATE LOCATION SLICE ################################
     ##### Search by location
     # ROWS of rests
-    rest1k = db.executesql('SET @lat =' + str(loc[1]))
-    rest1k = db.executesql('SET @lng = ' + str(loc[2]))
+    rest1k = db.executesql('SET @lat =' + str(loc['latitude']))
+    rest1k = db.executesql('SET @lng = ' + str(loc["longitude"]))
     rest1k = db.executesql('SELECT t_restaraunt.id,t_restaraunt.f_is_network,'
                            't_restaraunt.f_network_name,(ACOS(COS(RADIANS(@lat))'
                            '*COS(RADIANS(t_restaraunt.f_latitude))*COS(RADIANS(t_restaraunt.f_longitude)-RADIANS(@lng))+SIN(RADIANS(@lat))'
@@ -391,7 +391,7 @@ def get_food_with_loc(vars):
         return result['msg']
     elif result['msg'] == 'none':
         # run new search
-        weighted_result = weighted_search(vars.query, vars.location, vars.user_id)
+        weighted_result = weighted_search(vars.query, simplejson.loads(vars.location), vars.user_id)
         # write result to cache
         write_to_cache(vars.user_id, weighted_result)
         # give control to cache
