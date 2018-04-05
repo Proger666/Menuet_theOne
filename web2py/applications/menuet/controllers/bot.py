@@ -298,12 +298,8 @@ def write_to_cache(user_id, weighted_result):
     return None
 
 
-def weighted_search(query, loc, user_id):
-    start = datetime.datetime.now()
-    # query = query_cleanUp(query)
-    result_list = []
+def weighted_search(query, location_long, location_lat, user_id):
     raw_weights = {'ingr': 1, 'item': 2}
-    found_items_id = []
     # result format
     # Structure
     #     {'item': [
@@ -319,8 +315,8 @@ def weighted_search(query, loc, user_id):
     ##################### CREATE LOCATION SLICE ################################
     ##### Search by location
     # ROWS of rests
-    rest1k = db.executesql('SET @lat = 55.848941')
-    rest1k = db.executesql('SET @lng = 37.518768')
+    rest1k = db.executesql('SET @lat =' + location_lat)
+    rest1k = db.executesql('SET @lng = ' + location_long)
     rest1k = db.executesql('SELECT t_restaraunt.id,t_restaraunt.f_is_network,'
                            't_restaraunt.f_network_name,(ACOS(COS(RADIANS(@lat))'
                            '*COS(RADIANS(t_restaraunt.f_latitude))*COS(RADIANS(t_restaraunt.f_longitude)-RADIANS(@lng))+SIN(RADIANS(@lat))'
