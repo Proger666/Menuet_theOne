@@ -1,16 +1,19 @@
 # -*- coding:utf8 -*-
 # !/usr/bin/env python
 import datetime
+import uuid
+
 import pandas as pd
 import pymorphy2
 
-from gluon.contrib import simplejson
 import re
 
 ######## todo: redesign ####
-USER_CACHE = [{"user_id": 66666, "items": [], 'time': datetime.datetime.now()}]
 
 # View of m-m-relations
+import simplejson
+from simplejson import JSONDecodeError
+
 m_t_m_rest_menu = \
     ((db.t_rest_menu.t_menu == db.t_menu.id) &
      (db.t_rest_menu.t_rest == db.t_restaraunt.id))
@@ -36,12 +39,31 @@ def save_user_loc_to_db(request):
     pass
 
 
-def get_from_cache(user, count):
-    for item in USER_CACHE:
-        if item['user_id'] == user:
-            return item
-    pass
-    return {}
+def get_from_cache(user_id, count):
+    try:
+        master_file = open('applications/menuet/cache/cache_master', 'r+')
+    except IOError:
+        master_file = open('applications/menuet/cache/cache_master', 'wb')
+        master_file.close()
+        master_file = open('applications/menuet/cache/cache_master', 'r+')
+    try:
+
+        cache_items = simplejson.loads(master_file.read())
+    except JSONDecodeError:
+        return {'msg': 'none'}
+
+    # for item in USER_CACHE:
+    #     # find requested data for user by id
+    #     if item['user_id'] == user_id:
+    #         # if we found record - do we have data ?
+    #         if len(item['items']) == 0:
+    #             USER_CACHE[:] = [d for d in USER_CACHE if d.get('user_id') != user_id]
+    #             return {'msg': 'no more'}
+    #         else:
+    #             r = item['items'][int(item['curr_pos'])::]
+    #             item['curr_pos'] += count
+    #             return {'msg': 'ok', 'items': r}
+    return {'msg': 'none'}
 
 
 def search_by_name(items, query, weight):
@@ -189,14 +211,16 @@ def get_ingrs_for_item(item_id):
     ingrs = [x['f_name'] for x in ingrs]
     return ingrs
 
+
 def get_price_for_item(item_id):
     if item_id is None:
         return None
     min_price = db(db.t_item_prices.f_item == item_id).select(db.t_item_prices.f_price.min()).first()
     if min_price != None:
-        #TODO: redesign
+        # TODO: redesign
         price = min_price.values()[0].values()[0]
     return price
+
 
 def create_result(by_name, by_ingr):
     start = datetime.datetime.now()
@@ -208,9 +232,9 @@ def create_result(by_name, by_ingr):
         if len(element) > 0:
             if not is_exist(element, resulting_array):
                 resulting_array.append({'item': element['item']['f_name'],
-                                    'ingrs': ",".join(get_ingrs_for_item(element['item']['id'])),
-                                    'cost': get_price_for_item(element['item']['id']),
-                                    'weight': element['weight']})
+                                        'ingrs': ",".join(get_ingrs_for_item(element['item']['id'])),
+                                        'cost': get_price_for_item(element['item']['id']),
+                                        'weight': element['weight']})
     end = datetime.datetime.now() - start
     logger.warning('create_result concluded in ' + str(end))
     return resulting_array
@@ -227,11 +251,18 @@ def is_exist(element, resulting_array):
 def write_to_cache(user_id, weighted_result):
     # add to cache
     if len(weighted_result) > 0:
-        USER_CACHE.append(
-            {'user_id': user_id,
-             'items': weighted_result,
-             'time': datetime.datetime.now()}
-        )
+        uuid_number = str(uuid.uuid4())
+        file = open('applications/menuet/cache/cache' + uuid_number, 'wb')
+        _ = {"user_id": user_id,
+             "items": weighted_result,
+             "curr_pos": 0}
+        print>> file, _
+        master_file = open('applications/menuet/cache/cache_master', 'wb')
+        simplejson.dump({"user_id": user_id,
+             "uuid": uuid_number,
+             "time": str(datetime.datetime.now())},master_file)
+        file.close()
+        master_file.close()
         return True
     return None
 
@@ -270,9 +301,12 @@ def weighted_search(query, loc, user_id):
     # u'T' = True for mySQL
     _tmp_nets = set()
     # get ids of networks
-    [_tmp_nets.add(x['f_network_name']) for x in rest1k if x['f_is_network'] == u'T' and x['f_network_name'] is not None and x['f_network_name'] != 5]
+    [_tmp_nets.add(x['f_network_name']) for x in rest1k if
+     x['f_is_network'] == u'T' and x['f_network_name'] is not None and x['f_network_name'] != 5]
     _tmp_rests_id = [x['id'] for x in rest1k]
-    menus = db((db.t_menu.f_current == True) & ( (db.t_restaraunt.id.belongs(_tmp_rests_id)) | (db.t_menu.f_network.belongs(_tmp_nets))) & (m_t_m_rest_menu)).select(
+    menus = db((db.t_menu.f_current == True) & (
+            (db.t_restaraunt.id.belongs(_tmp_rests_id)) | (db.t_menu.f_network.belongs(_tmp_nets))) & (
+                   m_t_m_rest_menu)).select(
         db.t_menu.id)
 
     menus_id = [x.id for x in menus]
@@ -290,13 +324,9 @@ def weighted_search(query, loc, user_id):
     by_ingr = search_by_ingr(items, query, raw_weights['ingr'])
 
     weighted_result = create_result(by_name, by_ingr)
-    # Dump to cache
-    cached = False
-    if len(weighted_result) > 0:
-        cached = write_to_cache(user_id, weighted_result)
     end = datetime.datetime.now() - start
     logger.warning('Weighted search concluded in ' + str(end))
-    return cached
+    return weighted_result
 
 
 def api_error(msg):
@@ -316,7 +346,7 @@ def get_food_with_loc(vars):
         return api_error("Query is empty")
     # lets get food WITH WEIGHTS
     # query = food
-    # From proxy we expet to receive:
+    # From proxy we expect to receive:
     # payload = {'action': 'get_food_loc', 'token': MENUET_TOKEN,
     #            'user_id': update.message.from_user.id,
     #            'query': food,
@@ -327,13 +357,21 @@ def get_food_with_loc(vars):
     # if nothing - sorry
     count = 3
     result = get_from_cache(vars.user_id, count)
-    if len(result) > 0:
+    if result['msg'] == 'ok':
         # return data from cache
-        return result
-    else:
-        if weighted_search(vars.query, Storage(vars.location), vars.user_id):
-            result = get_from_cache(vars.user_id, count)
-            return result
+        return result['items']
+    elif result['msg'] == 'no more':
+        return result['msg']
+    elif result['msg'] == 'none':
+        # run new search
+        weighted_result = weighted_search(vars.query, Storage(vars.location), vars.user_id)
+        # write result to cache
+        write_to_cache(vars.user_id, weighted_result)
+        # give control to cache
+        result = get_from_cache(vars.user_id, count)
+        if result['msg'] == 'ok':
+            return result['items']
+
     return []
 
 
