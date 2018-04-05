@@ -3,7 +3,6 @@
 import datetime
 import uuid
 
-import pandas as pd
 import pymorphy2
 
 import re
@@ -73,7 +72,7 @@ def get_from_cache(user_id, count):
                         simplejson.dump(cached, f)
                         return {'msg': 'ok', 'items': r}
     except Exception as e:
-        # TODO:redesign
+        # TODO:re design
         logger.error('we failed to fetch from cache with ' + str(e.message) + str(e))
         return {'msg': 'none'}
     return {'msg': 'none'}
@@ -385,7 +384,7 @@ def get_food_with_loc(vars):
     result = get_from_cache(vars.user_id, count)
     if result['msg'] == 'ok':
         # return data from cache
-        return result['items']
+        return result
     elif result['msg'] == 'no more':
         return result['msg']
     elif result['msg'] == 'none':
@@ -396,7 +395,7 @@ def get_food_with_loc(vars):
         # give control to cache
         result = get_from_cache(vars.user_id, count)
         if result['msg'] == 'ok':
-            return result['items']
+            return result
 
     return []
 
