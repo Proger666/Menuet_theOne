@@ -391,7 +391,7 @@ def get_food_with_loc(vars):
         return result['msg']
     elif result['msg'] == 'none':
         # run new search
-        weighted_result = weighted_search(vars.query, vars.lng,vars.lat, vars.user_id)
+        weighted_result = weighted_search(vars.query, vars.loc_lng,vars.loc_lat, vars.user_id)
         # write result to cache
         write_to_cache(vars.user_id, weighted_result)
         # give control to cache
