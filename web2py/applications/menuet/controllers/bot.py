@@ -283,7 +283,11 @@ def write_to_cache(user_id, weighted_result):
             feedsjson.seek(0)
             entry = {"user_id": user_id,
                      "time": str(datetime.datetime.now())}
-            feeds = simplejson.load(feedsjson)
+            try:
+                feeds = simplejson.load(feedsjson)
+            except Exception as e:
+                logger.error("something broken in cache creation " + str(e) + str(e.message))
+                feeds = []
             feeds.append(entry)
             feedsjson.seek(0)
             simplejson.dump(feeds, feedsjson)
