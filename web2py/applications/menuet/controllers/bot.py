@@ -60,7 +60,7 @@ def get_from_cache(user_id, count):
             # find requested data for user by id
             if item['user_id'] == user_id:
                 # if we found record - do we have data ?
-                path = 'applications/menuet/cache/cache_' + user_id
+                path = 'applications/menuet/cache/cache_' + str(user_id)
                 with open(path, 'r+') as f:
                     cached = simplejson.load(f)
                     r = simplejson.loads(cached['items'])[int(cached['curr_pos'])::]
@@ -84,7 +84,7 @@ def get_from_cache(user_id, count):
 def search_by_name(items, query, weight):
     # search by exact match fast fail if found
     # result obj
-    # query = query.encode('utf-8')
+    query = query.encode('utf-8')
     result = [{}]
 
     for item in items:
@@ -149,6 +149,7 @@ def search_by_ingr(items, query, weight):
     start = datetime.datetime.now()
     # result will be stored as row
     result_final = [{}]
+    query = query.encode('utf-8')
     # try search word by word
     # strip by words
     # delete all trash
@@ -273,7 +274,7 @@ def write_to_cache(user_id, weighted_result):
     # add to cache
     if len(weighted_result) > 0:
         # Create new cache for the results
-        file = open('applications/menuet/cache/cache_' + user_id, 'wb')
+        file = open('applications/menuet/cache/cache_' + str(user_id), 'wb')
         _ = {"user_id": user_id,
              "items": simplejson.dumps(weighted_result),
              "curr_pos": 0}
