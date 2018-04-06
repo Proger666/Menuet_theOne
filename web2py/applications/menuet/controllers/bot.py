@@ -396,7 +396,7 @@ def get_food_with_loc(vars):
         # return data from cache
         return result
     elif result['msg'] == 'no more':
-        return result['msg']
+        return result
     elif result['msg'] == 'none':
         # run new search
         weighted_result = weighted_search(vars.query, vars.loc_lng, vars.loc_lat, vars.user_id)
