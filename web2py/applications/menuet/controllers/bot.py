@@ -84,7 +84,7 @@ def get_from_cache(user_id, count):
 def search_by_name(items, query, weight):
     # search by exact match fast fail if found
     # result obj
-    query = query.encode('utf-8')
+    # query = query.encode('utf-8')
     result = [{}]
 
     for item in items:
@@ -130,13 +130,19 @@ def normalize_words(ingrs_list):
             result.append(morph.parse(ingr)[0].normal_form)
         except AttributeError:
             result.append(ingr)
+        except UnicodeDecodeError:
+            result.append(morph.parse(ingr.decode('utf-8'))[0].normal_form)
     if len(result) > 0:
         return result
     return None
 
 
 def pos(word, morth=pymorphy2.MorphAnalyzer()):
-    return morth.parse(word)[0].tag.POS
+    try:
+        r = morth.parse(word.decode('utf-8'))[0].tag.POS
+    except UnicodeDecodeError:
+        r = morth.parse(word.encode('utf-8'))[0].tag.POS
+    return r
 
 
 def search_by_ingr(items, query, weight):
@@ -353,6 +359,7 @@ def weighted_search(query, lng, lat, user_id):
     weighted_result = create_result(by_name, by_ingr)
     end = datetime.datetime.now() - start
     logger.warning('Weighted search concluded in ' + str(end))
+    logger.warning('we found ' + str(weighted_result))
     return weighted_result
 
 
@@ -391,7 +398,7 @@ def get_food_with_loc(vars):
         return result['msg']
     elif result['msg'] == 'none':
         # run new search
-        weighted_result = weighted_search(vars.query, vars.loc_lng,vars.loc_lat, vars.user_id)
+        weighted_result = weighted_search(vars.query, vars.loc_lng, vars.loc_lat, vars.user_id)
         # write result to cache
         write_to_cache(vars.user_id, weighted_result)
         # give control to cache
@@ -414,6 +421,8 @@ def api():
             save_user_loc_to_db(request.vars)
         elif request.vars.get('action') == 'get_food_loc':
             return get_food_with_loc(request.vars)
+
+    return locals()
 
 
 def get_user_location_google(text):
