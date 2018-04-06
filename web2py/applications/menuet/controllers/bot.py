@@ -244,6 +244,10 @@ def get_price_for_item(item_id):
     return price
 
 
+def get_rest_for_item(item_id):
+    return db((db.t_item.id == item_id) & (m_t_m_rest_menu) & (m_t_m_menu_item)).select(db.t_restaraunt.ALL).first()
+
+
 def create_result(by_name, by_ingr):
     start = datetime.datetime.now()
     if len(by_name) == 1 or len(by_ingr) == 1:
@@ -253,9 +257,13 @@ def create_result(by_name, by_ingr):
         # check if
         if len(element) > 0:
             if not is_exist(element, resulting_array):
+                # fetach rest info for item
+                _rest = get_rest_for_item(element["item"]["id"])
                 resulting_array.append({"item": element["item"]["f_name"],
                                         "ingrs": ",".join(get_ingrs_for_item(element["item"]["id"])),
                                         "cost": get_price_for_item(element["item"]["id"]),
+                                        "rest_name": _rest.f_name,
+                                        "rest_addr": _rest.f_address,
                                         "weight": element["weight"]})
     end = datetime.datetime.now() - start
     logger.warning('create_result concluded in ' + str(end))
