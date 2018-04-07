@@ -98,7 +98,7 @@ def search_by_name(items, query, weight):
         words = query.split(" ")
         i = len(words)
         start = datetime.datetime.now()
-        while len(result) == 1 and i > 1:
+        while len(result) == 1 and i > 0:
             # search for string and cut string's tail each time until last word
             sub_query = " ".join(words[:i])
             for item in items:
@@ -165,7 +165,7 @@ def search_by_ingr(items, query, weight):
     ingrs_id = [x.id for x in db(db.t_ingredient.f_normal_form.belongs(ingrs_normal)).select()]
     # if we dont have ingrs in DB = sorry
     if len(ingrs_id) == 0:
-        return None
+        return [{}]
 
     items_id = [x.id for x in items]
     # Lets try to find items by their ingrs
@@ -250,7 +250,7 @@ def get_rest_for_item(item_id):
 
 def create_result(by_name, by_ingr):
     start = datetime.datetime.now()
-    if len(by_name) == 1 or len(by_ingr) == 1:
+    if len(by_name) == 1 and len(by_ingr) == 1:
         return []
     resulting_array = []
     for element in by_ingr + by_name:
@@ -368,7 +368,7 @@ def weighted_search(query, lng, lat, user_id):
     weighted_result = create_result(by_name, by_ingr)
     end = datetime.datetime.now() - start
     logger.warning('Weighted search concluded in ' + str(end))
-    logger.warning('we found ' + str(weighted_result))
+    logger.warning('we found ' + str(len(weighted_result)) + " and results are " + str(weighted_result))
     return weighted_result
 
 
