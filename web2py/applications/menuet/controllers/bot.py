@@ -1,7 +1,7 @@
 # -*- coding:utf8 -*-
 # !/usr/bin/env python
 import datetime
-import uuid
+import os
 
 import pymorphy2
 
@@ -38,7 +38,37 @@ def save_user_loc_to_db(request):
     pass
 
 
-def get_from_cache(user_id, count):
+def clean_file_cache(user_id):
+    start = datetime.datetime.now()
+    try:
+        path = 'applications/menuet/cache/cache_' + str(user_id)
+        # Remove user cache
+        os.remove(path)
+    except Exception as e:
+        logger.error('We failed to clean user cache with ' + str(e) + " " + str(e.message))
+    try:
+        master_file = 'applications/menuet/cache/cache_master'
+        # remove user_id and its cache data from master_file
+        # OPen master for read
+        f= open(master_file, 'r+')
+        # read all lines
+        master_cache = simplejson.load(f)
+        master_cache = [x for x in master_cache if x['user_id'] != user_id]
+        # return to start of the file and rewrite whole file
+        # TODO: maybe slow
+        f.close()
+        f = open(master_file, 'w')
+        simplejson.dump(master_cache, f)
+        f.close()
+    except Exception as e:
+        logger.error('We failed to clean master cache with ' + str(e) + " " + str(e.message))
+    finally:
+        end = datetime.datetime.now() - start
+        logger.warning("we finished clean cache in  " + str(end))
+    pass
+
+
+def get_from_cache(user_id, count, query):
     try:
         master_file = open('applications/menuet/cache/cache_master', 'r+')
     except IOError:
@@ -61,12 +91,13 @@ def get_from_cache(user_id, count):
             if item['user_id'] == user_id:
                 # if we found record - do we have data ?
                 path = 'applications/menuet/cache/cache_' + str(user_id)
+                if item.get('last_query') != query:
+                    clean_file_cache(user_id)
                 with open(path, 'r+') as f:
                     cached = simplejson.load(f)
                     r = simplejson.loads(cached['items'])[int(cached['curr_pos'])::]
                     cached['curr_pos'] += count
                     if len(r) == 0:
-                        import os
                         f.close()
                         os.remove(path)
                         return {'msg': 'no more'}
@@ -108,7 +139,7 @@ def search_by_name(items, query, weight):
             i -= 1
         end = datetime.datetime.now() - start
         return result
-    return None
+    return result
 
 
 def query_cleanUp(query):
@@ -165,7 +196,7 @@ def search_by_ingr(items, query, weight):
     ingrs_id = [x.id for x in db(db.t_ingredient.f_normal_form.belongs(ingrs_normal)).select()]
     # if we dont have ingrs in DB = sorry
     if len(ingrs_id) == 0:
-        return [{}]
+        return result_final
 
     items_id = [x.id for x in items]
     # Lets try to find items by their ingrs
@@ -185,7 +216,7 @@ def search_by_ingr(items, query, weight):
                                         ' ORDER BY itm.id')
 
     # Lets try search by AND in results
-    result_AND = []
+    result_AND = [{}]
     # 0 is ITEM 1 is INGR
     i = 0
     # RESULT WILL BE ITEM ID!!!
@@ -250,6 +281,7 @@ def get_rest_for_item(item_id):
 
 def create_result(by_name, by_ingr):
     start = datetime.datetime.now()
+
     if len(by_name) == 1 and len(by_ingr) == 1:
         return []
     resulting_array = []
@@ -278,11 +310,11 @@ def is_exist(element, resulting_array):
     return False
 
 
-def write_to_cache(user_id, weighted_result):
+def write_to_cache(user_id, weighted_result, query):
     # add to cache
     if len(weighted_result) > 0:
         # Create new cache for the results
-        file = open('applications/menuet/cache/cache_' + str(user_id), 'wb')
+        file = open('applications/menuet/cache/cache_' + str(user_id), 'w')
         _ = {"user_id": user_id,
              "items": simplejson.dumps(weighted_result),
              "curr_pos": 0}
@@ -300,7 +332,8 @@ def write_to_cache(user_id, weighted_result):
         with open('applications/menuet/cache/cache_master', mode='r+') as feedsjson:
             feedsjson.seek(0)
             entry = {"user_id": user_id,
-                     "time": str(datetime.datetime.now())}
+                     "time": str(datetime.datetime.now()),
+                     "last_query": query}
             try:
                 feeds = simplejson.load(feedsjson)
             except Exception as e:
@@ -399,7 +432,7 @@ def get_food_with_loc(vars):
     # if not - new search
     # if nothing - sorry
     count = 3
-    result = get_from_cache(vars.user_id, count)
+    result = get_from_cache(vars.user_id, count, vars.query)
     if result['msg'] == 'ok':
         # return data from cache
         return result
@@ -409,9 +442,9 @@ def get_food_with_loc(vars):
         # run new search
         weighted_result = weighted_search(vars.query, vars.loc_lng, vars.loc_lat, vars.user_id)
         # write result to cache
-        write_to_cache(vars.user_id, weighted_result)
+        write_to_cache(vars.user_id, weighted_result, vars.query)
         # give control to cache
-        result = get_from_cache(vars.user_id, count)
+        result = get_from_cache(vars.user_id, count, vars.query)
         if result['msg'] == 'ok':
             return result
 
