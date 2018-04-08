@@ -221,14 +221,14 @@ def search_by_ingr(items, query, weight):
     i = 0
     # RESULT WILL BE ITEM ID!!!
     for item in result_id:
-        # create list of ints from DB response and then create uniq set
-        _set_ingr_id = set([int(x) for x in result_id[i][1].split()])
+        # create list of ints (ids) from DB response and then create uniq set
+        _set_ingr_id = set([int(x) for x in result_id[i][1].split(",")])
         # is set equal to ingrs_id ?
         if _set_ingr_id == set(ingrs_id):
             result_AND.append(item[0])
         i += 1
-    # do we get anything with and ? if not return OR
-    if len(result_AND) == 0:
+    # do we get anything with and ? if not return OR ids of items to include
+    if len(result_AND) == 1:
         result = [x[0] for x in result_id]
     else:
         result = result_AND
@@ -275,28 +275,39 @@ def get_price_for_item(item_id):
     return price
 
 
-def get_rest_for_item(item_id):
-    return db((db.t_item.id == item_id) & (m_t_m_rest_menu) & (m_t_m_menu_item)).select(db.t_restaraunt.ALL).first()
+def get_rest_for_item(item_id, networks_ids):
+    rest_info =  db((db.t_item.id == item_id) & (m_t_m_rest_menu) & (m_t_m_menu_item)).select(db.t_restaraunt.ALL).first()
+    # try to search in networks
+    if rest_info is None:
+        rest_info = db((db.t_item.id == item_id) & (m_t_m_menu_item)).select(db.t_menu.f_network).first().f_network
+        # TODO: REDESIGN
+        # resolve network info
+        _net_info = db(db.t_network.id == rest_info).select(db.t_network.ALL).first()
+        rest_info = {"f_name": _net_info.f_name, "f_address": "Москва" }
+        rest_info = Storage(rest_info)
+    return rest_info
 
-
-def create_result(by_name, by_ingr):
+def create_result(by_name, by_ingr, networks_ids):
     start = datetime.datetime.now()
 
     if len(by_name) == 1 and len(by_ingr) == 1:
         return []
     resulting_array = []
-    for element in by_ingr + by_name:
-        # check if
-        if len(element) > 0:
-            if not is_exist(element, resulting_array):
-                # fetach rest info for item
-                _rest = get_rest_for_item(element["item"]["id"])
-                resulting_array.append({"item": element["item"]["f_name"],
-                                        "ingrs": ",".join(get_ingrs_for_item(element["item"]["id"])),
-                                        "cost": get_price_for_item(element["item"]["id"]),
-                                        "rest_name": _rest.f_name,
-                                        "rest_addr": _rest.f_address,
-                                        "weight": element["weight"]})
+    try:
+        for element in by_ingr + by_name:
+            # check if
+            if len(element) > 0:
+                if not is_exist(element, resulting_array):
+                    # fetach rest info for item
+                    _rest = get_rest_for_item(element["item"]["id"], networks_ids)
+                    resulting_array.append({"item": element["item"]["f_name"],
+                                            "ingrs": ",".join(get_ingrs_for_item(element["item"]["id"])),
+                                            "cost": get_price_for_item(element["item"]["id"]),
+                                            "rest_name": _rest.f_name,
+                                            "rest_addr": _rest.f_address,
+                                            "weight": element["weight"]})
+    except Exception as e:
+        logger.error("DB ERROR!!!! we failed to create result in create_result, " + str(e) + str(e.message))
     end = datetime.datetime.now() - start
     logger.warning('create_result concluded in ' + str(end))
     return resulting_array
@@ -378,6 +389,7 @@ def weighted_search(query, lng, lat, user_id):
     # get ids of networks
     [_tmp_nets.add(x['f_network_name']) for x in rest1k if
      x['f_is_network'] == u'T' and x['f_network_name'] is not None and x['f_network_name'] != 5]
+
     _tmp_rests_id = [x['id'] for x in rest1k]
     menus = db((db.t_menu.f_current == True) & (
             (db.t_restaraunt.id.belongs(_tmp_rests_id)) | (db.t_menu.f_network.belongs(_tmp_nets))) & (
@@ -398,7 +410,7 @@ def weighted_search(query, lng, lat, user_id):
     # we expect ROW object
     by_ingr = search_by_ingr(items, query, raw_weights['ingr'])
 
-    weighted_result = create_result(by_name, by_ingr)
+    weighted_result = create_result(by_name, by_ingr, _tmp_nets)
     end = datetime.datetime.now() - start
     logger.warning('Weighted search concluded in ' + str(end))
     logger.warning('we found ' + str(len(weighted_result)) + " and results are " + str(weighted_result))
