@@ -95,7 +95,7 @@ def get_from_cache(user_id, count, query):
                     clean_file_cache(user_id)
                 with open(path, 'r+') as f:
                     cached = simplejson.load(f)
-                    r = simplejson.loads(cached['items'])[int(cached['curr_pos'])::]
+                    r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
                     cached['curr_pos'] += count
                     if len(r) == 0:
                         f.close()
