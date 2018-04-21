@@ -189,8 +189,8 @@
 
         $("#menu_type").change(function () {
 
-            var elem = $("#menu_type").find("option:selected").val();
-            if (elem === '3') {
+            var elem = $("#menu_type").find("option:selected").text();
+            if (elem === 'Бизнес-ланч меню') {
                 $('#menu_name').attr('disabled', true)
                         .val('');
             }

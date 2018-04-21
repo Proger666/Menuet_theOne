@@ -4,7 +4,7 @@ import datetime
 import os
 
 import pymorphy2
-
+from collections import OrderedDict
 import re
 
 ######## todo: redesign ####
@@ -287,9 +287,8 @@ def get_rest_for_item(item_id, networks_ids):
         rest_info = Storage(rest_info)
     return rest_info
 
-def create_result(by_name, by_ingr, networks_ids):
+def create_result(by_name, by_ingr, networks_ids, sort):
     start = datetime.datetime.now()
-
     if len(by_name) == 1 and len(by_ingr) == 1:
         return []
     resulting_array = []
@@ -306,6 +305,9 @@ def create_result(by_name, by_ingr, networks_ids):
                                             "rest_name": _rest.f_name,
                                             "rest_addr": _rest.f_address,
                                             "weight": element["weight"]})
+        # Let's sort this shit now
+        # create ordered dict to remember dict order
+        od = OrderedDict
     except Exception as e:
         logger.error("DB ERROR!!!! we failed to create result in create_result, " + str(e) + str(e.message))
     end = datetime.datetime.now() - start
@@ -357,7 +359,7 @@ def write_to_cache(user_id, weighted_result, query):
     return None
 
 
-def weighted_search(query, lng, lat, user_id):
+def weighted_search(query, lng, lat, user_id, sort):
     raw_weights = {'ingr': 1, 'item': 2}
     # result format
     # Structure
@@ -410,7 +412,7 @@ def weighted_search(query, lng, lat, user_id):
     # we expect ROW object
     by_ingr = search_by_ingr(items, query, raw_weights['ingr'])
 
-    weighted_result = create_result(by_name, by_ingr, _tmp_nets)
+    weighted_result = create_result(by_name, by_ingr, _tmp_nets, sort)
     end = datetime.datetime.now() - start
     logger.warning('Weighted search concluded in ' + str(end))
     logger.warning('we found ' + str(len(weighted_result)) + " and results are " + str(weighted_result))
@@ -452,7 +454,7 @@ def get_food_with_loc(vars):
         return result
     elif result['msg'] == 'none':
         # run new search
-        weighted_result = weighted_search(vars.query, vars.loc_lng, vars.loc_lat, vars.user_id)
+        weighted_result = weighted_search(vars.query, vars.loc_lng, vars.loc_lat, vars.user_id, vars.sort)
         # write result to cache
         write_to_cache(vars.user_id, weighted_result, vars.query)
         # give control to cache

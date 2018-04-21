@@ -1,0 +1,16 @@
+{{extend 'layout.html'}}
+<div class="col-md-auto">
+    <h2><a href="{{=URL('core','e_menu', vars=dict(m_id=request.vars.m_id,r_id=request.vars.r_id))}}">В меню!</a></h2>
+    <form method="post" id="json_form">
+        <div class="col-md-auto">
+            <div class="form-control">
+                <label for="json_data" class="font-weight-bold">Add items to this menu</label><br>
+                <textarea name="json_data" id="json_data"></textarea><br>
+                <div class="input-group">
+                    <input type="text" placeholder="Input TAGs with comma" name="tags">
+                </div>
+                <input class="btn btn-primary" type="submit" value="Add!">
+            </div>
+        </div>
+    </form>
+</div>

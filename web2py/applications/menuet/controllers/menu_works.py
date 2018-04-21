@@ -259,10 +259,10 @@ def save_item():
                 # create new M-t-M
                 _tmp_obj._t_step_ing_new_id = \
                     db.t_step_ing.update_or_insert(t_step=_tmp_obj._new_step_id, t_recipe=_tmp_obj.recipe_id)
-
+        elif item_source.change_factor == 'edit':
+            # lets get recipe for this item
 
         else:
-            _tmp_obj.recipe_id = item_source.recipe_id
         ####################### ADD M-M relations for item #####################################
         step = db(db.t_step.id == db.t_ingredient.id).select()
         # Get m-t-m relation - get all steps for given recipe id

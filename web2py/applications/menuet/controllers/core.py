@@ -14,6 +14,92 @@ t_item = db.t_item
 t_item_prices = db.t_item_prices
 
 
+def to_latin(string):
+    string = string.decode('utf-8')
+    import re
+    capital_letters = {u'А': u'A',
+                       u'Б': u'B',
+                       u'В': u'V',
+                       u'Г': u'G',
+                       u'Д': u'D',
+                       u'Е': u'E',
+                       u'Ё': u'E',
+                       u'З': u'Z',
+                       u'И': u'I',
+                       u'Й': u'Y',
+                       u'К': u'K',
+                       u'Л': u'L',
+                       u'М': u'M',
+                       u'Н': u'N',
+                       u'О': u'O',
+                       u'П': u'P',
+                       u'Р': u'R',
+                       u'С': u'S',
+                       u'Т': u'T',
+                       u'У': u'U',
+                       u'Ф': u'F',
+                       u'Х': u'H',
+                       u'Ъ': u'',
+                       u'Ы': u'Y',
+                       u'Ь': u'',
+                       u'Э': u'E', }
+
+    capital_letters_transliterated_to_multiple_letters = {u'Ж': u'Zh',
+                                                          u'Ц': u'Ts',
+                                                          u'Ч': u'Ch',
+                                                          u'Ш': u'Sh',
+                                                          u'Щ': u'Sch',
+                                                          u'Ю': u'Yu',
+                                                          u'Я': u'Ya', }
+
+    lower_case_letters = {u'а': u'a',
+                          u'б': u'b',
+                          u'в': u'v',
+                          u'г': u'g',
+                          u'д': u'd',
+                          u'е': u'e',
+                          u'ё': u'e',
+                          u'ж': u'zh',
+                          u'з': u'z',
+                          u'и': u'i',
+                          u'й': u'y',
+                          u'к': u'k',
+                          u'л': u'l',
+                          u'м': u'm',
+                          u'н': u'n',
+                          u'о': u'o',
+                          u'п': u'p',
+                          u'р': u'r',
+                          u'с': u's',
+                          u'т': u't',
+                          u'у': u'u',
+                          u'ф': u'f',
+                          u'х': u'h',
+                          u'ц': u'ts',
+                          u'ч': u'ch',
+                          u'ш': u'sh',
+                          u'щ': u'sch',
+                          u'ъ': u'',
+                          u'ы': u'y',
+                          u'ь': u'',
+                          u'э': u'e',
+                          u'ю': u'yu',
+                          u'я': u'ya', }
+
+    for cyrillic_string, latin_string in capital_letters_transliterated_to_multiple_letters.iteritems():
+        string = re.sub(ur"%s([а-я])" % cyrillic_string, ur'%s\1' % latin_string, string)
+
+    for dictionary in (capital_letters, lower_case_letters):
+
+        for cyrillic_string, latin_string in dictionary.iteritems():
+            string = string.replace(cyrillic_string, latin_string)
+
+    for cyrillic_string, latin_string in capital_letters_transliterated_to_multiple_letters.iteritems():
+        string = string.replace(cyrillic_string, latin_string.upper())
+
+    return string
+
+
 @auth.requires_login()
 def check_rest():
     rest_name = request.vars.rest.get('name')
@@ -23,12 +109,15 @@ def check_rest():
         _rest_name = rest_name.split(' ')
         for word in _rest_name:
             if len(word) > 2:
-                result_list.append(db(db.t_restaraunt.f_name.contains(word.encode('utf-8')) & (
-                        (db.t_restaraunt.f_locked_by != auth.user.id) | (
-                        db.t_restaraunt.f_locked_by == None))).select(db.t_restaraunt.f_name,
-                                                                      db.t_restaraunt.f_address,
-                                                                      db.t_restaraunt.id,
-                                                                      db.t_restaraunt.f_locked_by).as_json())
+                word = word.encode('utf-8')
+                word_to_latin = to_latin(word)
+                result_list.append(db(((db.t_restaraunt.f_name.contains(word)) |
+                                       (db.t_restaraunt.f_name.contains(word_to_latin))) & (
+                                              (db.t_restaraunt.f_locked_by != auth.user.id) | (
+                                              db.t_restaraunt.f_locked_by == None))).select(db.t_restaraunt.f_name,
+                                                                                            db.t_restaraunt.f_address,
+                                                                                            db.t_restaraunt.id,
+                                                                                            db.t_restaraunt.f_locked_by).as_json())
                 # result_list.append(db(db.t_restaraunt.f_name.contains(word.encode('utf-8')), db.t_restaraunt.f_name).select())
     if len(result_list) > 0:
         return result_list
@@ -102,10 +191,26 @@ def get_ingrs_for_item(item_id):
         ingrs.append(ingr)
     return ingrs
 
+
 @auth.requires_login()
 def add_rest():
     # reuse existing
     return locals()
+
+
+def check_exist(item):
+    if item is not None and len(item) > 0:
+        return True
+    return False
+
+
+def get_tags_for_item(tags_list):
+    if tags_list is None or len(tags_list) == 0:
+        return []
+    tags = []
+    for id in tags_list:
+        tags.append(db(db.t_item_tag.id == id).select(db.t_item_tag.f_name).first().f_name)
+    return tags
 
 
 @auth.requires_login()
@@ -131,8 +236,10 @@ def e_menu():
                 item.name = menu_item.f_name
                 item.id = menu_item.id
                 item.unit = None if menu_item.f_unit is None else db.t_unit[menu_item.f_unit].f_name
-                item.desc = ' '.join(menu_item.f_desc.split()[:4])  # ограничиваем 4 словами вывод
+                item.desc = ' '.join(menu_item.f_desc.split()[:4]) if check_exist(
+                    menu_item.f_desc) else ""  # ограничиваем 4 словами вывод
                 item.ingrs = get_ingrs_for_item(item.id)
+                item.tags = get_tags_for_item(menu_item.f_tags)
                 item.portions = []
                 # get portions name from DB
                 _portions = db(t_item_prices.f_item == item.id).select(t_item_prices.f_price, t_item_prices.f_portion)
@@ -155,6 +262,7 @@ def e_menu():
             request.vars) + logUser_and_request())
         return None
 
+
 @auth.requires_login()
 def e_item():
     item = Storage()
@@ -170,9 +278,9 @@ def e_item():
         item.cal = _tmp.f_cal
         item.id = _tmp.id
         item.unit = None if _tmp.f_unit is None else db.t_unit[_tmp.f_unit]
-        item.desc = _tmp.f_desc
+        item.desc =  "" if _tmp.f_desc is None else _tmp.f_desc
         item.ingrs = get_ingrs_for_item(item.id)
-        item.tags = get_tags_for_object(item.id,'item')
+        item.tags = get_tags_for_object(item.id, 'item')
         item.portions = []
         # get portions name from DB
         _portions = db(t_item_prices.f_item == item.id).select(t_item_prices.f_price, t_item_prices.f_portion)
@@ -202,7 +310,7 @@ def rests():
 @auth.requires_login()
 def menus():
     menus = {"menus": []}
-    _page = int(request.vars.get('page',1))
+    _page = int(request.vars.get('page', 1))
     menus = Storage(menus)
     _menu = db.t_menu[request.vars.m_id]
     if _menu.f_network != 5:
@@ -223,7 +331,7 @@ def menus():
             item_count = db(db.t_menu_item.t_menu == row.id).count()
             menus.menus.append({"id": row.id, "name": row.f_name, "created_on": row.created_on,
                                 "rest_name": network.f_name, "rest_addr": "",
-                                "r_id": network.id, "active": row.f_current,"item_count":item_count})
+                                "r_id": network.id, "active": row.f_current, "item_count": item_count})
     else:
         _tmp = db((db.t_rest_menu.t_menu == t_menu.id) &
                   (t_rest_menu.t_rest == t_restaraunt.id) &
@@ -233,13 +341,13 @@ def menus():
             item_count = db(db.t_menu_item.t_menu == row.t_menu.id).count()
             menus.menus.append({"id": row.t_menu.id, "name": row.t_menu.f_name, "created_on": row.t_menu.created_on,
                                 "rest_name": row.t_restaraunt.f_name, "rest_addr": row.t_restaraunt.f_address,
-                                "r_id": row.t_restaraunt.id, "active": row.t_menu.f_current,"item_count":item_count})
+                                "r_id": row.t_restaraunt.id, "active": row.t_menu.f_current, "item_count": item_count})
 
     menu_disp = [x for x in menus.menus]
     return locals()
 
 
-def pagination(c,m,d):
+def pagination(c, m, d):
     _range = []
     current = c
     last = m
@@ -252,7 +360,7 @@ def pagination(c,m,d):
     for i in range(1, last):
         if i == 1 or i == last or (i >= left and i < right):
             _range.append(i)
-        i +=1
+        i += 1
     for x in range(1, len(_range)):
         if l:
             if x - l == delta:
@@ -285,7 +393,7 @@ def get_tags_for_object(id, type):
     # select tags via lazy fetch
     if type == 'rest':
         query = db.t_restaraunt[id].f_tags
-    elif type== 'item':
+    elif type == 'item':
         query = db.t_item[id].f_tags
     else:
         logger.warn('Failed to get tags for object of type ' + str(type) + logUser_and_request())
@@ -293,6 +401,7 @@ def get_tags_for_object(id, type):
     if query != None:
         return [x.f_name for x in query]
     return []
+
 
 @auth.requires_login()
 def a_item():
@@ -310,7 +419,7 @@ def a_item():
         item.unit = None if _tmp.f_unit is None else db.t_unit[_tmp.f_unit]
         item.desc = _tmp.f_desc
         item.ingrs = get_ingrs_for_item(item.id)
-        item.tags = get_tags_for_object(item.id,'item')
+        item.tags = get_tags_for_object(item.id, 'item')
         item.portions = []
         # get portions name from DB
         _portions = db(t_item_prices.f_item == item.id).select(t_item_prices.f_price, t_item_prices.f_portion)
@@ -323,7 +432,7 @@ def a_item():
             logger.warn('No portions in request ' + logUser_and_request())
             return locals()
     else:
-        item.menu_name = db.t_menu[request.vars.get('m_id',0)].f_name
+        item.menu_name = db.t_menu[request.vars.get('m_id', 0)].f_name
         item.name = ""
         item.weight = ""
         item.desc = ""
@@ -333,7 +442,7 @@ def a_item():
         item.portions = ""
         item.tags_id = ""
         item.tags_name = ""
-        item.desc = item.name =''
+        item.desc = item.name = ''
         item.weight = 0
     portions = db(db.t_portion).select()
     return locals()
@@ -371,8 +480,7 @@ def e_rest():
         rest.modified_on = _rest.modified_on
         rest.f_network_name = db.t_network[_rest.f_network_name].f_name
         rest.f_network_id = db.t_network[_rest.f_network_name].id
-        rest.tags = get_tags_for_object(_rest.id,'rest')
-
+        rest.tags = get_tags_for_object(_rest.id, 'rest')
 
         # Get all menus for this restaraunt
         if rest.is_network:

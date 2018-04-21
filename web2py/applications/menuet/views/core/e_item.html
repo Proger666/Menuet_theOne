@@ -75,9 +75,8 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <input class="btn btn-primary" type="button" value="Добавить и закрыть" id="add_butt"
+                    <input class="btn btn-primary" type="button" value="Сохранить!" id="add_butt"
                            onclick="save_item(1)">
-                    <input class="btn btn-primary" type="button" value="Добавить!" id="add_butt" onclick="save_item(2)">
                 </div>
             </div>
         </div>
@@ -199,11 +198,12 @@
                 .val("Работаем...");
 
         var item = {};
+        item.id = "{{=request.vars.itm_id}}";
         item.name = document.getElementById('item_name').value;
         item.weight = document.getElementById('item_weight').value;
         item.desc = document.getElementById('item_desc').value;
         item.unit = $("#item_unit").find("option:selected").val();
-        item.change_factor = 'add';
+        item.change_factor = 'edit';
         item.m_id = "{{=request.vars.m_id}}";
         item.ingrs = document.getElementById('item_ingrs').value;
         item.portions_size = document.getElementsByName('portion_size');
