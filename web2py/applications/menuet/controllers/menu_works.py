@@ -179,6 +179,13 @@ def delete_menu_item():
     return {}
 
 
+def find_item_tags_id(tags_name):
+    '''Should return tags IDs as list'''
+    if tags_name is None or len(tags_name) == 0:
+        # return nothing if no data
+        return []
+    # returns list of ROWS with ID attribute inside - cast to list of pure IDs from this shit
+    return [x.id for x in db(db.t_item_tag.f_name.belongs(str(tags_name.encode('utf-8')).split(","))).select(db.t_item_tag.id).as_list(storage_to_dict=False)]
 
 
 @auth.requires_login()
@@ -261,19 +268,25 @@ def save_item():
                     db.t_step_ing.update_or_insert(t_step=_tmp_obj._new_step_id, t_recipe=_tmp_obj.recipe_id)
         elif item_source.change_factor == 'edit':
             # lets get recipe for this item
+            # Let's change t_item fields
+            db(db.t_item.id == int(item_source.id.encode('utf-8'))).update(f_name=item_source.name.encode('utf-8'), f_desc=item_source.desc.encode('utf-8'),
+                                                                  f_cal=item_source.cal.encode('utf-8'), f_tags=find_item_tags_id(item_source.tags_name),
+                                                                  f_weight=int(item_source.weight.encode('utf-8')))
+            # Add tags
 
+            pass
         else:
-        ####################### ADD M-M relations for item #####################################
-        step = db(db.t_step.id == db.t_ingredient.id).select()
-        # Get m-t-m relation - get all steps for given recipe id
-        steps_ing = db((db.t_recipe.id == _tmp_obj.recipe_id) & (db.t_step.id == db.t_step_ing.t_step) & (
-                db.t_recipe.id == db.t_step_ing.t_recipe))
-        # for ingr in ingrs_list:
-        #     # Create new step
-        #     _tmp_obj._new_step_id = db.t_step.update_or_insert(f_unit=_tmp_obj.unit_id,
-        #                                                    f_ingr=_tmp_obj.ingr_id)
-        # _tmp_obj._t_step_ing_new_id = \
-        #     db.t_step_ing.update_or_insert(t_step=_tmp_obj._new_step_id, t_recipe=_tmp_obj.recipe_id)
+            ####################### ADD M-M relations for item #####################################
+            step = db(db.t_step.id == db.t_ingredient.id).select()
+            # Get m-t-m relation - get all steps for given recipe id
+            steps_ing = db((db.t_recipe.id == _tmp_obj.recipe_id) & (db.t_step.id == db.t_step_ing.t_step) & (
+                    db.t_recipe.id == db.t_step_ing.t_recipe))
+            # for ingr in ingrs_list:
+            #     # Create new step
+            #     _tmp_obj._new_step_id = db.t_step.update_or_insert(f_unit=_tmp_obj.unit_id,
+            #                                                    f_ingr=_tmp_obj.ingr_id)
+            # _tmp_obj._t_step_ing_new_id = \
+            #     db.t_step_ing.update_or_insert(t_step=_tmp_obj._new_step_id, t_recipe=_tmp_obj.recipe_id)
         db.commit()
 
         return ajax_success()
