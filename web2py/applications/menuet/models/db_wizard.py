@@ -194,11 +194,13 @@ db.define_table('t_item_prices',
                 migrate=settings.migrate)
 ########################################
 db.define_table('t_item_price_archive',
-                Field('f_price', type='integer',
-                      label=T('Old price')),
+                Field('f_price', type='string',
+                      label=T('Price')),
                 Field('f_item', 'reference:t_item',
-                      label=T('Linked Item')),
-                auth.signature, format='%(f_price)s',
+                      label=T('Item')),
+                Field('f_portion', 'reference:t_portion',
+                      label=T('Linked portion')),
+                auth.signature, format='%(f_portion)s',
                 migrate=settings.migrate)
 ########################################
 ########################################

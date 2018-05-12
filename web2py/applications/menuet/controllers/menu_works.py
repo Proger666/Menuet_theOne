@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 ### required - do no delete
+import datetime
+
 from gluon.contrib import simplejson
 import pymorphy2
+
 
 def get_network_sugg(q):
     if q != None:
@@ -22,7 +25,7 @@ def get_tags_for_object(q, type):
         q = q.encode('utf-8')
         # search for menu or item tags
         if type == 'rest':
-            query =  db.t_rest_tag.f_name.contains(q)
+            query = db.t_rest_tag.f_name.contains(q)
         elif type == 'm_tags':
             query = db.t_menu_tag.f_name.contains(q)
         elif type == 'i_tags':
@@ -45,7 +48,7 @@ def get_sugg_for_ingrs(q):
     if q != None:
         result = []
         q = q.encode('utf-8')
-        #lets find ingredients
+        # lets find ingredients
         rows = db(db.t_ingredient.f_name.contains(q)).select()
         for row in rows:
             result.append({
@@ -71,14 +74,15 @@ def api():
                 # Search for tag (menu or item)
                 elif request.args[1] == 'm_tags' or request.args[1] == 'i_tags':
                     huections = get_tags_for_object(query, 'm_tags') if request.args[
-                                                                          1] == 'm_tags' else get_tags_for_object(query,
-                                                                                                                  'i_tags')
+                                                                            1] == 'm_tags' else get_tags_for_object(
+                        query,
+                        'i_tags')
                     return dict(suggestions=huections)
                 elif request.args[1] == 'ingredients':
                     huections = get_sugg_for_ingrs(query)
                     return dict(suggestions=huections)
                 elif request.args[1] == 'r_tags':
-                    huections = get_tags_for_object(query,'rest')
+                    huections = get_tags_for_object(query, 'rest')
                     return dict(suggestions=huections)
 
         else:
@@ -185,11 +189,13 @@ def find_item_tags_id(tags_name):
         # return nothing if no data
         return []
     # returns list of ROWS with ID attribute inside - cast to list of pure IDs from this shit
-    return [x.id for x in db(db.t_item_tag.f_name.belongs(str(tags_name.encode('utf-8')).split(","))).select(db.t_item_tag.id).as_list(storage_to_dict=False)]
+    return [x.id for x in db(db.t_item_tag.f_name.belongs(str(tags_name.encode('utf-8')).split(","))).select(
+        db.t_item_tag.id).as_list(storage_to_dict=False)]
 
 
 @auth.requires_login()
 def save_item():
+    start = datetime.datetime.now()
     # Create storage class for item
     item = Storage()
     # lets get our item from request or get None
@@ -238,57 +244,73 @@ def save_item():
                     ingrs_to_commit.ingr = db.t_ingredient.insert(f_name=ingr.lower(), f_curate=True)
                     ingrs_to_commit_list.append(ingrs_to_commit)
 
-        if item_source.change_factor == 'add':
+        # Create new recipe
+        _tmp_obj.recipe_id = db.t_recipe.insert(f_name=item_source.name.lower() + '_recipe')
+        item_source.desc = "" if item_source.desc is None else item_source.desc
 
-            # Create new recipe
-            _tmp_obj.recipe_id = db.t_recipe.insert(f_name=item_source.name.lower() + '_recipe')
-            item_source.desc = "" if item_source.desc is None else item_source.desc
+        if item_source.change_factor == 'add':
             # Create new Item
-            _tmp_obj.item_id = db.t_item.insert(f_cal=_tmp_obj.cal,f_name=item_source.name.lower(),
+            _tmp_obj.item_id = db.t_item.insert(f_cal=_tmp_obj.cal, f_name=item_source.name.lower(),
                                                 f_weight=item_source.weight,
                                                 f_unit=item_source.unit, f_recipe=_tmp_obj.recipe_id,
                                                 f_desc=item_source.desc, f_tags=_new_tags)
 
-            for step in item_source.portions:
-                _tmp_obj.t_item_prices_id = db.t_item_prices.insert(
-                    f_price=int(step['portion_price'].encode('utf-8')),
-                    f_portion=int(step['portion_size'].encode('utf-8')),
-                    f_item=_tmp_obj.item_id)
+            stich_portions_to_prices(_tmp_obj, item_source)
 
             _tmp_obj._new_menu_item_id = db.t_menu_item.insert(t_menu=item_source.m_id,
                                                                t_item=_tmp_obj.item_id)
 
-            # lets commit !!!!!STEPS!!!! to DB
-            # ATTACH ALL INGRS TO ITEM
-            for step in ingrs_to_commit_list:
-                # create new step
-                _tmp_obj._new_step_id = db.t_step.insert(f_ingr=step.ingr,f_unit=item_source.unit)
-                # create new M-t-M
-                _tmp_obj._t_step_ing_new_id = \
-                    db.t_step_ing.update_or_insert(t_step=_tmp_obj._new_step_id, t_recipe=_tmp_obj.recipe_id)
+
         elif item_source.change_factor == 'edit':
             # lets get recipe for this item
             # Let's change t_item fields
-            db(db.t_item.id == int(item_source.id.encode('utf-8'))).update(f_name=item_source.name.encode('utf-8'), f_desc=item_source.desc.encode('utf-8'),
-                                                                  f_cal=item_source.cal.encode('utf-8'), f_tags=find_item_tags_id(item_source.tags_name),
-                                                                  f_weight=int(item_source.weight.encode('utf-8')))
             # Add tags
-
-            pass
+            db(db.t_item.id == int(item_source.id.encode('utf-8'))).update(f_name=item_source.name.encode('utf-8'),
+                                                                           f_desc=item_source.desc.encode('utf-8'),
+                                                                           f_cal=item_source.cal.encode('utf-8'),
+                                                                           f_tags=find_item_tags_id(
+                                                                               item_source.tags_name),
+                                                                           f_weight=int(
+                                                                               item_source.weight.encode('utf-8')),
+                                                                           f_recipe=_tmp_obj.recipe_id,
+                                                                           f_unit=item_source.unit)
+            # change portions
+            _tmp_obj.item_id = item_source.id.encode('utf-8')
+            stich_portions_to_prices(_tmp_obj, item_source)
         else:
-            ####################### ADD M-M relations for item #####################################
-            step = db(db.t_step.id == db.t_ingredient.id).select()
-            # Get m-t-m relation - get all steps for given recipe id
-            steps_ing = db((db.t_recipe.id == _tmp_obj.recipe_id) & (db.t_step.id == db.t_step_ing.t_step) & (
-                    db.t_recipe.id == db.t_step_ing.t_recipe))
-            # for ingr in ingrs_list:
-            #     # Create new step
-            #     _tmp_obj._new_step_id = db.t_step.update_or_insert(f_unit=_tmp_obj.unit_id,
-            #                                                    f_ingr=_tmp_obj.ingr_id)
-            # _tmp_obj._t_step_ing_new_id = \
-            #     db.t_step_ing.update_or_insert(t_step=_tmp_obj._new_step_id, t_recipe=_tmp_obj.recipe_id)
+            logger.error('Failed to save item ' + logUser_and_request())
+            return ajax_error()
+        # ATTACH ALL INGRS TO ITEM
+        stich_ingrs_to_item(_tmp_obj, ingrs_to_commit_list, item_source)
+
         db.commit()
 
+        end = datetime.datetime.now() - start
+        logger.info('item saved in ' + str(end))
         return ajax_success()
 
     return {}
+
+
+def stich_ingrs_to_item(_tmp_obj, ingrs_to_commit_list, item_source):
+    for step in ingrs_to_commit_list:
+        # create new step
+        _tmp_obj._new_step_id = db.t_step.insert(f_ingr=step.ingr, f_unit=item_source.unit)
+        # create new M-t-M
+        _tmp_obj._t_step_ing_new_id = \
+            db.t_step_ing.update_or_insert(t_step=_tmp_obj._new_step_id, t_recipe=_tmp_obj.recipe_id)
+
+
+def stich_portions_to_prices(_tmp_obj, item_source):
+    # TODO:redesign
+    ## search for all ows with this item and move to archive
+    stale_rec = db.t_item_prices(db.t_item_prices.f_item == _tmp_obj.item_id).as_dict()
+    db.t_item_price_archive.insert(**stale_rec)
+    # remove stale record
+    db(db.t_item_prices.f_item == _tmp_obj.item_id).delete()
+    for step in item_source.portions:
+        # create new
+        _tmp_obj.t_item_prices_id = db.t_item_prices.insert(
+            f_price=int(step['portion_price'].encode('utf-8')),
+            f_portion=int(step['portion_size'].encode('utf-8')),
+            f_item=_tmp_obj.item_id)

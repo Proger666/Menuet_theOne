@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 ### required - do no delete
+import datetime
+
 from gluon.contrib import simplejson
 
 # define this DB SHIT!
@@ -215,6 +217,7 @@ def get_tags_for_item(tags_list):
 
 @auth.requires_login()
 def e_menu():
+    start = datetime.datetime.now()
     try:
         # get something or NONE
         menu_id = request.vars.get('m_id')
@@ -229,6 +232,7 @@ def e_menu():
             # Get all ITEMS for this MENU
             _menu_items = getItems_for_menu(menu_id)
             menu_items = []
+            end1 = datetime.datetime.now() - start
             # Lets fill item class
             for menu_item in _menu_items:
                 # create class storage for item
@@ -251,8 +255,10 @@ def e_menu():
                 else:
                     logger.warn('No portions in request ' + logUser_and_request())
                     return {}
+                end2 = datetime.datetime.now() - start
                 menu_items.append(item)
             tags = db.t_menu[menu_id].f_tags
+            end3 = datetime.datetime.now() - start
             return locals()
         else:
             logger.error("in e_menu, exception happened! " + logUser_and_request())

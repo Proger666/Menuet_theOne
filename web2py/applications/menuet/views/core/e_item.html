@@ -109,15 +109,20 @@
 
     var counter = 0;
 
+    function remove_portion(id) {
+        $(id).closest('div').remove();
+        $('i[name=chart]').toggleClass('fa-trash-alt fa-chart-pie');
+    }
+
     function loadRow(price) {
         var d = document.getElementById('price_group_id');
         $('#price_group_id').append('<div class="form-group input-group">' +
-                '<span class="input-group-addon"><i class="fas fa-chart-pie" style="width: 20px;height: 16px"></i> </span>' +
+                '<span name="chart"  class="input-group-addon"><i onclick="remove_portion(this)" name="chart" class="fas fa-chart-pie" style="width: 20px;height: 16px"></i> </span>' +
                 '<select name="portion_size" id="portion_size' + counter + '" class="form-control">' +
         {{for portion_name in portions_name:}}
                 '<option value="{{=portion_name.id}}">{{=portion_name.f_name}}</option>' +{{pass}}
                 '<div class="form-group input-group">' +
-                '<input type="number" name="portion_price" id="portion_price' + counter + '" value="'+price+'" class="form-control" placeholder="Цена">' +
+                '<input type="number" name="portion_price" id="portion_price' + counter + '" value="' + price + '" class="form-control" placeholder="Цена">' +
                 '<div id="add_portion' + counter + '" class="form-group"></div>');
 
         if (counter === 0) {
@@ -133,8 +138,8 @@
 
     function addRow() {
         var d = document.getElementById('price_group_id');
-        $('#price_group_id').append('<div class="form-group input-group">' +
-                '<span class="input-group-addon"><i class="fas fa-chart-pie" style="width: 20px;height: 16px"></i> </span>' +
+        $('#price_group_id').append('<div class="form-group input-group" >' +
+                '<span name="chart" class="input-group-addon"><i onclick="remove_portion(this)" name="chart" class="fas fa-chart-pie" style="width: 20px;height: 16px"></i> </span>' +
                 '<select name="portion_size" id="portion_size' + counter + '" class="form-control">' +
         {{for portion_name in portions_name:}}
 
@@ -142,7 +147,9 @@
                 '<div class="form-group input-group">' +
                 '<input type="number" name="portion_price" id="portion_price' + counter + '" value="{{=item.price}}" class="form-control" placeholder="Цена">' +
                 '<div id="add_portion' + counter + '" class="form-group"></div>');
-
+        $("span[name=chart]").hover(function () {
+            $('i[name=chart]').toggleClass('fa-trash-alt fa-chart-pie');
+        });
         if (counter === 0) {
             var btn_row_id = document.getElementById('addrow_id0');
         }
@@ -159,11 +166,16 @@
         });
         $("[id=item_unit]").val("{{=item.unit['id']}}");
 
-        {{for portion in item.portions:}}
+    {{for portion in item.portions:}}
         loadRow('{{=portion['price']}}');
-        $("[id=portion_size"+(counter-1)+"]").val("{{=portion['size']['id']}}");
+        $("[id=portion_size" + (counter - 1) + "]").val("{{=portion['size']['id']}}");
 
-        {{pass}}
+    {{pass}}
+
+        $("span[name=chart]").hover(function () {
+            $('i[name=chart]').toggleClass('fa-trash-alt fa-chart-pie');
+        });
+
 
     });
 
