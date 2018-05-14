@@ -111,5 +111,4 @@ venv.bak/
 /web2py/examples/
 /web2py/applications/menuet/views/core/e_rest_.html
 /web2py/applications/menuet/private/appconfig.ini
-!/web2py/applications/menuet/private/appconfig.ini
 /web2py/applications/menuet/keys/
