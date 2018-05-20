@@ -420,7 +420,7 @@ def weighted_search(query, lng, lat, user_id, sort):
     logger.warning('by name search concluded in ' + str(end))
     # we expect ROW object
     by_ingr = search_by_ingr(items, query, raw_weights['ingr'])
-    by_tag = search_by_tag(items, query, raw_weights['tag'])
+    #by_tag = search_by_tag(items, query, raw_weights['tag'])
     weighted_result = create_result(by_name, by_ingr, _tmp_nets, sort)
     end = datetime.datetime.now() - start
     logger.warning('Weighted search concluded in ' + str(end))
