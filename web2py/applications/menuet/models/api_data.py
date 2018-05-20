@@ -3,7 +3,7 @@ class result_object:
     def __init__(self):
         #set initial structure
         self.rest_name =""
-
+    asd
     def set_all(self,item_id,rest_id,item_price,item_rating,menu_id,item_weight,rest_name,rest_addr,rest_distance,rest_phone,f4sqr_link,item_ingrs):
         self.item_id=item_id
         self.rest_id=rest_id
