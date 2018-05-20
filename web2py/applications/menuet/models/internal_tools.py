@@ -6,7 +6,7 @@ def checkIfExist(*args):
                 return False
             else:
                 return True
-        except AttributeError:
+        except TypeError:
             pass
 
 
