@@ -1,10 +1,9 @@
 class result_object:
     '''This objects '''
-    def __init__(self):
-        #set initial structure
-        self.rest_name =""
-    def set_all(self,item_id,rest_id,item_price,item_rating,menu_id,item_weight,rest_name,rest_addr,rest_distance,rest_phone,f4sqr_link,item_ingrs):
+
+    def __init__(self,item_id,item_name,rest_id,item_price,item_rating,menu_id,item_weight,rest_name,rest_addr,rest_distance,rest_phone,f4sqr_link,item_ingrs):
         self.item_id=item_id
+        self.item_name=item_name
         self.rest_id=rest_id
         self.item_price=item_price
         self.item_rating=item_rating
@@ -16,3 +15,7 @@ class result_object:
         self.rest_phone=rest_phone
         self.f4sqr_link=f4sqr_link
         self.item_ingrs=item_ingrs
+
+class internalSearchCache:
+    def __init__(self):
+        self.name = ""

@@ -113,7 +113,7 @@ def get_from_cache(user_id, count, query):
     return {'msg': 'none'}
 
 
-def search_by_name(items, query, weight):
+def search_by_name(items, query, weight, internal_cache):
     # search by exact match fast fail if found
     # result obj
     query = query.encode('utf-8')
@@ -121,8 +121,9 @@ def search_by_name(items, query, weight):
 
     for item in items:
         if item.f_name == query:
-            result.append({'item': item, 'weight': weight})
+            result = result_object(item.id,item.f_name,)
 
+            result.append({'item': item, 'weight': weight})
             break
     if len(result) == 1:
         # lets try search word by word until fail
@@ -415,7 +416,9 @@ def weighted_search(query, lng, lat, user_id, sort):
     ############
     # we expect ROW object
     start = datetime.datetime.now()
-    by_name = search_by_name(items, query, raw_weights['item'])
+    # lets create cache in order to lower SQL queries
+    internal_cache = internalSearchCache()
+    by_name = search_by_name(items, query, raw_weights['item'], internal_cache)
     end = datetime.datetime.now() - start
     logger.warning('by name search concluded in ' + str(end))
     # we expect ROW object
