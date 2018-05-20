@@ -19,7 +19,6 @@ if request.global_settings.web2py_version < "2.15.5":
 # if SSL/HTTPS is properly configured and you want all HTTP requests to
 # be redirected to HTTPS, uncomment the line below:
 # -------------------------------------------------------------------------
-request.requires_https()
 
 # -------------------------------------------------------------------------
 # once in production, remove reload=True to gain full speed
