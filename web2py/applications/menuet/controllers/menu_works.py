@@ -304,10 +304,16 @@ def stich_ingrs_to_item(_tmp_obj, ingrs_to_commit_list, item_source):
 def stich_portions_to_prices(_tmp_obj, item_source):
     # TODO:redesign
     ## search for all ows with this item and move to archive
-    stale_rec = db.t_item_prices(db.t_item_prices.f_item == _tmp_obj.item_id).as_dict()
-    db.t_item_price_archive.insert(**stale_rec)
-    # remove stale record
-    db(db.t_item_prices.f_item == _tmp_obj.item_id).delete()
+    ## try to get stale records
+    try:
+        stale_rec = db.t_item_prices(db.t_item_prices.f_item == _tmp_obj.item_id).as_dict()
+        ## Copy entire record stale record from current db to archive
+        db.t_item_price_archive.insert(**stale_rec)
+        # remove stale record
+        db(db.t_item_prices.f_item == _tmp_obj.item_id).delete()
+    except AttributeError:
+        # its ok nothing todo
+        pass
     for step in item_source.portions:
         # create new
         _tmp_obj.t_item_prices_id = db.t_item_prices.insert(

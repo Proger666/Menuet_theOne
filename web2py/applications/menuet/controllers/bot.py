@@ -50,7 +50,7 @@ def clean_file_cache(user_id):
         master_file = 'applications/menuet/cache/cache_master'
         # remove user_id and its cache data from master_file
         # OPen master for read
-        f= open(master_file, 'r+')
+        f = open(master_file, 'r+')
         # read all lines
         master_cache = simplejson.load(f)
         master_cache = [x for x in master_cache if x['user_id'] != user_id]
@@ -71,6 +71,7 @@ def clean_file_cache(user_id):
 def get_from_cache(user_id, count, query):
     try:
         master_file = open('applications/menuet/cache/cache_master', 'r+')
+
     except IOError:
         master_file = open('applications/menuet/cache/cache_master', 'wb')
         master_file.close()
@@ -276,16 +277,18 @@ def get_price_for_item(item_id):
 
 
 def get_rest_for_item(item_id, networks_ids):
-    rest_info =  db((db.t_item.id == item_id) & (m_t_m_rest_menu) & (m_t_m_menu_item)).select(db.t_restaraunt.ALL).first()
+    rest_info = db((db.t_item.id == item_id) & (m_t_m_rest_menu) & (m_t_m_menu_item)).select(
+        db.t_restaraunt.ALL).first()
     # try to search in networks
     if rest_info is None:
         rest_info = db((db.t_item.id == item_id) & (m_t_m_menu_item)).select(db.t_menu.f_network).first().f_network
         # TODO: REDESIGN
         # resolve network info
         _net_info = db(db.t_network.id == rest_info).select(db.t_network.ALL).first()
-        rest_info = {"f_name": _net_info.f_name, "f_address": "Москва" }
+        rest_info = {"f_name": _net_info.f_name, "f_address": "Москва"}
         rest_info = Storage(rest_info)
     return rest_info
+
 
 def create_result(by_name, by_ingr, networks_ids, sort):
     start = datetime.datetime.now()
@@ -360,7 +363,7 @@ def write_to_cache(user_id, weighted_result, query):
 
 
 def weighted_search(query, lng, lat, user_id, sort):
-    raw_weights = {'ingr': 1, 'item': 2}
+    raw_weights = {'ingr': 1, 'item': 2, 'tag' : 3}
     # result format
     # Structure
     #     {'item': [
@@ -376,28 +379,34 @@ def weighted_search(query, lng, lat, user_id, sort):
     ##################### CREATE LOCATION SLICE ################################
     ##### Search by location
     # ROWS of rests
-    rest1k = db.executesql('SET @lat =' + str(lat))
-    rest1k = db.executesql('SET @lng = ' + str(lng))
-    rest1k = db.executesql('SELECT t_restaraunt.id,t_restaraunt.f_is_network,'
-                           't_restaraunt.f_network_name,(ACOS(COS(RADIANS(@lat))'
-                           '*COS(RADIANS(t_restaraunt.f_latitude))*COS(RADIANS(t_restaraunt.f_longitude)-RADIANS(@lng))+SIN(RADIANS(@lat))'
-                           '*SIN(RADIANS(t_restaraunt.f_latitude)))*6371)'
-                           'AS distance_in_km FROM t_restaraunt GROUP BY distance_in_km HAVING distance_in_km < 5000 LIMIT 10000',
-                           as_dict=True)
+    try:
+        #### Try to calculate location
+        ## TODO: redesign
+        db.executesql('SET @lat =' + str(lat))
+        db.executesql('SET @lng = ' + str(lng))
+        rest1k = db.executesql('SELECT t_restaraunt.id,t_restaraunt.f_is_network,'
+                               't_restaraunt.f_network_name,(ACOS(COS(RADIANS(@lat))'
+                               '*COS(RADIANS(t_restaraunt.f_latitude))*COS(RADIANS(t_restaraunt.f_longitude)-RADIANS(@lng))+SIN(RADIANS(@lat))'
+                               '*SIN(RADIANS(t_restaraunt.f_latitude)))*6371)'
+                               'AS distance_in_km FROM t_restaraunt GROUP BY distance_in_km HAVING distance_in_km < 5000 LIMIT 10000',
+                               as_dict=True)
+    except:
+        # We failed - get long with it
+        logger.error("ALARMA! Database error in location calculation")
+        rest1k = db(db.t_restaraunt.id > 0).select()
 
     # Get all menus for this rests
     # u'T' = True for mySQL
     _tmp_nets = set()
     # get ids of networks
     [_tmp_nets.add(x['f_network_name']) for x in rest1k if
-     x['f_is_network'] == u'T' and x['f_network_name'] is not None and x['f_network_name'] != 5]
+     x['f_is_network'] == u'T' or x['f_is_network'] == True and x['f_network_name'] is not None and x[
+         'f_network_name'] != 5]
 
     _tmp_rests_id = [x['id'] for x in rest1k]
-    menus = db((db.t_menu.f_current == True) & (
-            (db.t_restaraunt.id.belongs(_tmp_rests_id)) | (db.t_menu.f_network.belongs(_tmp_nets))) & (
-                   m_t_m_rest_menu)).select(
+    menus = db((db.t_menu.f_current == True)
+               & ((db.t_restaraunt.id.belongs(_tmp_rests_id)) & (m_t_m_rest_menu))).select(
         db.t_menu.id)
-
     menus_id = [x.id for x in menus]
     ## Add menus for networks
     menus_id += [x.id for x in db(db.t_menu.f_network.belongs(_tmp_nets)).select()]
@@ -411,7 +420,7 @@ def weighted_search(query, lng, lat, user_id, sort):
     logger.warning('by name search concluded in ' + str(end))
     # we expect ROW object
     by_ingr = search_by_ingr(items, query, raw_weights['ingr'])
-
+    by_tag = search_by_tag(items, query, raw_weights['tag'])
     weighted_result = create_result(by_name, by_ingr, _tmp_nets, sort)
     end = datetime.datetime.now() - start
     logger.warning('Weighted search concluded in ' + str(end))
@@ -431,9 +440,12 @@ def get_food_with_loc(vars):
     if len(vars) < 1:
         logger.error("failed to get food for user, vars not supplied")
         return {}
-    if vars.query is None or vars.query == "":
+    if not checkIfExist(vars.query):
         logger.error("query is empty :(")
         return api_error("Query is empty")
+    if not checkIfExist(vars.loc_lng, vars.loc_lat):
+        logger.error("Locations is not present")
+        return api_error("Locations is missing")
     # lets get food WITH WEIGHTS
     # query = food
     # From proxy we expect to receive:
