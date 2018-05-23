@@ -2,6 +2,7 @@
 # !/usr/bin/env python
 import datetime
 import os
+import jsonpickle
 
 import pymorphy2
 from collections import OrderedDict
@@ -113,33 +114,56 @@ def get_from_cache(user_id, count, query):
     return {'msg': 'none'}
 
 
-def search_by_name(items, query, weight, internal_cache):
+def get_STD_portion_price_item(item_id):
+    _portions = db(db.t_item_prices.f_item == item_id).select(db.t_item_prices.f_price, db.t_item_prices.f_portion)
+    if _portions != None:
+        # fill array with price and portion name
+        for step in _portions:
+            # 1 stands for Standard
+            if step.f_portion == 1:
+                return step.f_price
+
+
+def search_by_name(query, weight, rest1k, rests_item):
     # search by exact match fast fail if found
     # result obj
-    query = query.encode('utf-8')
-    result = [{}]
 
-    for item in items:
-        if item.f_name == query:
-            result = result_object(item.id,item.f_name,)
+    result = []
 
-            result.append({'item': item, 'weight': weight})
+    for item in rests_item:
+        item = Storage(item)
+        if item.item_name == query:
+            result.append(result_object(item.item_id, item.f_name,
+                                        item.rest_id, get_STD_portion_price_item(item.item_id), '0', item.menu_id,
+                                        weight, item.rest_name,
+                                        item.rest_address, rest1k[item.rest_id]['distance_in_km'],
+                                        item.rest_phone,
+                                        "https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5",
+                                        get_ingrs_for_item(item.item_id)))
+
             break
-    if len(result) == 1:
+    if len(result) == 0:
         # lets try search word by word until fail
         # strip by words
         words = query.split(" ")
         i = len(words)
-        start = datetime.datetime.now()
         while len(result) == 1 and i > 0:
             # search for string and cut string's tail each time until last word
             sub_query = " ".join(words[:i])
-            for item in items:
-                if item.f_name.startswith(sub_query):
-                    result.append({'item': item, 'weight': weight})
+            for item in rests_item:
+
+                item = Storage(item)
+                if item.item_name.startswith(sub_query):
+                    result.append(result_object(item.item_id, item.f_name,
+                                                item.rest_id, get_STD_portion_price_item(item.item_id), '0',
+                                                item.menu_id,
+                                                weight, item.rest_name,
+                                                item.rest_address, rest1k[item.rest_id]['distance_in_km'],
+                                                item.rest_phone,
+                                                "https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5",
+                                                get_ingrs_for_item(item.item_id)))
                     break
             i -= 1
-        end = datetime.datetime.now() - start
         return result
     return result
 
@@ -178,10 +202,10 @@ def pos(word, morth=pymorphy2.MorphAnalyzer()):
     return r
 
 
-def search_by_ingr(items, query, weight):
+def search_by_ingr(query, weight,rest1k, rests_item):
     start = datetime.datetime.now()
     # result will be stored as row
-    result_final = [{}]
+    result_final = []
     query = query.encode('utf-8')
     # try search word by word
     # strip by words
@@ -200,9 +224,10 @@ def search_by_ingr(items, query, weight):
     if len(ingrs_id) == 0:
         return result_final
 
-    items_id = [x.id for x in items]
+    # collect all ids from item ids
+    items_id = [x['item_id'] for x in rests_item]
     # Lets try to find items by their ingrs
-    # we join ALL tables + filter by items that we know and  filter them out by ingrs
+    # we join ALL tables + filter by items that we know and filter them out by ingrs
     # SEARCH BY IN thats OR search
     result_id = db.executesql(
         'SELECT itm.id, group_concat(concat(rc_ingr.ingr))'
@@ -218,7 +243,7 @@ def search_by_ingr(items, query, weight):
                                         ' ORDER BY itm.id')
 
     # Lets try search by AND in results
-    result_AND = [{}]
+    result_AND = []
     # 0 is ITEM 1 is INGR
     i = 0
     # RESULT WILL BE ITEM ID!!!
@@ -230,13 +255,25 @@ def search_by_ingr(items, query, weight):
             result_AND.append(item[0])
         i += 1
     # do we get anything with and ? if not return OR ids of items to include
-    if len(result_AND) == 1:
-        result = [x[0] for x in result_id]
+    if len(result_AND) == 0:
+        results_id = [x[0] for x in result_id]
     else:
-        result = result_AND
+        results_id = result_AND
     # result now is list of item IDs
     # now turn it to ROWS
-    [result_final.append({'item': x, 'weight': weight}) for x in items if x.id in result]
+    for item in rests_item:
+        item = Storage(item)
+        if item.item_id in results_id:
+            result_final.append(result_object(item.item_id, item.f_name,
+                                        item.rest_id, get_STD_portion_price_item(item.item_id), '0', item.menu_id,
+                                        weight, item.rest_name,
+                                        item.rest_address, rest1k[item.rest_id]['distance_in_km'],
+                                        item.rest_phone,
+                                        "https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5",
+                                        get_ingrs_for_item(item.item_id)))
+
+            break
+
     end = datetime.datetime.now() - start
     logger.warning('search by ingr concluded in ' + str(end))
     return result_final
@@ -293,26 +330,31 @@ def get_rest_for_item(item_id, networks_ids):
 
 def create_result(by_name, by_ingr, networks_ids, sort):
     start = datetime.datetime.now()
-    if len(by_name) == 1 and len(by_ingr) == 1:
+    if len(by_name) == 0 and len(by_ingr) == 0:
         return []
     resulting_array = []
     try:
         for element in by_ingr + by_name:
-            # check if
-            if len(element) > 0:
-                if not is_exist(element, resulting_array):
-                    # fetach rest info for item
-                    _rest = get_rest_for_item(element["item"]["id"], networks_ids)
-                    resulting_array.append({"item": element["item"]["f_name"],
-                                            "ingrs": ",".join(get_ingrs_for_item(element["item"]["id"])),
-                                            "cost": get_price_for_item(element["item"]["id"]),
-                                            "rest_name": _rest.f_name,
-                                            "rest_addr": _rest.f_address,
-                                            "weight": element["weight"]})
-        # Let's sort this shit now
-        # create ordered dict to remember dict order
-        od = OrderedDict
-    except Exception as e:
+            #check if it's duplicate
+            if element is not None:
+                if element not in resulting_array:
+                    resulting_array.append(element)
+        # for element in by_ingr + by_name:
+        #     # check if
+        #     if len(element) > 0:
+        #         if not is_exist(element, resulting_array):
+        #             # fetach rest info for item
+        #             _rest = get_rest_for_item(element["item"]["id"], networks_ids)
+        #             resulting_array.append({"item": element["item"]["f_name"],
+        #                                     "ingrs": ",".join(get_ingrs_for_item(element["item"]["id"])),
+        #                                     "cost": get_price_for_item(element["item"]["id"]),
+        #                                     "rest_name": _rest.f_name,
+        #                                     "rest_addr": _rest.f_address,
+        #                                     "weight": element["weight"]})
+        # # Let's sort this shit now
+        # # create ordered dict to remember dict order
+        # od = OrderedDict
+    except AssertionError:
         logger.error("DB ERROR!!!! we failed to create result in create_result, " + str(e) + str(e.message))
     end = datetime.datetime.now() - start
     logger.warning('create_result concluded in ' + str(end))
@@ -333,7 +375,7 @@ def write_to_cache(user_id, weighted_result, query):
         # Create new cache for the results
         file = open('applications/menuet/cache/cache_' + str(user_id), 'w')
         _ = {"user_id": user_id,
-             "items": simplejson.dumps(weighted_result),
+             "items": jsonpickle.dumps(weighted_result, unpicklable=False),
              "curr_pos": 0}
         # dumps this results
         simplejson.dump(_, file)
@@ -364,7 +406,7 @@ def write_to_cache(user_id, weighted_result, query):
 
 
 def weighted_search(query, lng, lat, user_id, sort):
-    raw_weights = {'ingr': 1, 'item': 2, 'tag' : 3}
+    raw_weights = {'ingr': 1, 'item': 2, 'tag': 3}
     # result format
     # Structure
     #     {'item': [
@@ -385,7 +427,7 @@ def weighted_search(query, lng, lat, user_id, sort):
         ## TODO: redesign
         db.executesql('SET @lat =' + str(lat))
         db.executesql('SET @lng = ' + str(lng))
-        rest1k = db.executesql('SELECT t_restaraunt.id,t_restaraunt.f_is_network,'
+        rest1k = db.executesql('SELECT t_restaraunt.id,t_restaraunt.f_is_network,t_restaraunt.f_address,'
                                't_restaraunt.f_network_name,(ACOS(COS(RADIANS(@lat))'
                                '*COS(RADIANS(t_restaraunt.f_latitude))*COS(RADIANS(t_restaraunt.f_longitude)-RADIANS(@lng))+SIN(RADIANS(@lat))'
                                '*SIN(RADIANS(t_restaraunt.f_latitude)))*6371)'
@@ -412,18 +454,30 @@ def weighted_search(query, lng, lat, user_id, sort):
     ## Add menus for networks
     menus_id += [x.id for x in db(db.t_menu.f_network.belongs(_tmp_nets)).select()]
 
-    items = db((db.t_menu.id.belongs(menus_id)) & (m_t_m_menu_item)).select(db.t_item.ALL)
+    # TODO:redesign
+    rests_item = db.executesql(
+        "SELECT t_menu.id as menu_id, t_restaraunt.f_public_phone AS rest_phone, ifnull(t_restaraunt.id,5) AS rest_id,t_restaraunt.f_name AS rest_name,"
+        "t_restaraunt.f_address AS rest_address,t_item.id AS item_id,t_item.f_name AS item_name, "
+        "t_menu.f_network FROM t_item "
+        "left OUTER JOIN t_menu_item ON t_item.id = t_menu_item.t_item "
+        "left OUTER JOIN t_menu ON t_menu_item.t_menu = t_menu.id "
+        "left OUTER JOIN t_rest_menu ON t_menu.id = t_rest_menu.t_menu "
+        "left OUTER JOIN t_restaraunt ON t_restaraunt.id = t_rest_menu.t_rest "
+        "where t_restaraunt.id IN(" + ', '.join(str(x) for x in _tmp_rests_id) + ") OR t_restaraunt.id IS NULL",
+        as_dict=True)
+
     ############
     # we expect ROW object
     start = datetime.datetime.now()
     # lets create cache in order to lower SQL queries
     internal_cache = internalSearchCache()
-    by_name = search_by_name(items, query, raw_weights['item'], internal_cache)
+    # we expect RESULT object
+    by_name = search_by_name(query, raw_weights['item'], rest1k, rests_item)
     end = datetime.datetime.now() - start
-    logger.warning('by name search concluded in ' + str(end))
-    # we expect ROW object
-    by_ingr = search_by_ingr(items, query, raw_weights['ingr'])
-    #by_tag = search_by_tag(items, query, raw_weights['tag'])
+    logger.warning('by_name search concluded in ' + str(end))
+    # we expect RESULT object
+    by_ingr = search_by_ingr(query, raw_weights['ingr'],rest1k, rests_item)
+    # by_tag = search_by_tag(items, query, raw_weights['tag'])
     weighted_result = create_result(by_name, by_ingr, _tmp_nets, sort)
     end = datetime.datetime.now() - start
     logger.warning('Weighted search concluded in ' + str(end))
