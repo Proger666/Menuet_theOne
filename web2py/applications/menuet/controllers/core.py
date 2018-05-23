@@ -131,7 +131,7 @@ def check_rest():
 def rest():
     rests = {"rests": []}
     rests = Storage(rests)
-    _tmp = db(db.t_restaraunt.f_locked_by == auth.user.id).select(orderby=~db.t_restaraunt.created_on, limitby=(0, 4))
+    _tmp = db(db.t_restaraunt.f_locked_by == auth.user.id).select(orderby=~db.t_restaraunt.modified_on, limitby=(0, 4))
     for row in _tmp:
         rests.rests.append({"id": row.id, "name": row.f_name, "created_on": row.created_on, "addr": row.f_address})
 
