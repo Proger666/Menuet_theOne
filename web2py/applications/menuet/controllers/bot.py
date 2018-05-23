@@ -154,7 +154,7 @@ def search_by_name(query, weight, rest1k, rests_item):
 
                 item = Storage(item)
                 if item.item_name.startswith(sub_query):
-                    result.append(result_object(item.item_id, item.f_name,
+                    result.append(result_object(item.item_id, item.item_name,
                                                 item.rest_id, get_STD_portion_price_item(item.item_id), '0',
                                                 item.menu_id,
                                                 weight, item.rest_name,
@@ -264,7 +264,7 @@ def search_by_ingr(query, weight,rest1k, rests_item):
     for item in rests_item:
         item = Storage(item)
         if item.item_id in results_id:
-            result_final.append(result_object(item.item_id, item.f_name,
+            result_final.append(result_object(item.item_id, item.item_name,
                                         item.rest_id, get_STD_portion_price_item(item.item_id), '0', item.menu_id,
                                         weight, item.rest_name,
                                         item.rest_address, rest1k[item.rest_id]['distance_in_km'],
