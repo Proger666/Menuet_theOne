@@ -147,7 +147,7 @@ def search_by_name(query, weight, rest1k, rests_item):
         # strip by words
         words = query.split(" ")
         i = len(words)
-        while len(result) == 1 and i > 0:
+        while len(result) == 0 and i > 0:
             # search for string and cut string's tail each time until last word
             sub_query = " ".join(words[:i])
             for item in rests_item:
