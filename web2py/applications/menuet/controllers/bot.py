@@ -132,7 +132,7 @@ def search_by_name(query, weight, rest1k, rests_item):
 
     for item in rests_item:
         item = Storage(item)
-        if item.item_name == query:
+        if item.item_name.lower() == query.lower() :
             create_result_obj(item, rest1k, result, weight)
 
             break
@@ -147,7 +147,7 @@ def search_by_name(query, weight, rest1k, rests_item):
             for item in rests_item:
 
                 item = Storage(item)
-                if item.item_name.startswith(sub_query):
+                if item.item_name.lower().startswith(sub_query.lower()):
                     create_result_obj(item, rest1k, result, weight)
                     break
             i -= 1
