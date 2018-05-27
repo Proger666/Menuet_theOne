@@ -165,7 +165,7 @@ def create_result_obj(item, rest1k, result, weight):
                                 item.rest_address, rest1k[item.rest_id]['distance_in_km'],
                                 item.rest_phone,
                                 "https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5",
-                                get_ingrs_for_item(item.item_id)))
+                                get_ingrs_for_item(item.item_id),item.rest_long, item.rest_lat))
 
 
 def query_cleanUp(query):
@@ -458,7 +458,7 @@ def weighted_search(query, lng, lat, user_id, sort):
     rests_item = db.executesql(
         "SELECT t_menu.id as menu_id, t_restaraunt.f_public_phone AS rest_phone, ifnull(t_restaraunt.id,5) AS rest_id,t_restaraunt.f_name AS rest_name,"
         "t_restaraunt.f_address AS rest_address,t_item.id AS item_id,t_item.f_name AS item_name, "
-        "t_menu.f_network FROM t_item "
+        "t_menu.f_network, t_restaraunt.f_latitude AS rest_lat, t_restaraunt.f_longitude as rest_long FROM t_item "
         "left OUTER JOIN t_menu_item ON t_item.id = t_menu_item.t_item "
         "left OUTER JOIN t_menu ON t_menu_item.t_menu = t_menu.id "
         "left OUTER JOIN t_rest_menu ON t_menu.id = t_rest_menu.t_menu "
