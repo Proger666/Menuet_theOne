@@ -131,10 +131,10 @@ def search_by_name(query, weight, rest1k, rests_item):
     result = []
 
     for item in rests_item:
-        item = Storage(item)
-        if item.item_name.lower() == query.lower() :
+     item = Storage(item)
+     # remove excessive spaces
+     if re.sub(' +',' ', item.item_name.lower()) == query.lower():
             create_result_obj(item, rest1k, result, weight)
-
             break
     if len(result) == 0:
         # lets try search word by word until fail
@@ -399,6 +399,8 @@ def write_to_cache(user_id, weighted_result, query):
 
 def weighted_search(query, lng, lat, user_id, sort):
     raw_weights = {'ingr': 1, 'item': 2, 'tag': 3}
+    # remove escessive spaces from query
+    query = re.sub(' +',' ', query.lower())
     # result format
     # Structure
     #     {'item': [
@@ -455,7 +457,7 @@ def weighted_search(query, lng, lat, user_id, sort):
         "left OUTER JOIN t_menu ON t_menu_item.t_menu = t_menu.id "
         "left OUTER JOIN t_rest_menu ON t_menu.id = t_rest_menu.t_menu "
         "left OUTER JOIN t_restaraunt ON t_restaraunt.id = t_rest_menu.t_rest "
-        "where t_restaraunt.id IN(" + ', '.join(str(x) for x in _tmp_rests_id) + ") OR t_restaraunt.id IS NULL",
+        "where t_restaraunt.id IN(" + ', '.join(str(x) for x in _tmp_rests_id) + ") OR t_restaraunt.id is null",
         as_dict=True)
 
     ############
