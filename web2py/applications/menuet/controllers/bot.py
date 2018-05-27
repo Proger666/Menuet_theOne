@@ -133,7 +133,7 @@ def search_by_name(query, weight, rest1k, rests_item):
     for item in rests_item:
      item = Storage(item)
      # remove excessive spaces
-     if re.sub(' +',' ', item.item_name.lower()) == query.lower():
+     if re.sub(' +',' ', item.item_name.lower()) == query:
             create_result_obj(item, rest1k, result, weight)
             break
     if len(result) == 0:
@@ -326,7 +326,7 @@ def create_result(by_name, by_ingr, networks_ids, sort):
         return []
     resulting_array = []
     try:
-        for element in by_ingr + by_name:
+        for element in  by_name + by_ingr :
             #check if it's duplicate
             if element is not None:
                 if element not in resulting_array:
