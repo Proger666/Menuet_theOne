@@ -264,16 +264,8 @@ def search_by_ingr(query, weight,rest1k, rests_item):
     for item in rests_item:
         item = Storage(item)
         if item.item_id in results_id:
-            result_final.append(result_object(item.item_id, item.item_name,
-                                        item.rest_id, get_STD_portion_price_item(item.item_id), '0', item.menu_id,
-                                        weight, item.rest_name,
-                                        item.rest_address, rest1k[item.rest_id]['distance_in_km'],
-                                        item.rest_phone,
-                                        "https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5",
-                                        get_ingrs_for_item(item.item_id)))
-
+            create_result_obj(item, rest1k, result_final, weight)
             break
-
     end = datetime.datetime.now() - start
     logger.warning('search by ingr concluded in ' + str(end))
     return result_final
