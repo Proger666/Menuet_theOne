@@ -15,8 +15,8 @@ class result_object:
         self.rest_phone=rest_phone
         self.f4sqr_link=f4sqr_link
         self.item_ingrs=item_ingrs
-        self.long = rest_long
-        self.lat = rest_lat
+        self.rest_long = rest_long
+        self.rest_lat = rest_lat
 
 class internalSearchCache:
     def __init__(self):
