@@ -257,8 +257,10 @@ def e_menu():
                     return {}
                 end2 = datetime.datetime.now() - start
                 menu_items.append(item)
+                logger.warning('We add new menu item in %s', str(end2))
             tags = db.t_menu[menu_id].f_tags
             end3 = datetime.datetime.now() - start
+            logger.warning("we loaded menu list in %s ", str(end3))
             return locals()
         else:
             logger.error("in e_menu, exception happened! " + logUser_and_request())

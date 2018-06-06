@@ -1,4 +1,5 @@
 import datetime
+import re
 
 import pymorphy2
 
@@ -74,13 +75,21 @@ def api_success(msg):
     return {'status': 'OK', 'msg': msg}
 
 
+def query_cleanUP(query):
+    '''remove bad Characters and orther shit'''
+    query = re.sub(r'[,&;(quot)]', " ", query)
+    return query
+
+
 def parse_ingrs_id(query):
     '''Should return list of ingrs ID for passed query'''
     # strip by words
     # delete all trash
     # remove all adjectives https://pymorphy2.readthedocs.io/en/latest/user/grammemes.html
     functors_pos = {'INTJ', 'PRCL', 'CONJ', 'PREP', 'ADJF'}  # function words from Pymorphy2
+    query = query_cleanUP(query)
     _query_list = query.split()
+
     ingrs = [word for word in _query_list if pos(word) not in functors_pos]
     # now lets normalize everything
     ingrs_normal = normalize_words(ingrs)

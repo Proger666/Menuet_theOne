@@ -204,7 +204,7 @@ db.define_table('t_item_price_archive',
                 Field('f_item', 'reference:t_item',
                       label=T('Item')),
                 Field('f_portion', 'reference:t_portion',
-                      label=T('Linked portion')),
+                      label=T('Linked portion archive')),
                 auth.signature, format='%(f_portion)s',
                 migrate=settings.migrate)
 ########################################
