@@ -170,10 +170,10 @@ def getItems_for_menu(menu_id):
 
 @auth.requires_login()
 def get_ingrs_for_item(item_id):
-    # get recipe for item to use later on
-    item_recipe = db.t_item.f_recipe
-    # get step
-    step = db(db.t_step.id == db.t_ingredient.id).select()
+    # # get recipe for item to use later on
+    # item_recipe = db.t_item.f_recipe
+    # # get step
+    # step = db(db.t_step.id == db.t_ingredient.id).select()
     # Get recipe ID for given item
     recipe_id = db((db.t_recipe.id == db.t_item.f_recipe)
                    & (db.t_item.id == item_id)).select()[0].t_recipe.id

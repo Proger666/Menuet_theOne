@@ -2,6 +2,24 @@ from gluon.contrib import simplejson
 from gluon.contrib.simplejson import JSONDecodeError
 
 
+def parse_items_ingrs():
+    '''Do various tasks with ingrs and items'''
+    # Should parse ingredients from item's name and attach them to item
+    if request.vars.job == 'parse_ingrs':
+        from_ingr = int(request.vars.from_ingr)
+        _tmp_items = db(db.t_item.id > from_ingr).select()
+        for item in _tmp_items:
+            ingrs = get_ingrs_for_item(item.id)
+            # now we have list of ingrs
+            # lets parse item name
+            parsed_ingrs_id_list = parse_ingrs_id(item.f_name)
+            if len(parsed_ingrs_id_list) > 0:
+                    parsed_ingrs_id_list += [x['id'] for x in ingrs]
+                    add_ingrs_item(item.id, item.f_name, set(parsed_ingrs_id_list))
+        msg = 'We updated '+ str(len(_tmp_items)) +' items'
+        return simplejson.dumps({'status': 'OK', 'msg': msg})
+
+
 @auth.requires_membership('admin')
 def statistics():
     result_list = []
@@ -25,7 +43,7 @@ def add_items_json():
     if json_data is not None and len(json_data) > 0:
         try:
             cat_array = simplejson.loads(json_data)
-            tags  = request.vars.get("tags", [])
+            tags = request.vars.get("tags", [])
             tags_list = []
             if tags is not None and len(tags) > 0:
                 tags = tags.strip()

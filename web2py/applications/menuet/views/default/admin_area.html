@@ -6,56 +6,89 @@
 <h2>{{=A("shkololo rest", _href=URL('core','rest'))}}</h2>
 <h2>{{=A("Users mgmt", _href=URL('default','users_m'))}}</h2>
 
-    <div class="col-sm-3">
-        <div class="card">
-            <div class="card-header">
-                Reset Locks
-            </div>
+<div class="col-sd-3">
+    <div class="card">
+        <div class="card-header">
+            Reset Locks
+        </div>
+        <div class="card-block">
+            <form name="reset_all_locks" enctype="multipart/form-data" method="post" action="{{=URL()}}">
+                <div class="form-group">
+                    <label class="font-weight-bold">Reset ALL LOCKS</label>
+                    <input type="submit" class="btn btn-danger" value="RESET">
+                    <input name="rst_all" type="hidden">
+                </div>
+            </form>
             <div class="card-block">
-                <form name="reset_all_locks" enctype="multipart/form-data" method="post" action="{{=URL()}}">
-                    <div class="form-group">
-                        <label class="font-weight-bold">Reset ALL LOCKS</label>
-                        <input type="submit" class="btn btn-danger" value="RESET">
-                        <input name="rst_all" type="hidden">
+                <div class="form-group">
+                    <form name="reset_all_locks" enctype="multipart/form-data" method="post" action="{{=URL()}}">
+                        <label class="font-weight-bold">Find User</label>
+                        <input name="username" type="text" class="input-group">
+                    {{if 'username' not in request.vars or request.vars.username == "":}}
+                        <input type="submit" class="btn btn-primary" value="Find">
+                    </form>
+
+
+                {{else:}}
+                {{for user in found_users:}}
+                    <div class="card-footer" id="div_rst">
+                        <label class="font-weight-bold">Found Users:</label> <br>
+                        <label class="font-weight-bold">{{=user.username}}</label>
+                        <input type="button" value="RESET" class="btn btn-danger"
+                               onclick="reset_lock({{=user.id}})">
+
+                        <br>
+                    {{pass}}
+                    {{pass}}
                     </div>
-                </form>
-                <div class="card-block">
-                    <div class="form-group">
-                        <form name="reset_all_locks" enctype="multipart/form-data" method="post" action="{{=URL()}}">
-                            <label class="font-weight-bold">Find User</label>
-                            <input name="username" type="text" class="input-group">
-                        {{if 'username' not in request.vars or request.vars.username == "":}}
-                            <input type="submit" class="btn btn-primary" value="Find">
-                        </form>
 
-
-                    {{else:}}
-                    {{for user in found_users:}}
-                        <div class="card-footer" id="div_rst">
-                            <label class="font-weight-bold">Found Users:</label> <br>
-                            <label class="font-weight-bold">{{=user.username}}</label>
-                            <input type="button" value="RESET" class="btn btn-danger"
-                                   onclick="reset_lock({{=user.id}})">
-
-                            <br>
-                        {{pass}}
-                        {{pass}}
-                        </div>
-
-                    </div>
                 </div>
             </div>
         </div>
-    <div class="col-sm-4">
+    </div>
+    <div class="col-sd-4">
         <div class="card">
             <div class="card-header">
                 DB operations
             </div>
             <div class="card-block">
-
+                <button class="btn btn-primary" onclick="do_parse_ingr()" type="button">
+                    <i class="" id="parse_icon"></i>Parse ingrs and add them to the items
+                </button>
+                <label class="font-weight-bold" for="from_ingr">From which ingr ID start to parse?</label>
+                <input type="number" id="from_ingr"/>
             </div>
         </div>
     </div>
+</div>
+
+<script type="application/javascript">
+    function do_parse_ingr() {
+        var from_ingr = document.getElementById('from_ingr').value;
+        var DTO = {'job': 'parse_ingrs', 'from_ingr': from_ingr};
+        var data = JSON.stringify(DTO);
+        $("#parse_icon").addClass('fa fa-spinner fa-spin');
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('admin', 'parse_items_ingrs')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json",
+            dataType: 'json',
+            data: data,
+            success: function (data) {
+                $("#parse_icon").removeClass('fa fa-spinner fa-spin');
+                window.alert(data.msg);
+                return data
+            },
+            error: function (data) {
+                $("#parse_icon").addClass('btn-danger');
+                return data
+
+            }
+        });
+    }
+
+</script>
 
 <script type="application/javascript">
     function reset_lock(user_id) {

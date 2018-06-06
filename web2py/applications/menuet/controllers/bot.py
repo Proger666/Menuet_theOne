@@ -215,20 +215,10 @@ def search_by_ingr(query, weight, rest1k, rests_item):
     # result will be stored as row
     result_final = []
     query = query.encode('utf-8')
-    # try search word by word
-    # strip by words
-    # delete all trash
-    # remove all adjectives https://pymorphy2.readthedocs.io/en/latest/user/grammemes.html
-    functors_pos = {'INTJ', 'PRCL', 'CONJ', 'PREP', 'ADJF'}  # function words from Pymorphy2
-    _query_list = query.split()
-    ingrs = [word for word in _query_list if pos(word) not in functors_pos]
-    # now lets normalize everything
-    ingrs_normal = normalize_words(ingrs)
 
-    # Now lets find INGRS id if we have such by their normal form
-    # TODO: redesign set search
-    ingrs_id = [x.id for x in db(db.t_ingredient.f_normal_form.belongs(ingrs_normal)).select()]
-    # if we dont have ingrs in DB = sorry
+    #lets try to get all ingrs ID from query
+    ingrs_id = parse_ingrs_id(query)
+
     if len(ingrs_id) == 0:
         return result_final
 
@@ -409,6 +399,7 @@ def weighted_search(query, lng, lat, user_id, sort):
     raw_weights = {'ingr': 1, 'item': 2, 'tag': 3}
     # remove escessive spaces from query
     query = re.sub(' +', ' ', query.lower())
+    logger.warning('We got new query: %s', query)
     # result format
     # Structure
     #     {'item': [
@@ -499,12 +490,6 @@ def weighted_search(query, lng, lat, user_id, sort):
     return weighted_result
 
 
-def api_error(msg):
-    return {'status': 'error', "msg": msg}
-
-
-def api_success(msg):
-    return {'status': 'OK', 'msg': msg}
 
 
 def get_food_with_loc(vars):
