@@ -51,6 +51,10 @@ db.define_table('t_rest_tag',
 db.define_table('t_restaraunt',
                 Field('f_q_id', type='string',
                       label=T('q_id')),
+                Field('f_f4sqr', type='string',
+                      default="https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5"
+                      ,
+                      label=T('f4sqr')),
                 Field('f_rating', type='string',
                       label=T('Restaraunt rating')),
                 Field('f_name', type='string',
@@ -179,6 +183,7 @@ db.define_table('t_item',
                       label=T('Weight')),
                 Field('f_unit', 'reference:t_unit', default=1,
                       label=T('Unit')),
+
                 Field('f_tags', 'list:reference t_item_tag', label=T('Tags')),
                 auth.signature, format='%(f_name)s',
                 migrate=settings.migrate)

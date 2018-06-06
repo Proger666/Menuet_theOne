@@ -280,6 +280,7 @@ def save_item():
         else:
             logger.error('Failed to save item ' + logUser_and_request())
             return ajax_error()
+
         # ATTACH ALL INGRS TO ITEM
         stich_ingrs_to_item(_tmp_obj, ingrs_to_commit_list, item_source)
 

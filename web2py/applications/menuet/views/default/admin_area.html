@@ -6,47 +6,56 @@
 <h2>{{=A("shkololo rest", _href=URL('core','rest'))}}</h2>
 <h2>{{=A("Users mgmt", _href=URL('default','users_m'))}}</h2>
 
-
-<div class="col-sm-3">
-    <div class="card">
-        <div class="card-header">
-            Reset Locks
-        </div>
-        <div class="card-block">
-            <form name="reset_all_locks" enctype="multipart/form-data" method="post" action="{{=URL()}}">
-                <div class="form-group">
-                    <label class="font-weight-bold">Reset ALL LOCKS</label>
-                    <input type="submit" class="btn btn-danger" value="RESET">
-                    <input name="rst_all" type="hidden">
-                </div>
-            </form>
+    <div class="col-sm-3">
+        <div class="card">
+            <div class="card-header">
+                Reset Locks
+            </div>
             <div class="card-block">
-                <div class="form-group">
-                    <form name="reset_all_locks" enctype="multipart/form-data" method="post" action="{{=URL()}}">
-                        <label class="font-weight-bold">Find User</label>
-                        <input name="username" type="text" class="input-group">
-                    {{if 'username' not in request.vars or request.vars.username == "":}}
-                        <input type="submit" class="btn btn-primary" value="Find">
-                    </form>
-
-
-                {{else:}}
-                {{for user in found_users:}}
-                    <div class="card-footer" id="div_rst">
-                        <label class="font-weight-bold">Found Users:</label> <br>
-                        <label class="font-weight-bold">{{=user.username}}</label>
-                        <input type="button" value="RESET" class="btn btn-danger" onclick="reset_lock({{=user.id}})">
-
-                        <br>
-                    {{pass}}
-                    {{pass}}
+                <form name="reset_all_locks" enctype="multipart/form-data" method="post" action="{{=URL()}}">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Reset ALL LOCKS</label>
+                        <input type="submit" class="btn btn-danger" value="RESET">
+                        <input name="rst_all" type="hidden">
                     </div>
+                </form>
+                <div class="card-block">
+                    <div class="form-group">
+                        <form name="reset_all_locks" enctype="multipart/form-data" method="post" action="{{=URL()}}">
+                            <label class="font-weight-bold">Find User</label>
+                            <input name="username" type="text" class="input-group">
+                        {{if 'username' not in request.vars or request.vars.username == "":}}
+                            <input type="submit" class="btn btn-primary" value="Find">
+                        </form>
 
+
+                    {{else:}}
+                    {{for user in found_users:}}
+                        <div class="card-footer" id="div_rst">
+                            <label class="font-weight-bold">Found Users:</label> <br>
+                            <label class="font-weight-bold">{{=user.username}}</label>
+                            <input type="button" value="RESET" class="btn btn-danger"
+                                   onclick="reset_lock({{=user.id}})">
+
+                            <br>
+                        {{pass}}
+                        {{pass}}
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>
+    <div class="col-sm-4">
+        <div class="card">
+            <div class="card-header">
+                DB operations
+            </div>
+            <div class="card-block">
+
+            </div>
+        </div>
     </div>
-</div>
 
 <script type="application/javascript">
     function reset_lock(user_id) {

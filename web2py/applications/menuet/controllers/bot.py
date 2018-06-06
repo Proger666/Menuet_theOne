@@ -8,6 +8,12 @@ import pymorphy2
 from collections import OrderedDict
 import re
 
+
+##### GLOBAL PARAMETERS ####
+class USER:
+    MAXDISTANCE = 500
+
+
 ######## todo: redesign ####
 
 # View of m-m-relations
@@ -131,13 +137,18 @@ def search_by_name(query, weight, rest1k, rests_item):
     result = []
 
     for item in rests_item:
-     item = Storage(item)
-     # remove excessive spaces
-     if re.sub(' +',' ', item.item_name.lower()) == query:
+        item = Storage(item)
+        # remove excessive spaces
+        if re.sub(' +', ' ', item.item_name.lower()) == query:
             create_result_obj(item, rest1k, result, weight)
             break
     if len(result) == 0:
         # lets try search word by word until fail
+        # lets try search via regex in full string
+        compile = re.compile(query.encode('utf-8'))
+        if compile.search(item.item_name.lower().encode('utf-8')) is not None:
+            create_result_obj(item, rest1k, result, weight)
+    if len(result) == 0:
         # strip by words
         words = query.split(" ")
         i = len(words)
@@ -145,7 +156,6 @@ def search_by_name(query, weight, rest1k, rests_item):
             # search for string and cut string's tail each time until last word
             sub_query = " ".join(words[:i])
             for item in rests_item:
-
                 item = Storage(item)
                 if item.item_name.lower().startswith(sub_query.lower()):
                     create_result_obj(item, rest1k, result, weight)
@@ -156,16 +166,27 @@ def search_by_name(query, weight, rest1k, rests_item):
 
 
 def create_result_obj(item, rest1k, result, weight):
+    rest = None
     if item.rest_name is None:
-        item.rest_name = "Сеть:" + str(db.t_network[item.f_network].f_name)
+        net_name = db.t_network[item.f_network]
+        item.rest_name = "Сеть:" + str(net_name.f_name)
+        for key, value in rest1k.iteritems():
+            if value['f_network_name'] == net_name.id:
+                rest = value
+                break
+    else:
+        rest = rest1k[item.rest_id]
+
     result.append(result_object(item.item_id, item.item_name,
                                 item.rest_id, get_STD_portion_price_item(item.item_id), '0',
                                 item.menu_id,
-                                weight, item.rest_name,
-                                item.rest_address, rest1k[item.rest_id]['distance_in_km'],
-                                item.rest_phone,
-                                "https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5",
-                                get_ingrs_for_item(item.item_id),item.rest_long, item.rest_lat))
+                                weight, rest.get('rest_name'),
+                                rest.get('rest_addr', 'Не знаем'), rest.get('distance_in_km', 0),
+                                item.get('rest_phone', 'Не знаем'),
+                                rest.get('f4sqr') if rest.get(
+                                    'f4sqr') is not None else 'https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5',
+                                get_ingrs_for_item(item.item_id), rest.get('rest_long', '55'),
+                                rest.get('rest_lat', '35')))
 
 
 def query_cleanUp(query):
@@ -202,7 +223,7 @@ def pos(word, morth=pymorphy2.MorphAnalyzer()):
     return r
 
 
-def search_by_ingr(query, weight,rest1k, rests_item):
+def search_by_ingr(query, weight, rest1k, rests_item):
     start = datetime.datetime.now()
     # result will be stored as row
     result_final = []
@@ -326,8 +347,8 @@ def create_result(by_name, by_ingr, networks_ids, sort):
         return []
     resulting_array = []
     try:
-        for element in  by_name + by_ingr :
-            #check if it's duplicate
+        for element in by_name + by_ingr:
+            # check if it's duplicate
             if element is not None:
                 if element not in resulting_array:
                     resulting_array.append(element)
@@ -400,7 +421,7 @@ def write_to_cache(user_id, weighted_result, query):
 def weighted_search(query, lng, lat, user_id, sort):
     raw_weights = {'ingr': 1, 'item': 2, 'tag': 3}
     # remove escessive spaces from query
-    query = re.sub(' +',' ', query.lower())
+    query = re.sub(' +', ' ', query.lower())
     # result format
     # Structure
     #     {'item': [
@@ -421,12 +442,13 @@ def weighted_search(query, lng, lat, user_id, sort):
         ## TODO: redesign
         db.executesql('SET @lat =' + str(lat))
         db.executesql('SET @lng = ' + str(lng))
-        rest1k = db.executesql('SELECT t_restaraunt.id,t_restaraunt.f_is_network,t_restaraunt.f_address,'
-                               't_restaraunt.f_network_name,(ACOS(COS(RADIANS(@lat))'
-                               '*COS(RADIANS(t_restaraunt.f_latitude))*COS(RADIANS(t_restaraunt.f_longitude)-RADIANS(@lng))+SIN(RADIANS(@lat))'
-                               '*SIN(RADIANS(t_restaraunt.f_latitude)))*6371)'
-                               'AS distance_in_km FROM t_restaraunt GROUP BY distance_in_km HAVING distance_in_km < 5000 LIMIT 10000',
-                               as_dict=True)
+        rest1k = db.executesql(
+            'SELECT t_restaraunt.f_longitude AS rest_long, t_restaraunt.f_latitude AS rest_lat,  t_restaraunt.id AS rest_id, t_restaraunt.f_name AS rest_name, t_restaraunt.f_f4sqr AS f4sqr, t_restaraunt.f_public_phone AS rest_phone, t_restaraunt.f_is_network,t_restaraunt.f_address AS rest_addr,'
+            't_restaraunt.f_network_name,(ACOS(COS(RADIANS(@lat))'
+            '*COS(RADIANS(t_restaraunt.f_latitude))*COS(RADIANS(t_restaraunt.f_longitude)-RADIANS(@lng))+SIN(RADIANS(@lat))'
+            '*SIN(RADIANS(t_restaraunt.f_latitude)))*6371)'
+            'AS distance_in_km FROM t_restaraunt GROUP BY distance_in_km HAVING distance_in_km < 5000 LIMIT 10000',
+            as_dict=True)
     except:
         # We failed - get long with it
         logger.error("ALARMA! Database error in location calculation")
@@ -437,10 +459,12 @@ def weighted_search(query, lng, lat, user_id, sort):
     _tmp_nets = set()
     # get ids of networks
     [_tmp_nets.add(x['f_network_name']) for x in rest1k if
-     x['f_is_network'] == u'T' or x['f_is_network'] == True and x['f_network_name'] is not None and x[
-         'f_network_name'] != 5]
+     x['f_is_network'] == u'T' or x['f_is_network'] == True and x['f_network_name'] is not None and (x[
+                                                                                                         'f_network_name'] != 5 and
+                                                                                                     x[
+                                                                                                         'f_network_name'] != 6)]
 
-    _tmp_rests_id = [x['id'] for x in rest1k]
+    _tmp_rests_id = [x['rest_id'] for x in rest1k]
     menus = db((db.t_menu.f_current == True)
                & ((db.t_restaraunt.id.belongs(_tmp_rests_id)) & (m_t_m_rest_menu))).select(
         db.t_menu.id)
@@ -450,14 +474,14 @@ def weighted_search(query, lng, lat, user_id, sort):
 
     # TODO:redesign
     rests_item = db.executesql(
-        "SELECT t_menu.id as menu_id, t_restaraunt.f_public_phone AS rest_phone, ifnull(t_restaraunt.id,5) AS rest_id,t_restaraunt.f_name AS rest_name,"
+        "SELECT t_menu.id AS menu_id, ifnull(t_restaraunt.id,5) AS rest_id,t_restaraunt.f_name AS rest_name,"
         "t_restaraunt.f_address AS rest_address,t_item.id AS item_id,t_item.f_name AS item_name, "
-        "t_menu.f_network, t_restaraunt.f_latitude AS rest_lat, t_restaraunt.f_longitude as rest_long FROM t_item "
+        "t_menu.f_network FROM t_item "
         "left OUTER JOIN t_menu_item ON t_item.id = t_menu_item.t_item "
         "left OUTER JOIN t_menu ON t_menu_item.t_menu = t_menu.id "
         "left OUTER JOIN t_rest_menu ON t_menu.id = t_rest_menu.t_menu "
         "left OUTER JOIN t_restaraunt ON t_restaraunt.id = t_rest_menu.t_rest "
-        "where t_restaraunt.id IN(" + ', '.join(str(x) for x in _tmp_rests_id) + ") OR t_restaraunt.id is null",
+        "where t_restaraunt.id IN(" + ', '.join(str(x) for x in _tmp_rests_id) + ") OR t_restaraunt.id IS NULL",
         as_dict=True)
 
     ############
@@ -465,12 +489,21 @@ def weighted_search(query, lng, lat, user_id, sort):
     start = datetime.datetime.now()
     # lets create cache in order to lower SQL queries
     internal_cache = internalSearchCache()
+
+    # lets reformat dictionary to add ID
+    _f_rest1k = {}
+    for item in rest1k:
+        _f_rest1k[item.get('rest_id', 0)] = item
+
     # we expect RESULT object
-    by_name = search_by_name(query, raw_weights['item'], rest1k, rests_item)
+    by_name = search_by_name(query, raw_weights['item'], _f_rest1k, rests_item)
     end = datetime.datetime.now() - start
     logger.warning('by_name search concluded in ' + str(end))
     # we expect RESULT object
-    by_ingr = search_by_ingr(query, raw_weights['ingr'],rest1k, rests_item)
+    start = datetime.datetime.now()
+    by_ingr = search_by_ingr(query, raw_weights['ingr'], _f_rest1k, rests_item)
+    end = datetime.datetime.now() - start
+    logger.info("Search by ingr concluded in %s", str(end))
     # by_tag = search_by_tag(items, query, raw_weights['tag'])
     weighted_result = create_result(by_name, by_ingr, _tmp_nets, sort)
     end = datetime.datetime.now() - start
