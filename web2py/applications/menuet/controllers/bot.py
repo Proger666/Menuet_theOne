@@ -142,26 +142,13 @@ def search_by_name(query, weight, rest1k, rests_item):
         if re.sub(' +', ' ', item.item_name.lower()) == query:
             create_result_obj(item, rest1k, result, weight)
             break
-    if len(result) == 0:
-        # lets try search word by word until fail
-        # lets try search via regex in full string
-        compile = re.compile(query.encode('utf-8'))
-        if compile.search(item.item_name.lower().encode('utf-8')) is not None:
-            create_result_obj(item, rest1k, result, weight)
-    if len(result) == 0:
-        # strip by words
-        words = query.split(" ")
-        i = len(words)
-        while len(result) == 0 and i > 0:
-            # search for string and cut string's tail each time until last word
-            sub_query = " ".join(words[:i])
-            for item in rests_item:
-                item = Storage(item)
-                if item.item_name.lower().startswith(sub_query.lower()):
-                    create_result_obj(item, rest1k, result, weight)
-                    break
-            i -= 1
-        return result
+        if len(result) == 0:
+            # lets try search word by word until fail
+            # lets try search via regex in full string
+            compile = re.compile(query.encode('utf-8'))
+            if compile.search(item.item_name.lower().encode('utf-8')) is not None:
+                create_result_obj(item, rest1k, result, weight)
+                break
     return result
 
 
