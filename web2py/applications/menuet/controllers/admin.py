@@ -12,12 +12,15 @@ def parse_items_ingrs():
             ingrs = get_ingrs_for_item(item.id)
             # now we have list of ingrs
             # lets parse item name
+        try:
             parsed_ingrs_id_list = parse_ingrs_id(item.f_name)
             if len(parsed_ingrs_id_list) > 0:
-                    parsed_ingrs_id_list += [x['id'] for x in ingrs]
-                    add_ingrs_item(item.id, item.f_name, set(parsed_ingrs_id_list))
-        msg = 'We updated '+ str(len(_tmp_items)) +' items'
-        return simplejson.dumps({'status': 'OK', 'msg': msg})
+                parsed_ingrs_id_list += [x['id'] for x in ingrs]
+                add_ingrs_item(item.id, item.f_name, set(parsed_ingrs_id_list))
+            msg = 'We updated ' + str(len(_tmp_items)) + ' items'
+            return simplejson.dumps({'status': 'OK', 'msg': msg})
+        except Exception as e:
+            return simplejson.dumps({'status': 'ERROR!', 'msg': str(e.message) + 'for item:' + str(item.f_name)})
 
 
 @auth.requires_membership('admin')

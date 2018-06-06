@@ -68,6 +68,7 @@
         var DTO = {'job': 'parse_ingrs', 'from_ingr': from_ingr};
         var data = JSON.stringify(DTO);
         $("#parse_icon").addClass('fa fa-spinner fa-spin');
+
         $.ajax({
             type: 'POST',
             url: '{{=URL('admin', 'parse_items_ingrs')}}',
