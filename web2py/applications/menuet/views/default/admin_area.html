@@ -49,19 +49,52 @@
     <div class="col-sd-4">
         <div class="card">
             <div class="card-header">
-                DB operations
+                <b>DB operations</b>
             </div>
             <div class="card-block">
                 <button class="btn btn-primary" onclick="do_parse_ingr()" type="button">
                     <i class="" id="parse_icon"></i>Parse ingrs and add them to the items
                 </button>
                 <label class="font-weight-bold" for="from_ingr">From which ingr ID start to parse?</label>
-                <input type="number" id="from_ingr"/>
+                <input value="0" type="number" id="from_ingr"/>
+            </div>
+            <div class="card-block">
+                <button class="btn btn-primary" onclick="do_ingr_to_normal()" type="button">
+                    <i class="" id="parse_icon_normal"></i>Parse ingrs and add normal form to them
+                </button>
+                <label class="font-weight-bold" for="from_ingr">From which ingr ID start to parse?</label>
+                <input class="" value="0" type="number" id="from_ingr"/>
             </div>
         </div>
     </div>
 </div>
+<script type="application/javascript">
+   function do_ingr_to_normal(){
+       var from_ingr = document.getElementById('from_ingr').value;
+        var DTO = {'job': 'ingrs_normal', 'from_ingr': from_ingr};
+        var data = JSON.stringify(DTO);
+        $("#parse_icon_normal").addClass('fa fa-spinner fa-spin');
 
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('admin', 'parse_items_ingrs')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json",
+            dataType: 'json',
+            data: data,
+            success: function (data) {
+                $("#parse_icon_normal").removeClass('fa fa-spinner fa-spin');
+                window.alert(data.msg);
+                return data
+            },
+            error: function (data) {
+                $("#parse_icon_normal").addClass('btn-danger');
+                return data
+
+            }
+        });
+   }
+</script>
 <script type="application/javascript">
     function do_parse_ingr() {
         var from_ingr = document.getElementById('from_ingr').value;

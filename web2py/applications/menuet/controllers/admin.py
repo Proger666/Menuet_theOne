@@ -12,6 +12,8 @@ def parse_items_ingrs():
             ingrs = get_ingrs_for_item(item.id)
             # now we have list of ingrs
             # lets parse item name
+            if item.id == 135:
+                pass
             try:
                 parsed_ingrs_id_list = parse_ingrs_id(item.f_name)
                 if len(parsed_ingrs_id_list) > 0:
@@ -19,8 +21,20 @@ def parse_items_ingrs():
                     add_ingrs_item(item.id, item.f_name, set(parsed_ingrs_id_list))
 
             except Exception as e:
-                return simplejson.dumps({'status': 'ERROR!', 'msg': str(e.message) + 'for item:' + str(item.f_name)})
+                return simplejson.dumps({'status': 'ERROR!', 'msg': str(e.message) + 'for item:' + str(item.id)})
         msg = 'We updated ' + str(len(_tmp_items)) + ' items'
+        return simplejson.dumps({'status': 'OK', 'msg': msg})
+    elif request.vars.job == 'ingrs_normal':
+        _ingrs = db(db.t_ingredient.id > 0).select()
+        try:
+            for ingr in _ingrs:
+                normal_form = normalize_ingr(ingr.f_name)
+                db(db.t_ingredient.id == ingr.id).update(f_normal_form=normal_form, f_curate='F')
+            db.commit()
+        except Exception as e:
+            msg = 'We FAILED at ' + str(ingr)
+            return simplejson.dumps({'status': 'ERROR', 'msg': msg})
+        msg = 'We updated ' + str(len(_ingrs)) + ' ingredients'
         return simplejson.dumps({'status': 'OK', 'msg': msg})
 
 

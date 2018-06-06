@@ -80,6 +80,17 @@ def query_cleanUP(query):
     query = re.sub(r'[,&;(quot)]', " ", query)
     return query
 
+def normalize_ingr(ingr):
+    '''Returns normal form of ingr'''
+    functors_pos = {'INTJ', 'PRCL', 'CONJ', 'PREP', 'ADJF'}  # function words from Pymorphy2
+    # remove any excessive words and letters
+    ingr = query_cleanUP(ingr)
+
+    ingr = ingr if pos(ingr) not in functors_pos else None
+    if ingr is None:
+        return None
+    normal_form = " ".join(normalize_words(ingr.split()))
+    return normal_form
 
 def parse_ingrs_id(query):
     '''Should return list of ingrs ID for passed query'''
@@ -91,6 +102,8 @@ def parse_ingrs_id(query):
     _query_list = query.split()
 
     ingrs = [word for word in _query_list if pos(word) not in functors_pos]
+    if len(ingrs) == 0:
+        return []
     # now lets normalize everything
     ingrs_normal = normalize_words(ingrs)
 
