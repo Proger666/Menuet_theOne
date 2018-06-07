@@ -280,7 +280,7 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name):
 
     for item in by_name:
         for ingr in ingrs_id:
-            if ingr in item.item_ingrs:
+            if ingr in item.item_ingrs["id"]:
                 item.search_score += 1
 
     result_final = by_name
@@ -310,7 +310,7 @@ def get_ingrs_for_item(item_id):
     _ = [x.t_step.f_ingr for x in _]
     # get all ingrs name
     ingrs = db(db.t_ingredient.id.belongs(_)).select()
-    ingrs = [x['id'] for x in ingrs]
+    ingrs = {"id":[x['id'] for x in ingrs],"name":[x["f_name"] for x in ingrs]}
     return ingrs
 
 
