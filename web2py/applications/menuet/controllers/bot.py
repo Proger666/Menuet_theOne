@@ -143,7 +143,7 @@ def search_by_name(query, weight, rest1k, rests_item):
         # remove excessive spaces
         # тыквенный суп
         tag_search = [x for x in query.split() if pos(x) in ["NOUN", 'ADJF']][0]
-        tag_search = re.compile(tag_search)
+        tag_search = re.compile(str(db(db.t_item_tag.f_name == tag_search).select(db.t_item_tag.id).first().id))
         if re.sub(' +', ' ', item.item_name.lower()) == query or tag_search.search(item.item_tags):
             create_result_obj(item, rest1k, result, weight)
             exact_match = True
@@ -345,7 +345,12 @@ def create_result(by_ingr, networks_ids, sort):
     resulting_array = []
     def bySearch_key(result_object):
         return result_object.search_score
-    resulting_array = sorted(by_ingr, key = bySearch_key, reverse=True)
+    def byPrice_key(result_object):
+        return result_object.item_price
+
+    resulting_array = sorted(by_ingr, key=bySearch_key, reverse=True)
+
+
     try:
         # for element in by_name + by_ingr:
         #     # check if it's duplicate
