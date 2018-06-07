@@ -207,7 +207,7 @@ def normalize_words(ingrs_list):
         except AttributeError:
             result.append(ingr)
         except UnicodeDecodeError:
-            result.append(morph.parse(ingr.decode('utf-8'))[0].normal_form)
+            result.append(morph.parse(ingr.decode('utf-8'))[0].normal_form.encode('utf-8'))
     if len(result) > 0:
         return result
     return None

@@ -29,6 +29,7 @@ def parse_items_ingrs():
         try:
             for ingr in _ingrs:
                 normal_form = normalize_ingr(ingr.f_name)
+
                 db(db.t_ingredient.id == ingr.id).update(f_normal_form=normal_form, f_curate='F')
             db.commit()
         except Exception as e:

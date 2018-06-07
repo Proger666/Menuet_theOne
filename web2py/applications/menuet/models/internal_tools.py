@@ -123,7 +123,7 @@ def normalize_words(ingrs_list):
         # lets get normal form of the word
         try:
             # bad design of library it will send exception if it doesnt know word
-            result.append(morph.parse(ingr)[0].normal_form)
+            result.append(morph.parse(ingr)[0].normal_form.encode('utf-8'))
         except AttributeError:
             result.append(ingr)
         except UnicodeDecodeError:
