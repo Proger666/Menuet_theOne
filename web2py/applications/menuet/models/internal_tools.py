@@ -82,7 +82,7 @@ def query_cleanUP(query):
 
 def normalize_ingr(ingr):
     '''Returns normal form of ingr'''
-    functors_pos = {'INTJ', 'PRCL', 'CONJ', 'PREP', 'ADJF'}  # function words from Pymorphy2
+    functors_pos = {'INTJ', 'PRCL', 'CONJ', 'PREP'}  # function words from Pymorphy2
     # remove any excessive words and letters
     ingr = query_cleanUP(ingr)
 
@@ -97,7 +97,7 @@ def parse_ingrs_id(query):
     # strip by words
     # delete all trash
     # remove all adjectives https://pymorphy2.readthedocs.io/en/latest/user/grammemes.html
-    functors_pos = {'INTJ', 'PRCL', 'CONJ', 'PREP', 'ADJF'}  # function words from Pymorphy2
+    functors_pos = {'INTJ', 'PRCL', 'CONJ', 'PREP'}  # function words from Pymorphy2
     query = query_cleanUP(query)
     _query_list = query.split()
 
