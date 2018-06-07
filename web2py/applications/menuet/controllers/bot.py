@@ -152,7 +152,7 @@ def search_by_name(query, weight, rest1k, rests_item):
                 create_result_obj(item, rest1k, result, weight)
                 break
             query_list = query.split()
-            while len(query_list) > 0:
+            while len(query_list) > 1:
                 query_list = query_list[:-1]
                 compile = re.compile(" ".join(query_list).encode('utf-8'))
                 if compile.search(item.item_name.lower().encode('utf-8')) is not None:
