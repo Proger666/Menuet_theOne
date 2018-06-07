@@ -17,6 +17,7 @@ class result_object:
         self.item_ingrs=item_ingrs
         self.rest_long = rest_long
         self.rest_lat = rest_lat
+        self.search_score = 0
 
 class internalSearchCache:
     def __init__(self):

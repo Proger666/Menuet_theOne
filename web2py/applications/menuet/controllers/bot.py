@@ -141,20 +141,24 @@ def search_by_name(query, weight, rest1k, rests_item):
     for item in rests_item:
         item = Storage(item)
         # remove excessive spaces
-        if re.sub(' +', ' ', item.item_name.lower()) == query:
+        # тыквенный суп
+        tag_search = [x for x in query.split() if pos(x) in ["NOUN", 'ADJF']][0]
+        tag_search = re.compile(tag_search)
+        if re.sub(' +', ' ', item.item_name.lower()) == query or tag_search.search(item.item_tags):
             create_result_obj(item, rest1k, result, weight)
             exact_match = True
             break
-        # lets get our noun
-        noun = [x for x in query.split() if pos(x) == "NOUN"][0]
         if exact_match == True:
             break
+
+        # lets get our noun
+        noun = [x for x in query.split() if pos(x) == "NOUN"][0]
+
         # lets try search word by word until fail
         # lets try search via regex in full string
-        compile = re.compile(noun.encode('utf-8'))
+        compile = re.compile(noun)
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
             create_result_obj(item, rest1k, result, weight)
-
 
     return result
 
@@ -219,60 +223,67 @@ def pos(word, morth=pymorphy2.MorphAnalyzer()):
     return r
 
 
-def search_by_ingr(query, weight, rest1k, rests_item):
+def search_by_ingr(query, weight, rest1k, rests_item, by_name):
     start = datetime.datetime.now()
     # result will be stored as row
     result_final = []
-    query = query.encode('utf-8')
 
-    #lets try to get all ingrs ID from query
+    # lets try to get all ingrs ID from query
     ingrs_id = parse_ingrs_id(query)
 
     if len(ingrs_id) == 0:
         return result_final
 
-    # collect all ids from item ids
-    items_id = [x['item_id'] for x in rests_item]
-    # Lets try to find items by their ingrs
-    # we join ALL tables + filter by items that we know and filter them out by ingrs
-    # SEARCH BY IN thats OR search
-    result_id = db.executesql(
-        'SELECT itm.id, group_concat(concat(rc_ingr.ingr))'
-        ' FROM(SELECT rc.id, t_ingredient.id AS ingr'
-        ' FROM t_ingredient'
-        ' INNER JOIN t_step ON t_step.f_ingr = t_ingredient.id'
-        ' INNER JOIN t_step_ing si ON si.t_step = t_step.id'
-        ' INNER JOIN t_recipe rc ON si.t_recipe = rc.id'
-        ' WHERE t_ingredient.id IN (' + ",".join(
-            str(x) for x in ingrs_id) + ')) AS rc_ingr JOIN (SELECT * FROM t_item WHERE t_item.id IN(' + ",".join(
-            str(x) for x in items_id) + ')) AS itm ON itm.f_recipe=rc_ingr.id'
-                                        ' GROUP BY itm.id'
-                                        ' ORDER BY itm.id')
+    if len(by_name) == 0:
+        # collect all ids from item ids
+        items_id = [x['item_id'] for x in rests_item]
+        # Lets try to find items by their ingrs
+        # we join ALL tables + filter by items that we know and filter them out by ingrs
+        # SEARCH BY IN thats OR search
+        result_id = db.executesql(
+            'SELECT itm.id, group_concat(concat(rc_ingr.ingr))'
+            ' FROM(SELECT rc.id, t_ingredient.id AS ingr'
+            ' FROM t_ingredient'
+            ' INNER JOIN t_step ON t_step.f_ingr = t_ingredient.id'
+            ' INNER JOIN t_step_ing si ON si.t_step = t_step.id'
+            ' INNER JOIN t_recipe rc ON si.t_recipe = rc.id'
+            ' WHERE t_ingredient.id IN (' + ",".join(
+                str(x) for x in ingrs_id) + ')) AS rc_ingr JOIN (SELECT * FROM t_item WHERE t_item.id IN(' + ",".join(
+                str(x) for x in items_id) + ')) AS itm ON itm.f_recipe=rc_ingr.id'
+                                            ' GROUP BY itm.id'
+                                            ' ORDER BY itm.id')
 
-    # Lets try search by AND in results
-    result_AND = []
-    # 0 is ITEM 1 is INGR
-    i = 0
-    # RESULT WILL BE ITEM ID!!!
-    for item in result_id:
-        # create list of ints (ids) from DB response and then create uniq set
-        _set_ingr_id = set([int(x) for x in result_id[i][1].split(",")])
-        # is set equal to ingrs_id ?
-        if _set_ingr_id == set(ingrs_id):
-            result_AND.append(item[0])
-        i += 1
-    # do we get anything with and ? if not return OR ids of items to include
-    if len(result_AND) == 0:
-        results_id = [x[0] for x in result_id]
-    else:
-        results_id = result_AND
-    # result now is list of item IDs
-    # now turn it to ROWS
-    for item in rests_item:
-        item = Storage(item)
-        if item.item_id in results_id:
-            create_result_obj(item, rest1k, result_final, weight)
-            break
+        # Lets try search by AND in results
+        result_AND = []
+        # 0 is ITEM 1 is INGR
+        i = 0
+        # RESULT WILL BE ITEM ID!!!
+        for item in result_id:
+            # create list of ints (ids) from DB response and then create uniq set
+            _set_ingr_id = set([int(x) for x in result_id[i][1].split(",")])
+            # is set equal to ingrs_id ?
+            if _set_ingr_id == set(ingrs_id):
+                result_AND.append(item[0])
+            i += 1
+        # do we get anything with and ? if not return OR ids of items to include
+        if len(result_AND) == 0:
+            results_id = [x[0] for x in result_id]
+        else:
+            results_id = result_AND
+        # result now is list of item IDs
+        # now turn it to ROWS
+        for item in rests_item:
+            item = Storage(item)
+            if item.item_id in results_id:
+                create_result_obj(item, rest1k, result_final, weight)
+                break
+
+    for item in by_name:
+        for ingr in ingrs_id:
+            if ingr in item.item_ingrs:
+                item.search_score += 1
+
+    result_final = by_name
     end = datetime.datetime.now() - start
     logger.warning('search by ingr concluded in ' + str(end))
     return result_final
@@ -298,8 +309,8 @@ def get_ingrs_for_item(item_id):
     # get ingrs id
     _ = [x.t_step.f_ingr for x in _]
     # get all ingrs name
-    ingrs = db(db.t_ingredient.id.belongs(_)).select(db.t_ingredient.f_name)
-    ingrs = [x['f_name'] for x in ingrs]
+    ingrs = db(db.t_ingredient.id.belongs(_)).select()
+    ingrs = [x['id'] for x in ingrs]
     return ingrs
 
 
@@ -327,17 +338,20 @@ def get_rest_for_item(item_id, networks_ids):
     return rest_info
 
 
-def create_result(by_name, by_ingr, networks_ids, sort):
+def create_result(by_ingr, networks_ids, sort):
     start = datetime.datetime.now()
-    if len(by_name) == 0 and len(by_ingr) == 0:
+    if len(by_ingr) == 0:
         return []
     resulting_array = []
+    def bySearch_key(result_object):
+        return result_object.search_score
+    resulting_array = sorted(by_ingr, key = bySearch_key, reverse=True)
     try:
-        for element in by_name + by_ingr:
-            # check if it's duplicate
-            if element is not None:
-                if element not in resulting_array:
-                    resulting_array.append(element)
+        # for element in by_name + by_ingr:
+        #     # check if it's duplicate
+        #     if element is not None:
+        #         if element not in resulting_array:
+        #             resulting_array.append(element)
         # for element in by_ingr + by_name:
         #     # check if
         #     if len(element) > 0:
@@ -353,6 +367,7 @@ def create_result(by_name, by_ingr, networks_ids, sort):
         # # Let's sort this shit now
         # # create ordered dict to remember dict order
         # od = OrderedDict
+        by_ingr = 1
     except AssertionError:
         logger.error("DB ERROR!!!! we failed to create result in create_result, " + str(e) + str(e.message))
     end = datetime.datetime.now() - start
@@ -408,7 +423,7 @@ def weighted_search(query, lng, lat, user_id, sort):
     start_all = datetime.datetime.now()
     raw_weights = {'ingr': 1, 'item': 2, 'tag': 3}
     # remove escessive spaces from query
-    query = re.sub(' +', ' ', query.lower())
+    query = re.sub(' +', ' ', query.lower()).encode('utf-8')
     query_id = str(uuid.uuid4()) + ': ' + query
     logger.warning('We got new query: %s', query_id)
     # result format
@@ -464,7 +479,7 @@ def weighted_search(query, lng, lat, user_id, sort):
     # TODO:redesign
     rests_item = db.executesql(
         "SELECT t_menu.id AS menu_id, ifnull(t_restaraunt.id,5) AS rest_id,t_restaraunt.f_name AS rest_name,"
-        "t_restaraunt.f_address AS rest_address,t_item.id AS item_id,t_item.f_name AS item_name, "
+        "t_restaraunt.f_address AS rest_address,t_item.id AS item_id,t_item.f_tags AS item_tags,t_item.f_name AS item_name, "
         "t_menu.f_network FROM t_item "
         "left OUTER JOIN t_menu_item ON t_item.id = t_menu_item.t_item "
         "left OUTER JOIN t_menu ON t_menu_item.t_menu = t_menu.id "
@@ -487,19 +502,17 @@ def weighted_search(query, lng, lat, user_id, sort):
     # we expect RESULT object
     by_name = search_by_name(query, raw_weights['item'], _f_rest1k, rests_item)
     end = datetime.datetime.now() - start
-    logger.warning("We got %s results by name in %s, for query: %s", len(by_name) ,str(end), query_id)
+    logger.warning("We got %s results by name in %s, for query: %s", len(by_name), str(end), query_id)
     # we expect RESULT object
     start = datetime.datetime.now()
-    by_ingr = search_by_ingr(query, raw_weights['ingr'], _f_rest1k, rests_item)
+    by_ingr = search_by_ingr(query, raw_weights['ingr'], _f_rest1k, rests_item, by_name)
     end = datetime.datetime.now() - start
-    logger.warning("We got %s results by ingr in %s, for query: %s", len(by_ingr) ,str(end), query_id)
+    logger.warning("We got %s results by ingr in %s, for query: %s", len(by_ingr), str(end), query_id)
     # by_tag = search_by_tag(items, query, raw_weights['tag'])
-    weighted_result = create_result(by_name, by_ingr, _tmp_nets, sort)
+    weighted_result = create_result(by_ingr, _tmp_nets, sort)
     end_all = datetime.datetime.now() - start_all
-    logger.warning("We got %s results in our search in %s, for query: %s", len(weighted_result) ,str(end), query_id)
+    logger.warning("We got %s results in our search in %s, for query: %s", len(weighted_result), str(end), query_id)
     return weighted_result
-
-
 
 
 def get_food_with_loc(vars):
