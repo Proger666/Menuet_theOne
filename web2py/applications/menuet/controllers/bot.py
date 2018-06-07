@@ -151,7 +151,7 @@ def search_by_name(query, weight, rest1k, rests_item):
             break
         # lets try search word by word until fail
         # lets try search via regex in full string
-        compile = re.compile(noun.encode('utf-8'))
+        compile = re.compile(noun)
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
             create_result_obj(item, rest1k, result, weight)
 
@@ -214,6 +214,8 @@ def pos(word, morth=pymorphy2.MorphAnalyzer()):
         r = morth.parse(word.decode('utf-8'))[0].tag.POS
     except UnicodeDecodeError:
         r = morth.parse(word.encode('utf-8'))[0].tag.POS
+    except UnicodeEncodeError:
+        r = morth.parse(word)[0].tag.POS
     return r
 
 
