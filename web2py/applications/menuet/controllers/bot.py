@@ -151,7 +151,7 @@ def search_by_name(query, weight, rest1k, rests_item):
             break
         # lets try search word by word until fail
         # lets try search via regex in full string
-        compile = re.compile(noun)
+        compile = re.compile(noun.encode('utf-8'))
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
             create_result_obj(item, rest1k, result, weight)
 
