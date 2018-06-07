@@ -2,6 +2,8 @@
 # !/usr/bin/env python
 import datetime
 import os
+import uuid
+
 import jsonpickle
 
 import pymorphy2
@@ -149,6 +151,15 @@ def search_by_name(query, weight, rest1k, rests_item):
             if compile.search(item.item_name.lower().encode('utf-8')) is not None:
                 create_result_obj(item, rest1k, result, weight)
                 break
+            query_list = query.split()
+            while len(query_list) > 0:
+                query_list = query_list[:-1]
+                compile = re.compile(" ".join(query_list))
+                if compile.search(item.item_name.lower().encode('utf-8')) is not None:
+                    create_result_obj(item, rest1k, result, weight)
+                    break
+                if len(result) != 0:
+                    break
     return result
 
 
@@ -396,10 +407,12 @@ def write_to_cache(user_id, weighted_result, query):
 
 
 def weighted_search(query, lng, lat, user_id, sort):
+    start_all = datetime.datetime.now()
     raw_weights = {'ingr': 1, 'item': 2, 'tag': 3}
     # remove escessive spaces from query
     query = re.sub(' +', ' ', query.lower())
-    logger.warning('We got new query: %s', query)
+    query_id = str(uuid.uuid4()) + ': ' + query
+    logger.warning('We got new query: %s', query_id)
     # result format
     # Structure
     #     {'item': [
@@ -476,17 +489,16 @@ def weighted_search(query, lng, lat, user_id, sort):
     # we expect RESULT object
     by_name = search_by_name(query, raw_weights['item'], _f_rest1k, rests_item)
     end = datetime.datetime.now() - start
-    logger.warning('by_name search concluded in ' + str(end))
+    logger.warning("We got %s results by name in %s, for query: %s", len(by_name) ,str(end), query_id)
     # we expect RESULT object
     start = datetime.datetime.now()
     by_ingr = search_by_ingr(query, raw_weights['ingr'], _f_rest1k, rests_item)
     end = datetime.datetime.now() - start
-    logger.info("Search by ingr concluded in %s", str(end))
+    logger.warning("We got %s results by ingr in %s, for query: %s", len(by_ingr) ,str(end), query_id)
     # by_tag = search_by_tag(items, query, raw_weights['tag'])
     weighted_result = create_result(by_name, by_ingr, _tmp_nets, sort)
-    end = datetime.datetime.now() - start
-    logger.warning('Weighted search concluded in ' + str(end))
-    logger.warning('we found ' + str(len(weighted_result)) + " and results are " + str(weighted_result))
+    end_all = datetime.datetime.now() - start_all
+    logger.warning("We got %s results in our search in %s, for query: %s", len(weighted_result) ,str(end), query_id)
     return weighted_result
 
 
