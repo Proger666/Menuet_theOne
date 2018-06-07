@@ -226,7 +226,7 @@ def pos(word, morth=pymorphy2.MorphAnalyzer()):
 def search_by_ingr(query, weight, rest1k, rests_item, by_name):
     start = datetime.datetime.now()
     # result will be stored as row
-    result_final = []
+    result_final = by_name
 
     # lets try to get all ingrs ID from query
     ingrs_id = parse_ingrs_id(query)
