@@ -281,7 +281,7 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name):
     for item in by_name:
         for ingr in ingrs_id:
             if ingr in item.item_ingrs["id"]:
-                item.search_score += 1
+                item.search_score += 100
 
     result_final = by_name
     end = datetime.datetime.now() - start
