@@ -124,7 +124,7 @@ def get_from_cache(user_id, count, query, sort):
                 with open(path, 'r+') as f:
                     cached = simplejson.load(f)
                     if sort == None:
-                        if cached['curr_pos'] > len(cached['items']):
+                        if cached['curr_pos'] >= len(cached['items']):
                             cached['curr_pos'] = 0
                         r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
                     else:
