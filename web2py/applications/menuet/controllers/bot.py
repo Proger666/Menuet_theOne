@@ -123,19 +123,19 @@ def get_from_cache(user_id, count, query, sort):
                     clean_file_cache(user_id)
                 with open(path, 'r+') as f:
                     cached = simplejson.load(f)
-                    if sort == None:
-                        if cached['curr_pos'] >= len(cached['items']):
-                            cached['curr_pos'] = 0
+                    if sort == 'None' or sort is None:
                         r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
                     else:
-                        r = simplejson.loads(cached['items'])[:]
-                        cached['curr_pos'] = 0
+                        if cached['curr_pos'] != 0 and cached['sorted'] is None:
+                            cached['curr_pos'] = 0
+                        r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
                         r = sort_result(r, sort)
+                        cached['sorted'] = sort
                     cached['curr_pos'] += count
                     if len(r) == 0:
                         f.close()
                         # do we need to delete cache ?
-                        # os.remove(path)
+                        os.remove(path)
                         return {'msg': 'no more'}
                     else:
                         f.seek(0)
@@ -437,7 +437,8 @@ def write_to_cache(user_id, weighted_result, query):
         file = open('applications/menuet/cache/cache_' + str(user_id), 'w')
         _ = {"user_id": user_id,
              "items": jsonpickle.dumps(weighted_result, unpicklable=False),
-             "curr_pos": 0}
+             "curr_pos": 0,
+             "sorted" : None}
         # dumps this results
         simplejson.dump(_, file)
         file.close()
