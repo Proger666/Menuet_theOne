@@ -76,8 +76,26 @@ def clean_file_cache(user_id):
         logger.warning("we finished clean cache in  " + str(end))
     pass
 
+def add_score_item(items, score_point):
+    for item in items:
+        item['search_score'] += score_point
 
-def get_from_cache(user_id, count, query):
+
+def sort_result(r, sort):
+    if sort == "lux":
+        r = sorted(r, key=lambda k: k['item_price'], reverse=True)
+        add_score_item(r, 10)
+    elif sort == "awesome":
+        r = sorted(r, key=lambda k: k['item_rating'], reverse=True)
+    elif sort == "cheap":
+        r = sorted(r, key=lambda k: k['item_price'], reverse=False)
+        add_score_item(r, 10)
+
+    r = sorted(r, key=lambda k: k['search_score'], reverse=True)
+    return r
+
+
+def get_from_cache(user_id, count, query, sort):
     try:
         master_file = open('applications/menuet/cache/cache_master', 'r+')
 
@@ -105,11 +123,16 @@ def get_from_cache(user_id, count, query):
                     clean_file_cache(user_id)
                 with open(path, 'r+') as f:
                     cached = simplejson.load(f)
-                    r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
+                    if sort == None:
+                        r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
+                    else:
+                        r = simplejson.loads(cached['items'])[:]
+                        r = sort_result(r, sort)
                     cached['curr_pos'] += count
                     if len(r) == 0:
                         f.close()
-                        os.remove(path)
+                        # do we need to delete cache ?
+                        # os.remove(path)
                         return {'msg': 'no more'}
                     else:
                         f.seek(0)
@@ -184,7 +207,7 @@ def create_result_obj(item, rest1k, result, weight):
         rest = rest1k[item.rest_id]
 
     result.append(result_object(item.item_id, item.item_name,
-                                item.rest_id, get_STD_portion_price_item(item.item_id), '0',
+                                item.rest_id, get_STD_portion_price_item(item.item_id), 0,
                                 item.menu_id,
                                 weight, rest.get('rest_name'),
                                 rest.get('rest_addr', 'Не знаем'), rest.get('distance_in_km', 0),
@@ -345,16 +368,20 @@ def get_rest_for_item(item_id, networks_ids):
         rest_info = Storage(rest_info)
     return rest_info
 
+def bySearch_key(result_object):
+    return result_object.search_score
+
+
+def byPrice_key(result_object):
+    return result_object.item_price
+def byRating_key(result_object):
+    return result_object.item_rating
+
 
 def create_result(by_ingr, networks_ids, sort):
     start = datetime.datetime.now()
     if len(by_ingr) == 0:
         return []
-    resulting_array = []
-    def bySearch_key(result_object):
-        return result_object.search_score
-    def byPrice_key(result_object):
-        return result_object.item_price
 
     resulting_array = sorted(by_ingr, key=bySearch_key, reverse=True)
 
@@ -524,8 +551,11 @@ def weighted_search(query, lng, lat, user_id, sort):
     # by_tag = search_by_tag(items, query, raw_weights['tag'])
     weighted_result = create_result(by_ingr, _tmp_nets, sort)
     end_all = datetime.datetime.now() - start_all
-    logger.warning("We got %s results in our search in %s, for query: %s", len(weighted_result), str(end), query_id)
+    logger.warning("We got %s results in our search in %s, for query: %s", len(weighted_result), str(end_all), query_id)
     return weighted_result
+
+
+
 
 
 def get_food_with_loc(vars):
@@ -550,7 +580,7 @@ def get_food_with_loc(vars):
     # if not - new search
     # if nothing - sorry
     count = 3
-    result = get_from_cache(vars.user_id, count, vars.query)
+    result = get_from_cache(vars.user_id, count, vars.query, vars.sort)
     if result['msg'] == 'ok':
         # return data from cache
         return result
@@ -562,7 +592,7 @@ def get_food_with_loc(vars):
         # write result to cache
         write_to_cache(vars.user_id, weighted_result, vars.query)
         # give control to cache
-        result = get_from_cache(vars.user_id, count, vars.query)
+        result = get_from_cache(vars.user_id, count, vars.query, None)
         if result['msg'] == 'ok':
             return result
 
