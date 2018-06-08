@@ -124,9 +124,12 @@ def get_from_cache(user_id, count, query, sort):
                 with open(path, 'r+') as f:
                     cached = simplejson.load(f)
                     if sort == None:
+                        if cached['curr_pos'] > len(cached['items']):
+                            cached['curr_pos'] = 0
                         r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
                     else:
                         r = simplejson.loads(cached['items'])[:]
+                        cached['curr_pos'] = 0
                         r = sort_result(r, sort)
                     cached['curr_pos'] += count
                     if len(r) == 0:
@@ -155,15 +158,19 @@ def get_STD_portion_price_item(item_id):
                 return step.f_price
 
 
-def search_by_name(query, weight, rest1k, rests_item):
+def search_by_name(query, weight, rest1k, rests_item, query_id):
     # search by exact match fast fail if found
     # result obj
 
     result = []
     exact_match = False
     # Lets parse tags
-    tag_search = [x for x in query.split() if pos(x) in ["NOUN", 'ADJF']][0]
-    _tag = db(db.t_item_tag.f_name == tag_search).select(db.t_item_tag.id).first()
+    try:
+        tag_search = [x for x in query.split() if pos(x) in ["NOUN", 'ADJF']][0]
+        _tag = db(db.t_item_tag.f_name == tag_search).select(db.t_item_tag.id).first()
+    except:
+        _tag = None
+        logger.warning("We failed to get NOUN from query %s", query_id)
     if _tag is not None:
         tag_search = re.compile(str(_tag.id))
     else:
@@ -254,7 +261,7 @@ def pos(word, morth=pymorphy2.MorphAnalyzer()):
     return r
 
 
-def search_by_ingr(query, weight, rest1k, rests_item, by_name):
+def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
     start = datetime.datetime.now()
     # result will be stored as row
     result_final = by_name
@@ -540,12 +547,12 @@ def weighted_search(query, lng, lat, user_id, sort):
         _f_rest1k[item.get('rest_id', 0)] = item
 
     # we expect RESULT object
-    by_name = search_by_name(query, raw_weights['item'], _f_rest1k, rests_item)
+    by_name = search_by_name(query, raw_weights['item'], _f_rest1k, rests_item, query_id)
     end = datetime.datetime.now() - start
     logger.warning("We got %s results by name in %s, for query: %s", len(by_name), str(end), query_id)
     # we expect RESULT object
     start = datetime.datetime.now()
-    by_ingr = search_by_ingr(query, raw_weights['ingr'], _f_rest1k, rests_item, by_name)
+    by_ingr = search_by_ingr(query, raw_weights['ingr'], _f_rest1k, rests_item, by_name, query_id)
     end = datetime.datetime.now() - start
     logger.warning("We got %s results by ingr in %s, for query: %s", len(by_ingr), str(end), query_id)
     # by_tag = search_by_tag(items, query, raw_weights['tag'])
