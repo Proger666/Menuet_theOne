@@ -143,7 +143,8 @@ def search_by_name(query, weight, rest1k, rests_item):
         # remove excessive spaces
         # тыквенный суп
         tag_search = [x for x in query.split() if pos(x) in ["NOUN", 'ADJF']][0]
-        tag_search = re.compile(str(db(db.t_item_tag.f_name == tag_search).select(db.t_item_tag.id).first().id))
+        _tag = db(db.t_item_tag.f_name == tag_search).select(db.t_item_tag.id).first()
+        tag_search = re.compile(str(_tag.id if _tag is not None else ""))
         if re.sub(' +', ' ', item.item_name.lower()) == query or tag_search.search(item.item_tags):
             create_result_obj(item, rest1k, result, weight)
             exact_match = True
