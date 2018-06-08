@@ -169,28 +169,33 @@ def getItems_for_menu(menu_id):
 
 
 @auth.requires_login()
-def get_ingrs_for_item(item_id):
+def get_ingrs_for_item(item_id, units):
+    start = datetime.datetime.now()
     # # get recipe for item to use later on
     # item_recipe = db.t_item.f_recipe
     # # get step
     # step = db(db.t_step.id == db.t_ingredient.id).select()
     # Get recipe ID for given item
-    recipe_id = db((db.t_recipe.id == db.t_item.f_recipe)
-                   & (db.t_item.id == item_id)).select()[0].t_recipe.id
+    # recipe_id = db((db.t_recipe.id == db.t_item.f_recipe)
+    #                & (db.t_item.id == item_id)).select()[0].t_recipe.id
     # Get m-t-m relation - get all steps for given recipe id
-    steps_ing = db((db.t_recipe.id == recipe_id) &
+    steps_ing = db(
                    (db.t_step.id == db.t_step_ing.t_step) &
                    (db.t_recipe.id == db.t_step_ing.t_recipe))
     # Create list of ingrs
     # create ingrs storage class
     ingrs = []
-    for _cur_step in steps_ing.select():
+    steps_ingr = steps_ing.select(join=db.t_recipe.on((db.t_recipe.id == db.t_item.f_recipe) & (db.t_item.id == item_id)))
+
+    for _cur_step in steps_ingr:
         ingr = Storage()
         # get Ingr set names n weight
         ingr.name = db(db.t_ingredient.id == _cur_step.t_step.f_ingr).select(db.t_ingredient.f_name).first().f_name
         ingr.qty = _cur_step.t_step.f_qty
-        ingr.unit = db(db.t_unit.id == _cur_step.t_step.f_unit).select().first()
+        ingr.unit = db(db.t_unit.id == _cur_step.t_step.f_unit).select().first() if units is None else units[_cur_step.t_step.f_unit]['unit']
         ingrs.append(ingr)
+    end = datetime.datetime.now() - start
+    logger.warning("ingrs fecthed for %s", end)
     return ingrs
 
 
@@ -230,19 +235,23 @@ def e_menu():
             # get current menu based on URL parameters
             menu = Storage(getMenu_forRest(rest_id, menu_id))
             # Get all ITEMS for this MENU
+            start = datetime.datetime.now()
             _menu_items = getItems_for_menu(menu_id)
             menu_items = []
             end1 = datetime.datetime.now() - start
+            logger.warning("all menu loaded in %s", end1)
+            _units = db(db.t_unit.id > 0 ).select()
+            units = [{'id':x['id'], 'unit':x} for x in _units]
             # Lets fill item class
             for menu_item in _menu_items:
                 # create class storage for item
                 item = Storage()
                 item.name = menu_item.f_name
                 item.id = menu_item.id
-                item.unit = None if menu_item.f_unit is None else db.t_unit[menu_item.f_unit].f_name
+                item.unit = None if menu_item.f_unit is None else units[menu_item.f_unit]['unit']['f_name']
                 item.desc = ' '.join(menu_item.f_desc.split()[:4]) if check_exist(
                     menu_item.f_desc) else ""  # ограничиваем 4 словами вывод
-                item.ingrs = get_ingrs_for_item(item.id)
+                item.ingrs = get_ingrs_for_item(item.id, units)
                 item.tags = get_tags_for_item(menu_item.f_tags)
                 item.portions = []
                 # get portions name from DB
@@ -287,7 +296,7 @@ def e_item():
         item.id = _tmp.id
         item.unit = None if _tmp.f_unit is None else db.t_unit[_tmp.f_unit]
         item.desc =  "" if _tmp.f_desc is None else _tmp.f_desc
-        item.ingrs = get_ingrs_for_item(item.id)
+        item.ingrs = get_ingrs_for_item(item.id, None)
         item.tags = get_tags_for_object(item.id, 'item')
         item.portions = []
         # get portions name from DB
@@ -426,7 +435,7 @@ def a_item():
         item.id = _tmp.id
         item.unit = None if _tmp.f_unit is None else db.t_unit[_tmp.f_unit]
         item.desc = _tmp.f_desc
-        item.ingrs = get_ingrs_for_item(item.id)
+        item.ingrs = get_ingrs_for_item(item.id, None)
         item.tags = get_tags_for_object(item.id, 'item')
         item.portions = []
         # get portions name from DB
