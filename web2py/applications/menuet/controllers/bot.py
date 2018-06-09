@@ -191,7 +191,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
 
 
         # lets get our
-        clean_query = [x for x in query.split() if pos(x) not in ["NUMBR", 'NPRO', "PREP", "CONJ", "INTJ", "COMP", "PRTF", "GRND", "ADVB", "PRCL"]]
+        clean_query = [x for x in query.split() if pos(x) not in ["NUMR", 'NPRO', "PREP", "CONJ", "INTJ", "COMP", "PRTF", "GRND", "ADVB", "PRCL"]]
 
         # lets try search word by word until fail
         # lets try search via regex in full string
