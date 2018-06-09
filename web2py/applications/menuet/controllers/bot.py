@@ -479,9 +479,10 @@ def weighted_search(query, lng, lat, user_id, sort):
     start_all = datetime.datetime.now()
     raw_weights = {'ingr': 1, 'item': 2, 'tag': 3}
     # remove escessive spaces from query
-    query = re.sub(' +', ' ', query.lower()).encode('utf-8')
     query_id = str(uuid.uuid4()) + ': ' + query
     logger.warning('We got new query: %s', query_id)
+    query = re.sub(' +', ' ', query.lower()).encode('utf-8')
+
     # result format
     # Structure
     #     {'item': [
