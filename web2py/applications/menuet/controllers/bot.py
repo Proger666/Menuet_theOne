@@ -222,7 +222,7 @@ def create_result_obj(item, rest1k, result, weight,search_score):
                                 rest.get('f4sqr') if rest.get(
                                     'f4sqr') is not None else 'https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5',
                                 get_ingrs_for_item(item.item_id), rest.get('rest_long', '55'),
-                                rest.get('rest_lat', '35')), search_score)
+                                rest.get('rest_lat', '35'), search_score))
 
 
 def query_cleanUp(query):
