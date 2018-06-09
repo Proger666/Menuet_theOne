@@ -189,15 +189,23 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         if exact_match == True:
             continue
 
-        # lets get our noun
-        noun = [x for x in query.split() if pos(x) == "NOUN"][0]
+
+        # lets get our
+        clean_query = [x for x in query.split() if pos(x) not in ["NUMBR", 'NPRO', "PREP", "CONJ", "INTJ", "COMP", "PRTF", "GRND", "ADVB", "PRCL"]]
 
         # lets try search word by word until fail
         # lets try search via regex in full string
-        compile = re.compile(noun)
+        if len(clean_query) == 0:
+            return []
+        clean_query_list = clean_query.split()
+        compile = re.compile("("+"|".join(clean_query_list)+")")
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
-            create_result_obj(item, rest1k, result, weight,0)
-
+            create_result_obj(item, rest1k, result, weight,50)
+        else:
+            for word in clean_query_list:
+                compile = re.compile(word)
+                if compile.search(item.item_name.lower().encode('utf-8')) is not None:
+                    create_result_obj(item, rest1k, result, weight, 50)
     return result
 
 
