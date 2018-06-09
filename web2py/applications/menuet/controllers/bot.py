@@ -182,7 +182,8 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         # тыквенный суп
 
         if re.sub(' +', ' ', item.item_name.lower()) == query or tag_search.search(item.item_tags):
-            create_result_obj(item, rest1k, result, weight)
+            search_score = 100
+            create_result_obj(item, rest1k, result, weight, search_score)
             exact_match = True
             continue
         if exact_match == True:
@@ -195,12 +196,12 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         # lets try search via regex in full string
         compile = re.compile(noun)
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
-            create_result_obj(item, rest1k, result, weight)
+            create_result_obj(item, rest1k, result, weight,0)
 
     return result
 
 
-def create_result_obj(item, rest1k, result, weight):
+def create_result_obj(item, rest1k, result, weight,search_score):
     rest = None
     if item.rest_name is None:
         net_name = db.t_network[item.f_network]
@@ -221,7 +222,7 @@ def create_result_obj(item, rest1k, result, weight):
                                 rest.get('f4sqr') if rest.get(
                                     'f4sqr') is not None else 'https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5',
                                 get_ingrs_for_item(item.item_id), rest.get('rest_long', '55'),
-                                rest.get('rest_lat', '35')))
+                                rest.get('rest_lat', '35')), search_score)
 
 
 def query_cleanUp(query):
@@ -312,7 +313,7 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
         for item in rests_item:
             item = Storage(item)
             if item.item_id in results_id:
-                create_result_obj(item, rest1k, result_final, weight)
+                create_result_obj(item, rest1k, result_final, weight,0)
                 break
 
     for item in by_name:

@@ -1,7 +1,7 @@
 class result_object:
     '''This objects '''
 
-    def __init__(self,item_id,item_name,rest_id,item_price,item_rating,menu_id,item_weight,rest_name,rest_addr,rest_distance,rest_phone,f4sqr_link,item_ingrs,rest_long,rest_lat):
+    def __init__(self,item_id,item_name,rest_id,item_price,item_rating,menu_id,item_weight,rest_name,rest_addr,rest_distance,rest_phone,f4sqr_link,item_ingrs,rest_long,rest_lat, search_score):
         self.item_id=item_id
         self.item_name=item_name
         self.rest_id=rest_id
@@ -17,7 +17,7 @@ class result_object:
         self.item_ingrs=item_ingrs
         self.rest_long = rest_long
         self.rest_lat = rest_lat
-        self.search_score = 0
+        self.search_score = search_score
 
 class internalSearchCache:
     def __init__(self):
