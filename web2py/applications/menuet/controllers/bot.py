@@ -197,12 +197,12 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         # lets try search via regex in full string
         if len(clean_query) == 0:
             return []
-        clean_query_list = clean_query.split()
-        compile = re.compile("("+"|".join(clean_query_list)+")")
+
+        compile = re.compile("("+"|".join(clean_query)+")")
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
             create_result_obj(item, rest1k, result, weight,50)
         else:
-            for word in clean_query_list:
+            for word in clean_query:
                 compile = re.compile(word)
                 if compile.search(item.item_name.lower().encode('utf-8')) is not None:
                     create_result_obj(item, rest1k, result, weight, 50)
