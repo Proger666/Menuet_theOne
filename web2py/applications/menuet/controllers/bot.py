@@ -10,7 +10,6 @@ import pymorphy2
 from collections import OrderedDict
 import re
 
-
 ##### GLOBAL PARAMETERS ####
 class USER:
     MAXDISTANCE = 500
@@ -185,9 +184,9 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         if re.sub(' +', ' ', item.item_name.lower()) == query or tag_search.search(item.item_tags):
             create_result_obj(item, rest1k, result, weight)
             exact_match = True
-            break
+            continue
         if exact_match == True:
-            break
+            continue
 
         # lets get our noun
         noun = [x for x in query.split() if pos(x) == "NOUN"][0]

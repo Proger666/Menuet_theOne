@@ -38,6 +38,10 @@ def parse_items_ingrs():
         msg = 'We updated ' + str(len(_ingrs)) + ' ingredients'
         return simplejson.dumps({'status': 'OK', 'msg': msg})
 
+@auth.requires_membership('admin')
+def db_operations():
+
+    return locals()
 
 @auth.requires_membership('admin')
 def statistics():
