@@ -126,7 +126,7 @@ def get_from_cache(user_id, count, query, sort):
                         r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
                     else:
                         # sorting by user request with unknown initial state
-                        if cached['sorted'] is None or cached['sorted'] == 'None':
+                        if cached['sorted'] is None or cached['sorted'] == 'None' or sort != cached['sorted']:
                             cached['curr_pos'] = 0
                             # load everything
                             r = simplejson.loads(cached['items'])
