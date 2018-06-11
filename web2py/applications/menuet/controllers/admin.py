@@ -51,13 +51,14 @@ def add_tags():
     search_for = request.vars.s.encode('utf-8').split(",")
     add_tags = request.vars.t.encode('utf-8').split(",")
     for string in search_for:
-        items_to_modify = db(db.t_item.f_name.like(string)).select()
+        items_to_modify = db(db.t_item.f_name.like("%"+string+"%")).select()
         # add tags to searched item
         for item in items_to_modify:
-            _tags = item.f_tags.split("|")
+            _tags = item.f_tags
             _tags.append(add_tags)
-            _tags = "|" + "|".join(_tags) + "|"
             db(db.t_item.id == item.id).update(f_tags=_tags)
+
+    db.commit()
 
     return locals()
 
