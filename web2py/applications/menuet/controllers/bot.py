@@ -610,7 +610,7 @@ def get_food_with_loc(vars):
     # if yes - show some
     # if not - new search
     # if nothing - sorry
-    count = 3
+    count = 2
     result = get_from_cache(vars.user_id, count, vars.query, vars.sort)
     if result['msg'] == 'ok':
         # return data from cache
