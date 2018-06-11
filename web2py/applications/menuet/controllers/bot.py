@@ -125,8 +125,13 @@ def get_from_cache(user_id, count, query, sort):
                     if sort == 'None' or sort is None:
                         r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
                     else:
-                        if cached['curr_pos'] != 0 and (cached['sorted'] is None or cache['sorted'] != sort):
+
+
+                        if cached['curr_pos'] > len(simplejson.loads(cached['items'])):
                             cached['curr_pos'] = 0
+                            f.seek(0)
+                            simplejson.dump(cached, f)
+                            return {'msg': 'no more'}
                         r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
                         r = sort_result(r, sort)
                         cached['sorted'] = sort
@@ -134,7 +139,7 @@ def get_from_cache(user_id, count, query, sort):
                     if len(r) == 0:
                         f.close()
                         # do we need to delete cache ?
-                        os.remove(path)
+                        #os.remove(path)
                         return {'msg': 'no more'}
                     else:
                         f.seek(0)
@@ -181,7 +186,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         # remove excessive spaces
         # тыквенный суп
 
-        if re.sub(' +', ' ', item.item_name.lower()) == query or tag_search.search(item.item_tags):
+        if re.sub(' +', ' ', item.item_name.lower().encode('utf-8')) == query or tag_search.search(item.item_tags):
             search_score = 100
             create_result_obj(item, rest1k, result, weight, search_score)
             exact_match = True
@@ -479,7 +484,6 @@ def weighted_search(query, lng, lat, user_id, sort):
     start_all = datetime.datetime.now()
     raw_weights = {'ingr': 1, 'item': 2, 'tag': 3}
     # remove escessive spaces from query
-    query = "".join(query)
     query_id = str(uuid.uuid4()) + ': ' + query
     logger.warning('We got new query: %s', query_id)
     query = re.sub(' +', ' ', query.lower()).encode('utf-8')
