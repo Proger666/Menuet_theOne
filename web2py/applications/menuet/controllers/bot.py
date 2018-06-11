@@ -2,13 +2,12 @@
 # !/usr/bin/env python
 import datetime
 import os
+import re
 import uuid
 
 import jsonpickle
-
 import pymorphy2
-from collections import OrderedDict
-import re
+
 
 ##### GLOBAL PARAMETERS ####
 class USER:
@@ -75,6 +74,7 @@ def clean_file_cache(user_id):
         logger.warning("we finished clean cache in  " + str(end))
     pass
 
+
 def add_score_item(items, score_point):
     for item in items:
         item['search_score'] += score_point
@@ -127,14 +127,21 @@ def get_from_cache(user_id, count, query, sort):
                     else:
                         if cached['sorted'] is None or cached['sorted'] == 'None':
                             cached['curr_pos'] = 0
+                            # load everything
+
+                            r = simplejson.loads(cached['items'])
                         elif cached['curr_pos'] >= len(simplejson.loads(cached['items'])):
                             f.seek(0)
                             simplejson.dump(cached, f)
                             f.close()
                             os.remove(path)
                             return {'msg': 'no more'}
-                        r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
+                        else:
+                            r = simplejson.loads(cached['items'])[
+                                int(cached['curr_pos']): int(cached['curr_pos']) + count]
+
                         r = sort_result(r, sort)
+                        cached['items'] = r
                         cached['sorted'] = sort
                     cached['curr_pos'] += count
                     if len(r) == 0:
@@ -195,18 +202,18 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         if exact_match == True:
             continue
 
-
         # lets get our
-        clean_query = [x for x in query.split() if pos(x) not in ["NUMR", 'NPRO', "PREP", "CONJ", "INTJ", "COMP", "PRTF", "GRND", "ADVB", "PRCL"]]
+        clean_query = [x for x in query.split() if
+                       pos(x) not in ["NUMR", 'NPRO', "PREP", "CONJ", "INTJ", "COMP", "PRTF", "GRND", "ADVB", "PRCL"]]
 
         # lets try search word by word until fail
         # lets try search via regex in full string
         if len(clean_query) == 0:
             return []
 
-        compile = re.compile("("+"|".join(clean_query)+")")
+        compile = re.compile("(" + "|".join(clean_query) + ")")
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
-            create_result_obj(item, rest1k, result, weight,50)
+            create_result_obj(item, rest1k, result, weight, 50)
         else:
             for word in clean_query:
                 compile = re.compile(word)
@@ -215,7 +222,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
     return result
 
 
-def create_result_obj(item, rest1k, result, weight,search_score):
+def create_result_obj(item, rest1k, result, weight, search_score):
     rest = None
     if item.rest_name is None:
         net_name = db.t_network[item.f_network]
@@ -327,7 +334,7 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
         for item in rests_item:
             item = Storage(item)
             if item.item_id in results_id:
-                create_result_obj(item, rest1k, result_final, weight,0)
+                create_result_obj(item, rest1k, result_final, weight, 0)
                 break
 
     for item in by_name:
@@ -362,7 +369,7 @@ def get_ingrs_for_item(item_id):
     _ = [x.t_step.f_ingr for x in _]
     # get all ingrs name
     ingrs = db(db.t_ingredient.id.belongs(_)).select()
-    ingrs = {"id":[x['id'] for x in ingrs],"name":[x["f_name"] for x in ingrs]}
+    ingrs = {"id": [x['id'] for x in ingrs], "name": [x["f_name"] for x in ingrs]}
     return ingrs
 
 
@@ -389,12 +396,15 @@ def get_rest_for_item(item_id, networks_ids):
         rest_info = Storage(rest_info)
     return rest_info
 
+
 def bySearch_key(result_object):
     return result_object.search_score
 
 
 def byPrice_key(result_object):
     return result_object.item_price
+
+
 def byRating_key(result_object):
     return result_object.item_rating
 
@@ -405,7 +415,6 @@ def create_result(by_ingr, networks_ids, sort):
         return []
 
     resulting_array = sorted(by_ingr, key=bySearch_key, reverse=True)
-
 
     try:
         # for element in by_name + by_ingr:
@@ -452,7 +461,7 @@ def write_to_cache(user_id, weighted_result, query):
         _ = {"user_id": user_id,
              "items": jsonpickle.dumps(weighted_result, unpicklable=False),
              "curr_pos": 0,
-             "sorted" : None}
+             "sorted": None}
         # dumps this results
         simplejson.dump(_, file)
         file.close()
@@ -576,9 +585,6 @@ def weighted_search(query, lng, lat, user_id, sort):
     end_all = datetime.datetime.now() - start_all
     logger.warning("We got %s results in our search in %s, for query: %s", len(weighted_result), str(end_all), query_id)
     return weighted_result
-
-
-
 
 
 def get_food_with_loc(vars):
