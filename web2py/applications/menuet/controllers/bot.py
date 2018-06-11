@@ -125,14 +125,13 @@ def get_from_cache(user_id, count, query, sort):
                     if sort == 'None' or sort is None:
                         r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
                     else:
-
-                        if cached['curr_pos'] > len(simplejson.loads(cached['items'])) and (cached['sorted'] is None or cached['sorted'] == 'None'):
+                        if cached['sorted'] is None or cached['sorted'] == 'None':
+                            cached['curr_pos'] = 0
+                        elif cached['curr_pos'] >= len(simplejson.loads(cached['items'])):
                             f.seek(0)
                             simplejson.dump(cached, f)
-                            return {'msg': 'no more'}
-                        elif cached['curr_pos'] > len(simplejson.loads(cached['items'])):
-                            f.seek(0)
-                            simplejson.dump(cached, f)
+                            f.close()
+                            os.remove(path)
                             return {'msg': 'no more'}
                         r = simplejson.loads(cached['items'])[int(cached['curr_pos']): int(cached['curr_pos']) + count]
                         r = sort_result(r, sort)
