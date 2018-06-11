@@ -30,7 +30,8 @@ def parse_items_ingrs():
             for ingr in _ingrs:
                 normal_form = normalize_ingr(ingr.f_name)
 
-                db(db.t_ingredient.id == ingr.id and db.t_ingredient.f_curate == 'T').update(f_normal_form=normal_form, f_curate='F')
+                db(db.t_ingredient.id == ingr.id and db.t_ingredient.f_curate == 'T').update(f_normal_form=normal_form,
+                                                                                             f_curate='F')
             db.commit()
         except Exception as e:
             msg = 'We FAILED at ' + str(ingr)
@@ -38,10 +39,28 @@ def parse_items_ingrs():
         msg = 'We updated ' + str(len(_ingrs)) + ' ingredients'
         return simplejson.dumps({'status': 'OK', 'msg': msg})
 
+
 @auth.requires_membership('admin')
 def db_operations():
+    return locals()
+
+
+@auth.requires_membership('admin')
+def add_tags():
+    # TODO: add sanity check
+    search_for = request.vars.s.encode('utf-8').split(",")
+    add_tags = request.vars.t.encode('utf-8').split(",")
+    for string in search_for:
+        items_to_modify = db(db.t_item.f_name.like(string)).select()
+        # add tags to searched item
+        for item in items_to_modify:
+            _tags = item.f_tags.split("|")
+            _tags.append(add_tags)
+            _tags = "|" + "|".join(_tags) + "|"
+            db(db.t_item.id == item.id).update(f_tags=_tags)
 
     return locals()
+
 
 @auth.requires_membership('admin')
 def statistics():
