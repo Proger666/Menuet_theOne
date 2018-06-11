@@ -141,7 +141,7 @@ def get_from_cache(user_id, count, query, sort):
                     if len(r) == 0:
                         f.close()
                         # do we need to delete cache ?
-                        #os.remove(path)
+                        os.remove(path)
                         return {'msg': 'no more'}
                     else:
                         f.seek(0)
