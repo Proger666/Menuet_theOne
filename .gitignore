@@ -113,3 +113,4 @@ venv.bak/
 /web2py/applications/menuet/private/appconfig.ini
 /web2py/applications/menuet/keys/
 /web2py/applications/menuet/cache/
+/web2py/applications/menuet/keys/cert.crt
