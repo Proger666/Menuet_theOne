@@ -35,6 +35,7 @@
             success: function (data) {
                 $("#search_butt").attr("disabled", false)
                 .val("Search and add tags");
+                window.alert("We updated " + data['msg'] + " items")
             },
             error: function () {
                 location.reload();

@@ -73,10 +73,10 @@ def add_tags():
                     logger.info("we added new tags %s for item %s", str(_tags), str(item.id))
 
         db.commit()
+        return simplejson.dumps({"error": 'ok', 'msg': len(items_to_modify)})
     except:
         logger.error('We FAILED to add new tags from admin area!!! for tags %s and we searched for %s', str(add_tags),
                      str(search_for))
-        return simplejson.dumps({"error":'ok'})
 
 
 @auth.requires_membership('admin')
