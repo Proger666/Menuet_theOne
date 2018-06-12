@@ -226,7 +226,6 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
                     create_result_obj(item, rest1k, result, weight, 50)
         item_time = datetime.datetime.now() - start
         logger.warning("we processed item in in %s", item_time)
-
     return result
 
 
@@ -246,15 +245,34 @@ def create_result_obj(item, rest1k, result, weight, search_score):
     item_time = datetime.datetime.now() - start
     logger.warning("we ready to create result in %s", item_time)
 
+    # lets get info about items via sophisticated SQL query
+    # TODO: redesign into PyDAL
+    item_info = db.executesql(
+        'SELECT item_id,item_name, item_price, ingr_id, group_concat(concat(ingr_id)) as ingrs_ids, group_concat(concat(ingr_name)) as ingrs_names '
+        'FROM('
+        'SELECT t_item.id AS item_id,t_item.f_name AS item_name, t_item_prices.f_price AS item_price, t_ingredient.id AS ingr_id, t_ingredient.f_name AS ingr_name '
+        'from  t_item '
+        'LEFT OUTER JOIN t_item_prices ON t_item_prices.f_item = t_item.id AND t_item_prices.f_portion = "1" '
+        'LEFT OUTER JOIN t_recipe ON t_recipe.id = t_item.f_recipe '
+        'LEFT OUTER JOIN t_step_ing ON t_step_ing.t_recipe = t_recipe.id '
+        'LEFT OUTER JOIN t_step ON t_step.id = t_step_ing.t_step '
+        'LEFT OUTER JOIN t_ingredient ON t_ingredient.id = t_step.f_ingr '
+        ') AS ingrs '
+        'JOIN (SELECT * FROM t_item ) AS itm '
+        'ON itm.id = item_id '
+        'GROUP BY itm.id',as_dict=True)
+
+    item_ingrs_dict = {'id':(map(int, filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['ingrs_ids'].encode('utf-8').split(","))),
+                       'name': (filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['ingrs_names'].encode('utf-8')).split(",") }
     result.append(result_object(item.item_id, item.item_name,
-                                item.rest_id, get_STD_portion_price_item(item.item_id), 0,
+                                item.rest_id, filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['item_price'], 0,
                                 item.menu_id,
                                 weight, rest.get('rest_name'),
                                 rest.get('rest_addr', 'Не знаем'), rest.get('distance_in_km', 0),
                                 item.get('rest_phone', 'Не знаем'),
                                 rest.get('f4sqr') if rest.get(
                                     'f4sqr') is not None else 'https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5',
-                                get_ingrs_for_item(item.item_id), rest.get('rest_long', '55'),
+                                item_ingrs_dict, rest.get('rest_long', '55'),
                                 rest.get('rest_lat', '35'), search_score))
     item_time = datetime.datetime.now() - start
     logger.warning("we added result for query in in %s", item_time)
