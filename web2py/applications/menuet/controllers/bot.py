@@ -221,6 +221,8 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
                 compile = re.compile(word)
                 if compile.search(item.item_name.lower().encode('utf-8')) is not None:
                     create_result_obj(item, rest1k, result, weight, 50)
+
+
     return result
 
 
@@ -264,7 +266,7 @@ def normalize_words(ingrs_list):
         # lets get normal form of the word
         try:
             # bad design of library it will send exception if it doesnt know word
-            result.append(morph.parse(ingr)[0].normal_form)
+            morph.parse(ingr.decode('utf-8'))[0].inflect({'sing', 'nomn'}).word
         except AttributeError:
             result.append(ingr)
         except UnicodeDecodeError:
@@ -293,9 +295,9 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
     ingrs_id = parse_ingrs_id(query)
 
     if len(ingrs_id) == 0:
-        return result_final
+         return result_final
 
-    if len(by_name) == 0:
+    if len(by_name) > 0 :
         # collect all ids from item ids
         items_id = [x['item_id'] for x in rests_item]
         # Lets try to find items by their ingrs
