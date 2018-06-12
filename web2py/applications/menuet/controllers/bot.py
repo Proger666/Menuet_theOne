@@ -373,7 +373,7 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
         # lets get all item_id from by_name list
         if len(by_name) > 0:
             by_name_ids = [x.item_id for x in by_name]
-            result_id = [x for x in results_id if x not in by_name_ids]
+            results_id = [x for x in results_id if x not in by_name_ids]
         # now turn it to ROWS
         for item in rests_item:
             item = Storage(item)
