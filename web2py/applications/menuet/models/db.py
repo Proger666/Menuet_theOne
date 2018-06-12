@@ -24,7 +24,7 @@ request.requires_https()
 # -------------------------------------------------------------------------
 # once in production, remove reload=True to gain full speed
 # -------------------------------------------------------------------------
-configuration = AppConfig(reload=False)
+configuration = AppConfig(reload=True)
 
 if not request.env.web2py_runtime_gae:
     # ---------------------------------------------------------------------
