@@ -134,7 +134,7 @@ def get_from_cache(user_id, count, query, sort):
                             # sort by user request
                             r = sort_result(r, sort)
                             cached['sorted'] = sort
-                            #sore all result inside our cache file
+                            # sore all result inside our cache file
                             cached['items'] = simplejson.dumps(r)
                         elif cached['curr_pos'] >= len(simplejson.loads(cached['items'])):
                             # we dont need our cache file now - close
@@ -222,7 +222,6 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
                 if compile.search(item.item_name.lower().encode('utf-8')) is not None:
                     create_result_obj(item, rest1k, result, weight, 50)
 
-
     return result
 
 
@@ -295,9 +294,9 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
     ingrs_id = parse_ingrs_id(query)
 
     if len(ingrs_id) == 0:
-         return result_final
+        return result_final
 
-    if len(by_name) > 0 :
+    if len(by_name) > 0:
         # collect all ids from item ids
         items_id = [x['item_id'] for x in rests_item]
         # Lets try to find items by their ingrs

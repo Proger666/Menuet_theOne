@@ -106,12 +106,14 @@ def parse_ingrs_id(query):
         return []
     # now lets normalize everything
     ingrs_normal = normalize_words(ingrs)
-
-    # Now lets find INGRS id if we have such by their normal form
-    # TODO: redesign set search
-    ingrs_id = [x.id for x in db(db.t_ingredient.f_normal_form.belongs(ingrs_normal)).select()]
+    if ingrs_normal is not None:
+        # Now lets find INGRS id if we have such by their normal form
+        # TODO: redesign set search
+        ingrs_id = [x.id for x in db(db.t_ingredient.f_normal_form.belongs(ingrs_normal)).select()]
     # if we dont have ingrs in DB = sorry
-    return ingrs_id
+        return ingrs_id
+    else:
+        return []
 
 def normalize_words(ingrs_list):
     # Do we have ingrs list ?
