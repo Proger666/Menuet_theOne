@@ -382,6 +382,7 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
                 break
         # we created result by_ingr and added it to resulted array
 
+    # add score if we found ingrs in items
     for item in result_final:
         for ingr in ingrs_id:
             if ingr in item.item_ingrs["id"]:
