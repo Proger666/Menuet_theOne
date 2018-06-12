@@ -179,6 +179,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
     result = []
     exact_match = False
     # Lets parse tags
+    start = datetime.datetime.now()
     try:
         tag_search = [x for x in query.split() if pos(x) in ["NOUN", 'ADJF']][0]
         _tag = db(db.t_item_tag.f_name == tag_search).select(db.t_item_tag.id).first()
@@ -190,6 +191,8 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
     else:
         # trash string
         tag_search = re.compile("asfsdf")
+    tags_time = datetime.datetime.now() - start
+    logger.warning("we are pased tags in %s", tags_time)
 
     for item in rests_item:
         item = Storage(item)
@@ -221,11 +224,14 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
                 compile = re.compile(word)
                 if compile.search(item.item_name.lower().encode('utf-8')) is not None:
                     create_result_obj(item, rest1k, result, weight, 50)
+        item_time = datetime.datetime.now() - start
+        logger.warning("we processed item in in %s", item_time)
 
     return result
 
 
 def create_result_obj(item, rest1k, result, weight, search_score):
+    start = datetime.datetime.now()
     rest = None
     if item.rest_name is None:
         net_name = db.t_network[item.f_network]
@@ -237,6 +243,9 @@ def create_result_obj(item, rest1k, result, weight, search_score):
     else:
         rest = rest1k[item.rest_id]
 
+    item_time = datetime.datetime.now() - start
+    logger.warning("we ready to create result in %s", item_time)
+
     result.append(result_object(item.item_id, item.item_name,
                                 item.rest_id, get_STD_portion_price_item(item.item_id), 0,
                                 item.menu_id,
@@ -247,6 +256,8 @@ def create_result_obj(item, rest1k, result, weight, search_score):
                                     'f4sqr') is not None else 'https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5',
                                 get_ingrs_for_item(item.item_id), rest.get('rest_long', '55'),
                                 rest.get('rest_lat', '35'), search_score))
+    item_time = datetime.datetime.now() - start
+    logger.warning("we added result for query in in %s", item_time)
 
 
 def query_cleanUp(query):
@@ -265,7 +276,7 @@ def normalize_words(ingrs_list):
         # lets get normal form of the word
         try:
             # bad design of library it will send exception if it doesnt know word
-            morph.parse(ingr.decode('utf-8'))[0].inflect({'sing', 'nomn'}).word
+            result.append(morph.parse(ingr.decode('utf-8'))[0].inflect({'sing', 'nomn'}).word)
         except AttributeError:
             result.append(ingr)
         except UnicodeDecodeError:
@@ -293,27 +304,33 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
     # lets try to get all ingrs ID from query
     ingrs_id = parse_ingrs_id(query)
 
-    if len(ingrs_id) == 0:
-        return result_final
+    #
 
-    if len(by_name) > 0:
+    # right now we have result from by_name and RAW ALL ITEMS we search by ID
+
+    # killswitch
+    if len(ingrs_id) > 0:
         # collect all ids from item ids
         items_id = [x['item_id'] for x in rests_item]
         # Lets try to find items by their ingrs
         # we join ALL tables + filter by items that we know and filter them out by ingrs
         # SEARCH BY IN thats OR search
-        result_id = db.executesql(
-            'SELECT itm.id, group_concat(concat(rc_ingr.ingr))'
-            ' FROM(SELECT rc.id, t_ingredient.id AS ingr'
-            ' FROM t_ingredient'
-            ' INNER JOIN t_step ON t_step.f_ingr = t_ingredient.id'
-            ' INNER JOIN t_step_ing si ON si.t_step = t_step.id'
-            ' INNER JOIN t_recipe rc ON si.t_recipe = rc.id'
-            ' WHERE t_ingredient.id IN (' + ",".join(
-                str(x) for x in ingrs_id) + ')) AS rc_ingr JOIN (SELECT * FROM t_item WHERE t_item.id IN(' + ",".join(
-                str(x) for x in items_id) + ')) AS itm ON itm.f_recipe=rc_ingr.id'
-                                            ' GROUP BY itm.id'
-                                            ' ORDER BY itm.id')
+
+        # if we have ANY ingrs in query - lets try search items for them
+        if len(ingrs_id) > 0:
+            result_id = db.executesql(
+                'SELECT itm.id, group_concat(concat(rc_ingr.ingr))'
+                ' FROM(SELECT rc.id, t_ingredient.id AS ingr'
+                ' FROM t_ingredient'
+                ' INNER JOIN t_step ON t_step.f_ingr = t_ingredient.id'
+                ' INNER JOIN t_step_ing si ON si.t_step = t_step.id'
+                ' INNER JOIN t_recipe rc ON si.t_recipe = rc.id'
+                ' WHERE t_ingredient.id IN (' + ",".join(
+                    str(x) for x in
+                    ingrs_id) + ')) AS rc_ingr JOIN (SELECT * FROM t_item WHERE t_item.id IN(' + ",".join(
+                    str(x) for x in items_id) + ')) AS itm ON itm.f_recipe=rc_ingr.id'
+                                                ' GROUP BY itm.id'
+                                                ' ORDER BY itm.id')
 
         # Lets try search by AND in results
         result_AND = []
@@ -333,14 +350,21 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
         else:
             results_id = result_AND
         # result now is list of item IDs
+
+        # Lets filter items ID that we already have in by_name result
+        # lets get all item_id from by_name list
+        if len(by_name) > 0:
+            by_name_ids = [x.item_id for x in by_name]
+            result_id = [x for x in results_id if x not in by_name_ids]
         # now turn it to ROWS
         for item in rests_item:
             item = Storage(item)
             if item.item_id in results_id:
-                create_result_obj(item, rest1k, result_final, weight, 0)
+                create_result_obj(item, rest1k, result_final, weight, 50)
                 break
+        # we created result by_ingr and added it to resulted array
 
-    for item in by_name:
+    for item in result_final:
         for ingr in ingrs_id:
             if ingr in item.item_ingrs["id"]:
                 item.search_score += 100
