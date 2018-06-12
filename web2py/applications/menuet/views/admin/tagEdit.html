@@ -1,4 +1,4 @@
-<div class="col-sm-2">
+<div class="col-sm-6">
     <div class="card-block">
         <div class="card-header">
             <label class="font-weight-bold">Bulk search and add tags</label>
@@ -12,12 +12,14 @@
             <label class="font-weight-bold" for="search_for">Which tags to add? comma separated</label>
 
             <input class="form-control" type="text" id="add_tags">
-            <input value="Search and add tags" class="btn btn-success" type="button" onclick="search_add_tags()">
+            <input value="Search and add tags" id="search_butt" class="btn btn-success" type="button" onclick="search_add_tags()">
         </div>
     </div>
 </div>
 <script type="application/javascript">
     function search_add_tags() {
+        $("#search_butt").attr("disabled", true)
+                .val("Working...");
         var search_for = document.getElementById('search_for').value;
         var add_tags = document.getElementById('add_tags').value;
         var DTO = {'s': search_for, 't': add_tags};
@@ -29,9 +31,10 @@
             scriptCharset: "utf-8",
             contentType: "application/json; charset=utf-8",
             data: data,
-            dataType: 'text',
+            dataType: 'json',
             success: function (data) {
-                location.reload();
+                $("#search_butt").attr("disabled", false)
+                .val("Search and add tags");
             },
             error: function () {
                 location.reload();
