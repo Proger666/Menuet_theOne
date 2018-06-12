@@ -50,12 +50,24 @@ def add_tags():
     # TODO: add sanity check
     search_for = request.vars.s.encode('utf-8').split(",")
     add_tags = request.vars.t.encode('utf-8').split(",")
+
+    tags_list = []
+    for tag in add_tags:
+        _tags_db = db(db.t_item_tag.f_name.like("%"+tag+"%")).select(db.t_item.id)
+        if _tags_db is None:
+            tags_list.append(db.t_item_tag.insert(f_name=tag))
+        else:
+            _ = [x.id for x in _tags_db]
+            tags_list.append(_)
+
+
     for string in search_for:
         items_to_modify = db(db.t_item.f_name.like("%"+string+"%")).select()
         # add tags to searched item
         for item in items_to_modify:
             _tags = item.f_tags
-            _tags.append(add_tags)
+            _add_tags = db(db.t_item_tag)
+            _tags.append(tags_list)
             db(db.t_item.id == item.id).update(f_tags=_tags)
 
     db.commit()

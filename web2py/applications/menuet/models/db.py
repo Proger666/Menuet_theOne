@@ -24,7 +24,7 @@ request.requires_https()
 # -------------------------------------------------------------------------
 # once in production, remove reload=True to gain full speed
 # -------------------------------------------------------------------------
-configuration = AppConfig(reload=True)
+configuration = AppConfig(reload=False)
 
 if not request.env.web2py_runtime_gae:
     # ---------------------------------------------------------------------
@@ -32,7 +32,7 @@ if not request.env.web2py_runtime_gae:
     # ---------------------------------------------------------------------
     #driver_args = dict(ssl=dict(verify='NONE')
     db = DAL(configuration.get('db.uri'),
-             pool_size=configuration.get('db.pool_size'),
+             pool_size=configuration.get('db.pool_size'),lazy_tables=True,
              migrate_enabled=configuration.get('db.migrate'),
              check_reserved=['all'], fake_migrate_all=False, ignore_field_case = True)
 else:
