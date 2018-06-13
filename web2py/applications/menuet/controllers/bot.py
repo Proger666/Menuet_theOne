@@ -175,41 +175,43 @@ def get_STD_portion_price_item(item_id):
 def search_by_name(query, weight, rest1k, rests_item, query_id):
     # search by exact match fast fail if found
     # result obj
-
+    tag_search = []
     result = []
     exact_match = False
+
+    # lets get our
+    clean_query = [x for x in query.split() if
+                   pos(x) not in ["NUMR", 'NPRO', "PREP", "CONJ", "INTJ", "COMP", "PRTF", "GRND", "ADVB", "PRCL"]]
     # Lets parse tags
     start = datetime.datetime.now()
     try:
-        tag_search = [x for x in query.split() if pos(x) in ["NOUN", 'ADJF']][0]
-        _tag = db(db.t_item_tag.f_name == tag_search).select(db.t_item_tag.id).first()
+        tag_search = [x for x in query.split() if pos(x) in ["NOUN", 'ADJF']]
+        tag_search = normalize_words(tag_search)
+        _tag_ids = db(db.t_item_tag.f_name.belongs(tag_search)).select(db.t_item_tag.id)
     except:
-        _tag = None
+        _tag_ids = []
         logger.warning("We failed to get NOUN from query %s", query_id)
-    if _tag is not None:
-        tag_search = re.compile(str(_tag.id))
-    else:
-        # trash string
-        tag_search = re.compile("asfsdf")
     tags_time = datetime.datetime.now() - start
     logger.warning("we are pased tags in %s", tags_time)
 
     for item in rests_item:
+        search_score = 0
         item = Storage(item)
         # remove excessive spaces
         # тыквенный суп
 
-        if re.sub(' +', ' ', item.item_name.lower().encode('utf-8')) == query or tag_search.search(item.item_tags):
+        if re.sub(' +', ' ', item.item_name.lower().encode('utf-8')) == query:
             search_score = 100
+        for tag in _tag_ids:
+            tag_regex = re.compile(str(tag.id))
+            if tag_regex.search(item.item_tags) is not None:
+                search_score += 50
+
+        if search_score != 0:
             create_result_obj(item, rest1k, result, weight, search_score)
-            exact_match = True
-            continue
-        if exact_match == True:
             continue
 
-        # lets get our
-        clean_query = [x for x in query.split() if
-                       pos(x) not in ["NUMR", 'NPRO', "PREP", "CONJ", "INTJ", "COMP", "PRTF", "GRND", "ADVB", "PRCL"]]
+
 
         # lets try search word by word until fail
         # lets try search via regex in full string
@@ -218,12 +220,12 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
 
         compile = re.compile("(" + "|".join(clean_query) + ")")
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
-            create_result_obj(item, rest1k, result, weight, 50)
+            create_result_obj(item, rest1k, result, weight, 40)
         else:
             for word in clean_query:
                 compile = re.compile(word)
                 if compile.search(item.item_name.lower().encode('utf-8')) is not None:
-                    create_result_obj(item, rest1k, result, weight, 50)
+                    create_result_obj(item, rest1k, result, weight, 20)
         item_time = datetime.datetime.now() - start
         logger.warning("we processed item in in %s", item_time)
     return result
@@ -248,10 +250,10 @@ def create_result_obj(item, rest1k, result, weight, search_score):
     # lets get info about items via sophisticated SQL query
     # TODO: redesign into PyDAL
     item_info = db.executesql(
-        'SELECT item_id,item_name, item_price, ingr_id, group_concat(concat(ingr_id)) as ingrs_ids, group_concat(concat(ingr_name)) as ingrs_names '
+        'SELECT item_id,item_name, item_price, ingr_id, group_concat(concat(ingr_id)) AS ingrs_ids, group_concat(concat(ingr_name)) AS ingrs_names '
         'FROM('
         'SELECT t_item.id AS item_id,t_item.f_name AS item_name, t_item_prices.f_price AS item_price, t_ingredient.id AS ingr_id, t_ingredient.f_name AS ingr_name '
-        'from  t_item '
+        'FROM  t_item '
         'LEFT OUTER JOIN t_item_prices ON t_item_prices.f_item = t_item.id AND t_item_prices.f_portion = "1" '
         'LEFT OUTER JOIN t_recipe ON t_recipe.id = t_item.f_recipe '
         'LEFT OUTER JOIN t_step_ing ON t_step_ing.t_recipe = t_recipe.id '
@@ -260,12 +262,18 @@ def create_result_obj(item, rest1k, result, weight, search_score):
         ') AS ingrs '
         'JOIN (SELECT * FROM t_item ) AS itm '
         'ON itm.id = item_id '
-        'GROUP BY itm.id',as_dict=True)
-
-    item_ingrs_dict = {'id':(map(int, filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['ingrs_ids'].encode('utf-8').split(","))),
-                       'name': (filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['ingrs_names'].encode('utf-8')).split(",") }
+        'GROUP BY itm.id', as_dict=True)
+    try:
+        item_ingrs_dict = {'id': (map(int,
+                                      filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['ingrs_ids'].encode(
+                                          'utf-8').split(","))),
+                           'name': (filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['ingrs_names'].encode(
+                               'utf-8')).split(",")}
+    except AttributeError:
+        item_ingrs_dict = {'id': [], 'name': []}
     result.append(result_object(item.item_id, item.item_name,
-                                item.rest_id, filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['item_price'], 0,
+                                item.rest_id,
+                                filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['item_price'], 0,
                                 item.menu_id,
                                 weight, rest.get('rest_name'),
                                 rest.get('rest_addr', 'Не знаем'), rest.get('distance_in_km', 0),
@@ -286,6 +294,7 @@ def query_cleanUp(query):
 
 def normalize_words(ingrs_list):
     # Do we have ingrs list ?
+
     if len(ingrs_list) == 0:
         return None
     morph = pymorphy2.MorphAnalyzer()
@@ -298,7 +307,7 @@ def normalize_words(ingrs_list):
         except AttributeError:
             result.append(ingr)
         except UnicodeDecodeError:
-            result.append(morph.parse(ingr.decode('utf-8'))[0].normal_form.encode('utf-8'))
+            result.append(morph.parse(ingr.encode('utf-8'))[0].normal_form.encode('utf-8'))
     if len(result) > 0:
         return result
     return None
