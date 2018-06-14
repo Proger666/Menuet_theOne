@@ -2,7 +2,8 @@ import datetime
 import re
 
 import pymorphy2
-import simplejson
+
+from gluon.contrib import simplejson
 
 
 def checkIfExist(*args):
