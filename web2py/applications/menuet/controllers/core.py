@@ -255,7 +255,6 @@ def e_menu():
                     menu_item.get('item_desc', "")) else ""  + "..."# ограничиваем 4 словами вывод
                 item.ingrs = menu_item.get('ingrs_names', "").split(",") if menu_item.get('ingrs_names', "") is not None else []
                 item.tags = get_tags_for_item(menu_item['item_tags'].split("|"))
-                logger.warning("______ %s", datetime.datetime.now() - start)
                 item.portions = []
                 # get portions name from DB
                 _portions = db(t_item_prices.f_item == item.id).select(t_item_prices.f_price, t_item_prices.f_portion)

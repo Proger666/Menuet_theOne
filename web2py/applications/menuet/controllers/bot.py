@@ -205,6 +205,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         for tag in _tag_ids:
             tag_regex = re.compile(str(tag.id))
             if tag_regex.search(item.item_tags) is not None:
+                logger.warning("we got TAGS %s and we looking for %s", str(item.item_tags) ,str(tag))
                 search_score += 50
 
         if search_score != 0:
