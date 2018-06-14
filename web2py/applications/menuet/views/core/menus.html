@@ -4,7 +4,7 @@
     <div class="row">
     {{for menu in menu_disp:}}
     {{menu = Storage(menu)}}
-        <div class="col-sm-4">
+        <div class="col-sm-4" id="{{=menu.id}}">
 
             <div class="card text-center
                         {{if not menu.active:}}
@@ -19,7 +19,7 @@
                         <span class="badge badge-default">Неактивно</span>
                     {{else:}}
                         <span class="badge badge-info">Текущее</span>
-{{pass}}
+                    {{pass}}
                     </h5>
                     <p class="card-text">
                         <em>{{=menu.rest_name}}</em><br/>
@@ -29,12 +29,13 @@
                         <em class="text-muted">Создан: {{=menu.created_on}}</em><br/>
                     </p>
                 </div>
-                <div class="card-footer">
+                <div class="card-footer" id="{{=menu.id}}">
                     <input type="submit" value="Править"
                            onclick="window.location='{{=URL('core', 'e_menu', vars=dict(m_id=menu.id,r_id=menu.r_id))}}'"
-                     {{if not menu.active:}}class="btn btn-secondary" disabled
-                            {{else:}}
+                           {{if not menu.active:}}class="btn btn-secondary" disabled
+                    {{else:}}
                            class="btn btn-primary"{{pass}} >
+                    <input type="submit" class="btn btn-inverse" value="On/Off" onclick="dis_enable_menu(this)">
                 </div>
             </div>
 
@@ -45,3 +46,29 @@
     </div>
 
 </div>
+<script>
+    function dis_enable_menu(element) {
+
+        var state ='{{=menu.active}}';
+        var menu = {'id': element.parentElement.id, 'state':state};
+
+        var DTO = {'menu': menu};
+        var data = JSON.stringify(DTO);
+
+        $.ajax({
+            type: 'POST',
+            url: '{{=URL('menu_works', 'dis_enab_menu')}}',
+            scriptCharset: "utf-8",
+            contentType: "application/json",
+            dataType: 'json',
+            data: data,
+            success: function (data) {
+                window.location.reload()
+
+            },
+            error: function (data) {
+
+            }
+        });
+    }
+</script>

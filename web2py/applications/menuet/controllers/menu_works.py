@@ -3,7 +3,6 @@
 import datetime
 
 from gluon.contrib import simplejson
-import pymorphy2
 
 
 def get_network_sugg(q):
@@ -114,9 +113,23 @@ def change_price_item():
         return {}
     return {}
 
+@auth.requires_login()
+def dis_enab_menu():
+    '''This one should enable/disable MENU via f_current field'''
+
+    menu_id = request.vars.menu['id']
+
+    #Inverse state
+    state = False if request.vars.menu['state'] == 'True' else True
+    if request.vars.menu is None:
+        return ajax_error("oy wey")
+    db(db.t_menu.id == menu_id).update(f_current=state)
+    return ajax_success("Job done")
+
 
 @auth.requires_login()
 def fill_net():
+    '''This function adds rest to existing NETWORK and making all present menus as OUTDATED '''
     try:
         network = db.t_network[request.vars.network['id']]
         # check if request for rest adding
@@ -156,14 +169,6 @@ def fill_net():
     return {}
 
 
-def ajax_success():
-    session.flash = T("Success!")
-    return simplejson.dumps("{'status':'OK'}")
-
-
-def ajax_error():
-    session.flash = T("Failure!")
-    return {}
 
 
 @auth.requires_login()
@@ -279,7 +284,7 @@ def save_item():
             stich_portions_to_prices(_tmp_obj, item_source)
         else:
             logger.error('Failed to save item ' + logUser_and_request())
-            return ajax_error()
+            return ajax_error("We failed to save item :(")
 
         # ATTACH ALL INGRS TO ITEM
         stich_ingrs_to_item(_tmp_obj, ingrs_to_commit_list, item_source)
@@ -288,7 +293,7 @@ def save_item():
 
         end = datetime.datetime.now() - start
         logger.info('item saved in ' + str(end))
-        return ajax_success()
+        return ajax_success("Job done")
 
     return {}
 

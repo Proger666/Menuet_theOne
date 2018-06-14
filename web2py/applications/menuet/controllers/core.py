@@ -160,12 +160,7 @@ def getMenu_forRest(rest_id, menu_id):
     return menu
 
 
-@auth.requires_login()
-def getItems_for_menu(menu_id):
-    items = db((t_menu.id == menu_id)
-               & (t_menu_item.t_menu == t_menu.id)
-               & (t_menu_item.t_item == t_item.id)).select(t_item.ALL)
-    return items
+
 
 
 @auth.requires_login()
@@ -215,9 +210,9 @@ def get_tags_for_item(tags_list):
     if tags_list is None or len(tags_list) == 0:
         return []
     tags = []
-    for id in tags_list:
-        tags.append(db(db.t_item_tag.id == id).select(db.t_item_tag.f_name).first().f_name)
-    return tags
+    tags_list = [x.encode('utf-8') for x in tags_list if len(x)]
+    tags = db(db.t_item_tag.id.belongs(tags_list)).select(db.t_item_tag.f_name)
+    return [x.f_name for x in tags]
 
 
 @auth.requires_login()
@@ -234,25 +229,33 @@ def e_menu():
         elif str.isdigit(menu_id) and str.isdigit(rest_id):
             # get current menu based on URL parameters
             menu = Storage(getMenu_forRest(rest_id, menu_id))
-            # Get all ITEMS for this MENU
-            start = datetime.datetime.now()
-            _menu_items = getItems_for_menu(menu_id)
             menu_items = []
+            # Get all ITEMS for this MENU and its details
+
+            start = datetime.datetime.now()
+            # is it Network menu or not ?
+            _ = db(db.t_restaraunt.id == rest_id).select(db.t_restaraunt.f_is_network).first().f_is_network
+            # sophisticated query that should return evrything we need for item
+            if _  == True:
+                _menu_items = getItems_for_menu(menu_id)
+            elif _ == False:
+                _menu_items = getItems_for_menu(menu_id)
             end1 = datetime.datetime.now() - start
             logger.warning("all menu loaded in %s", end1)
             _units = db(db.t_unit.id > 0 ).select()
             units = [{'id':x['id'], 'unit':x} for x in _units]
             # Lets fill item class
             for menu_item in _menu_items:
-                # create class storage for item
+                # create class storage for item and items with context
                 item = Storage()
-                item.name = menu_item.f_name
-                item.id = menu_item.id
-                item.unit = None if menu_item.f_unit is None else units[menu_item.f_unit]['unit']['f_name']
-                item.desc = ' '.join(menu_item.f_desc.split()[:4]) if check_exist(
-                    menu_item.f_desc) else ""  # ограничиваем 4 словами вывод
-                item.ingrs = get_ingrs_for_item(item.id, units)
-                item.tags = get_tags_for_item(menu_item.f_tags)
+                item.name = menu_item['item_name']
+                item.id = menu_item['item_id']
+                item.unit = None if menu_item.get('item_unit') is None else units[menu_item.get('item_unit')]['unit']['f_name']
+                item.desc = ' '.join(menu_item.get('item_desc', "").split()[:4]) if check_exist(
+                    menu_item.get('item_desc', "")) else ""  + "..."# ограничиваем 4 словами вывод
+                item.ingrs = menu_item.get('ingrs_names', "").split(",") if menu_item.get('ingrs_names', "") is not None else []
+                item.tags = get_tags_for_item(menu_item['item_tags'].split("|"))
+                logger.warning("______ %s", datetime.datetime.now() - start)
                 item.portions = []
                 # get portions name from DB
                 _portions = db(t_item_prices.f_item == item.id).select(t_item_prices.f_price, t_item_prices.f_portion)

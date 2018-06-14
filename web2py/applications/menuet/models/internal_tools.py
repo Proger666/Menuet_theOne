@@ -2,6 +2,7 @@ import datetime
 import re
 
 import pymorphy2
+import simplejson
 
 
 def checkIfExist(*args):
@@ -74,6 +75,39 @@ def api_error(msg):
 def api_success(msg):
     return {'status': 'OK', 'msg': msg}
 
+def ajax_success(msg):
+    session.flash = T(msg)
+    return simplejson.dumps("{'status':'OK', 'msg':"+msg+"}")
+
+
+def ajax_error(msg):
+    session.flash = T(msg)
+    return {}
+
+
+@auth.requires_login()
+def getItems_for_menu(menu_id):
+    '''That's one should return items with ALL context (ingrs, rest, etc)'''
+    #TODO: redesing to PyDAL
+    items = db.executesql('SELECT item_desc,item_unit,item_tags,item_id,item_name, item_price, ingr_id, group_concat(concat(ingr_id)) AS ingrs_ids, group_concat(concat(ingr_name)) AS ingrs_names '
+        'FROM('
+        'SELECT t_item.f_desc as item_desc,  t_item.f_tags as item_tags, t_item.f_unit as item_unit, t_item.id AS item_id,t_item.f_name AS item_name,'
+                          ' t_item_prices.f_price AS item_price,'
+                          ' t_ingredient.id AS ingr_id, t_ingredient.f_name AS ingr_name '
+        'FROM  t_item '
+        'LEFT OUTER JOIN t_item_prices ON t_item_prices.f_item = t_item.id AND t_item_prices.f_portion = "1" '
+        'LEFT OUTER JOIN t_recipe ON t_recipe.id = t_item.f_recipe '
+        'LEFT OUTER JOIN t_step_ing ON t_step_ing.t_recipe = t_recipe.id '
+        'LEFT OUTER JOIN t_step ON t_step.id = t_step_ing.t_step '
+        'LEFT OUTER JOIN t_ingredient ON t_ingredient.id = t_step.f_ingr '
+        'LEFT OUTER JOIN t_menu_item on t_menu_item.t_item = t_item.id '
+        ') AS ingrs '
+        'JOIN (SELECT * FROM t_item ) AS itm '
+        'ON itm.id = item_id '
+        'inner join t_menu on t_menu.id ='+menu_id+ ' '
+        'inner join t_menu_item on t_menu_item.t_menu = t_menu.id and itm.id = t_menu_item.t_item '
+        'GROUP BY itm.id', as_dict=True)
+    return items
 
 def query_cleanUP(query):
     '''remove bad Characters and orther shit'''
