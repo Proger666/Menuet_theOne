@@ -225,7 +225,7 @@ def save_item():
         for tag in item_tags:
             _r_t = db(db.t_item_tag.f_name == tag).select().first()
             if _r_t == None and tag != "":
-                _new_tags.append(db.t_item_tag.insert(f_name=tag))
+                _new_tags.append(db.t_item_tag.insert(f_name=tag.lower()))
             elif _r_t != None:
                 _new_tags.append(_r_t.id)
 

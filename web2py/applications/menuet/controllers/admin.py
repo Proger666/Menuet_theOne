@@ -56,7 +56,7 @@ def add_tags():
         for tag in add_tags:
             _tags_db = db(db.t_item_tag.f_name.ilike(tag.decode('utf-8'))).select(db.t_item_tag.id)
             if len(_tags_db) == 0:
-                tags_list.append(db.t_item_tag.insert(f_name=tag))
+                tags_list.append(db.t_item_tag.insert(f_name=tag.lower()))
             else:
                 [tags_list.append(x.id) for x in _tags_db]
 
@@ -109,12 +109,12 @@ def add_items_json():
                 tags = tags.split(",")
                 for tag in tags:
                     tag_id = db(db.t_item_tag.f_name == tags).select(db.t_item_tag.id).first()
-                    tags_list.append(tag_id if tag_id is not None else db.t_item_tag.insert(f_name=tag))
+                    tags_list.append(tag_id if tag_id is not None else db.t_item_tag.insert(f_name=tag.lower()))
             for item in cat_array['categories'][0]['items']:
                 _recipe = db.t_recipe.update_or_insert(f_name=item['name'] + "_recipe")
                 if _recipe is None:
                     _recipe = db.t_recipe.insert(f_name=item['name'] + "_recipe")
-                _tmp_item = db.t_item.update_or_insert(f_name=item['name'], f_unit=1, f_recipe=_recipe,
+                _tmp_item = db.t_item.update_or_insert(f_name=item['name'].lower(), f_unit=1, f_recipe=_recipe,
                                                        f_tags=tags_list)
                 db.t_item_prices.insert(f_price=item['price'], f_item=_tmp_item, f_portion=1)
                 db.t_menu_item.insert(t_item=_tmp_item, t_menu=menu_id)
