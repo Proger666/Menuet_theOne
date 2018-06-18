@@ -1,6 +1,5 @@
 import unittest
 from unittest import TestCase
-from gluon.dal import DAL, Field
 
 
 

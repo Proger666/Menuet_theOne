@@ -18,7 +18,7 @@ def check_token(token):
             return True
     return False
 
-
+@auth.requires_login()
 def new_rest(rest, auth, src):
     # dissallow direct requests
     if not src:

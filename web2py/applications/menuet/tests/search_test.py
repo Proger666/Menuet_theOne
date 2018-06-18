@@ -9,6 +9,9 @@ from applications.menuet.controllers.bot import weighted_search
 
 
 class TestWeighted_search(TestCase):
+    def setUp(self):
+        self.env = new_env(app='menuet', controller='bot')
+        self.db = copy_db(self.env, db_name='db', db_link='sqlite:memory')
 
     def test_weighted_search(self):
         query = "meTest"

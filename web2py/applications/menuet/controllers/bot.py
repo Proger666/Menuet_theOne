@@ -577,7 +577,7 @@ def weighted_search(query, lng, lat, user_id, sort):
             't_restaraunt.f_network_name,(ACOS(COS(RADIANS(@lat))'
             '*COS(RADIANS(t_restaraunt.f_latitude))*COS(RADIANS(t_restaraunt.f_longitude)-RADIANS(@lng))+SIN(RADIANS(@lat))'
             '*SIN(RADIANS(t_restaraunt.f_latitude)))*6371)'
-            'AS distance_in_km FROM t_restaraunt GROUP BY distance_in_km HAVING distance_in_km < 5000 LIMIT 10000',
+            'AS distance_in_km FROM t_restaraunt HAVING distance_in_km < 50000 LIMIT 15000',
             as_dict=True)
     except:
         # We failed - get long with it
@@ -595,12 +595,12 @@ def weighted_search(query, lng, lat, user_id, sort):
                                                                                                          'f_network_name'] != 6)]
 
     _tmp_rests_id = [x['rest_id'] for x in rest1k]
-    menus = db((db.t_menu.f_current == True)
-               & ((db.t_restaraunt.id.belongs(_tmp_rests_id)) & (m_t_m_rest_menu))).select(
-        db.t_menu.id)
-    menus_id = [x.id for x in menus]
-    ## Add menus for networks
-    menus_id += [x.id for x in db(db.t_menu.f_network.belongs(_tmp_nets)).select()]
+    # menus = db((db.t_menu.f_current == True)
+    #            & ((db.t_restaraunt.id.belongs(_tmp_rests_id)) & (m_t_m_rest_menu))).select(
+    #     db.t_menu.id)
+    # menus_id = [x.id for x in menus]
+    # ## Add menus for networks
+    # menus_id += [x.id for x in db(db.t_menu.f_network.belongs(_tmp_nets)).select()]
 
     # TODO:redesign
     rests_item = db.executesql(
@@ -618,7 +618,7 @@ def weighted_search(query, lng, lat, user_id, sort):
     # we expect ROW object
     start = datetime.datetime.now()
     # lets create cache in order to lower SQL queries
-    internal_cache = internalSearchCache()
+    # internal_cache = internalSearchCache()
 
     # lets reformat dictionary to add ID
     _f_rest1k = {}
