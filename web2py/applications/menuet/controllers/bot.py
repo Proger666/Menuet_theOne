@@ -224,7 +224,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
             create_result_obj(item, rest1k, result, weight, 40)
 
         item_time = datetime.datetime.now() - start
-        logger.warning("we processed item in in %s", item_time)
+        logger.info("we processed item in in %s", item_time)
     return result
 
 
