@@ -199,14 +199,15 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         item = Storage(item)
         # remove excessive spaces
         # тыквенный суп
-
+        # exact match
         if re.sub(' +', ' ', item.item_name.lower().encode('utf-8')) == query:
             search_score = 100
+        # do we have matched tags?
         for tag in _tag_ids:
             tag_regex = re.compile(str(tag.id))
             if tag_regex.search(item.item_tags) is not None:
-                search_score += 50
-
+                search_score += 70
+        # if we found anything create result and move to the next item
         if search_score != 0:
             create_result_obj(item, rest1k, result, weight, search_score)
             continue
@@ -217,15 +218,11 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         # lets try search via regex in full string
         if len(clean_query) == 0:
             return []
-
-        compile = re.compile("(" + "|".join(clean_query) + ")")
+        #lets try find via OR (abc|dce)
+        compile = re.compile("(\b" + "\b|\b".join(clean_query) + "\b)")
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
             create_result_obj(item, rest1k, result, weight, 40)
-        else:
-            for word in clean_query:
-                compile = re.compile(word)
-                if compile.search(item.item_name.lower().encode('utf-8')) is not None:
-                    create_result_obj(item, rest1k, result, weight, 20)
+
         item_time = datetime.datetime.now() - start
         logger.warning("we processed item in in %s", item_time)
     return result
@@ -314,6 +311,8 @@ def normalize_words(ingrs_list):
 
 
 def pos(word, morth=pymorphy2.MorphAnalyzer()):
+    if len(word) <= 1:
+        return 'CONJ'
     try:
         r = morth.parse(word.decode('utf-8'))[0].tag.POS
     except UnicodeDecodeError:
