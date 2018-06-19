@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+### required - do no delete
 import datetime
 import re
 
@@ -69,6 +71,7 @@ def add_ingrs_item(item_id, item_name, ingrs_list):
     db.commit()
     return True
 
+
 def api_error(msg):
     return {'status': 'error', "msg": msg}
 
@@ -76,9 +79,10 @@ def api_error(msg):
 def api_success(msg):
     return {'status': 'OK', 'msg': msg}
 
+
 def ajax_success(msg):
     session.flash = T(msg)
-    return simplejson.dumps("{'status':'OK', 'msg':"+msg+"}")
+    return simplejson.dumps("{'status':'OK', 'msg':" + msg + "}")
 
 
 def ajax_error(msg):
@@ -89,31 +93,34 @@ def ajax_error(msg):
 @auth.requires_login()
 def getItems_for_menu(menu_id):
     '''That's one should return items with ALL context (ingrs, rest, etc)'''
-    #TODO: redesing to PyDAL
-    items = db.executesql('SELECT item_desc,item_unit,item_tags,item_id,item_name, item_price, ingr_id, group_concat(concat(ingr_id)) AS ingrs_ids, group_concat(concat(ingr_name)) AS ingrs_names '
+    # TODO: redesing to PyDAL
+    items = db.executesql(
+        'SELECT item_desc,item_unit,item_tags,item_id,item_name, item_price, ingr_id, group_concat(concat(ingr_id)) AS ingrs_ids, group_concat(concat(ingr_name)) AS ingrs_names '
         'FROM('
-        'SELECT t_item.f_desc as item_desc,  t_item.f_tags as item_tags, t_item.f_unit as item_unit, t_item.id AS item_id,t_item.f_name AS item_name,'
-                          ' t_item_prices.f_price AS item_price,'
-                          ' t_ingredient.id AS ingr_id, t_ingredient.f_name AS ingr_name '
+        'SELECT t_item.f_desc AS item_desc,  t_item.f_tags AS item_tags, t_item.f_unit AS item_unit, t_item.id AS item_id,t_item.f_name AS item_name,'
+        ' t_item_prices.f_price AS item_price,'
+        ' t_ingredient.id AS ingr_id, t_ingredient.f_name AS ingr_name '
         'FROM  t_item '
         'LEFT OUTER JOIN t_item_prices ON t_item_prices.f_item = t_item.id AND t_item_prices.f_portion = "1" '
         'LEFT OUTER JOIN t_recipe ON t_recipe.id = t_item.f_recipe '
         'LEFT OUTER JOIN t_step_ing ON t_step_ing.t_recipe = t_recipe.id '
         'LEFT OUTER JOIN t_step ON t_step.id = t_step_ing.t_step '
         'LEFT OUTER JOIN t_ingredient ON t_ingredient.id = t_step.f_ingr '
-        'LEFT OUTER JOIN t_menu_item on t_menu_item.t_item = t_item.id '
+        'LEFT OUTER JOIN t_menu_item ON t_menu_item.t_item = t_item.id '
         ') AS ingrs '
         'JOIN (SELECT * FROM t_item ) AS itm '
         'ON itm.id = item_id '
-        'inner join t_menu on t_menu.id ='+menu_id+ ' '
-        'inner join t_menu_item on t_menu_item.t_menu = t_menu.id and itm.id = t_menu_item.t_item '
-        'GROUP BY itm.id', as_dict=True)
+        'inner JOIN t_menu ON t_menu.id =' + menu_id + ' '
+                                                       'INNER JOIN t_menu_item ON t_menu_item.t_menu = t_menu.id AND itm.id = t_menu_item.t_item '
+                                                       'GROUP BY itm.id', as_dict=True)
     return items
+
 
 def query_cleanUP(query):
     '''remove bad Characters and orther shit'''
     query = re.sub(r'[,&;(quot)]', " ", query)
     return query
+
 
 def normalize_ingr(ingr):
     '''Returns normal form of ingr'''
@@ -126,6 +133,7 @@ def normalize_ingr(ingr):
         return None
     normal_form = " ".join(normalize_words(ingr.split()))
     return normal_form
+
 
 def parse_ingrs_id(query):
     '''Should return list of ingrs ID for passed query'''
@@ -145,10 +153,20 @@ def parse_ingrs_id(query):
         # Now lets find INGRS id if we have such by their normal form
         # TODO: redesign set search
         ingrs_id = [x.id for x in db(db.t_ingredient.f_normal_form.belongs(ingrs_normal)).select()]
-    # if we dont have ingrs in DB = sorry
+        # if we dont have ingrs in DB = sorry
         return ingrs_id
     else:
         return []
+
+
+def check_for_morph(morph):
+    BROKEN_WORDS = [{"лука": "лук"}]
+    for item in BROKEN_WORDS:
+        for k,v  in item.iteritems():
+            if k == morph:
+                return v
+    return []
+
 
 def normalize_words(ingrs_list):
     # Do we have ingrs list ?
@@ -159,20 +177,30 @@ def normalize_words(ingrs_list):
     for ingr in ingrs_list:
         # lets get normal form of the word
         try:
-            # bad design of library it will send exception if it doesnt know word
-            result.append(morph.parse(ingr)[0].normal_form.encode('utf-8'))
+            try:
+                # bad  library design it will send exception if it doesnt know word
+                try_morph = morph.parse(ingr.encode('utf-8'))[0].normal_form
+            except UnicodeDecodeError:
+                try_morph = morph.parse(ingr.decode('utf-8'))[0].normal_form
+            # check if we got unmorphed word
+            bad_morph = check_for_morph(try_morph)
+            if len(bad_morph):
+                result.append(bad_morph)
+            else:
+                result.append(try_morph)
         except AttributeError:
             result.append(ingr)
-        except UnicodeDecodeError:
-            result.append(morph.parse(ingr.decode('utf-8'))[0].normal_form)
     if len(result) > 0:
         return result
     return None
 
-
 def pos(word, morth=pymorphy2.MorphAnalyzer()):
+    if len(word) <= 1:
+        return 'CONJ'
     try:
         r = morth.parse(word.decode('utf-8'))[0].tag.POS
     except UnicodeDecodeError:
         r = morth.parse(word.encode('utf-8'))[0].tag.POS
+    except UnicodeEncodeError:
+        r = morth.parse(word)[0].tag.POS
     return r

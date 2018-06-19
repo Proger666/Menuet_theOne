@@ -287,37 +287,10 @@ def query_cleanUp(query):
     return query
 
 
-def normalize_words(ingrs_list):
-    # Do we have ingrs list ?
-
-    if len(ingrs_list) == 0:
-        return None
-    morph = pymorphy2.MorphAnalyzer()
-    result = []
-    for ingr in ingrs_list:
-        # lets get normal form of the word
-        try:
-            # bad design of library it will send exception if it doesnt know word
-            result.append(morph.parse(ingr.decode('utf-8'))[0].inflect({'sing', 'nomn'}).word)
-        except AttributeError:
-            result.append(ingr)
-        except UnicodeDecodeError:
-            result.append(morph.parse(ingr.encode('utf-8'))[0].normal_form.encode('utf-8'))
-    if len(result) > 0:
-        return result
-    return None
 
 
-def pos(word, morth=pymorphy2.MorphAnalyzer()):
-    if len(word) <= 1:
-        return 'CONJ'
-    try:
-        r = morth.parse(word.decode('utf-8'))[0].tag.POS
-    except UnicodeDecodeError:
-        r = morth.parse(word.encode('utf-8'))[0].tag.POS
-    except UnicodeEncodeError:
-        r = morth.parse(word)[0].tag.POS
-    return r
+
+
 
 
 def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):

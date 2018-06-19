@@ -12,8 +12,7 @@ def parse_items_ingrs():
             ingrs = get_ingrs_for_item(item.id)
             # now we have list of ingrs
             # lets parse item name
-            if item.id == 135:
-                pass
+
             try:
                 parsed_ingrs_id_list = parse_ingrs_id(item.f_name)
                 if len(parsed_ingrs_id_list) > 0:
