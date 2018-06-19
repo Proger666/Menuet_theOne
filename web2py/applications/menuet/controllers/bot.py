@@ -548,7 +548,7 @@ def weighted_search(query, lng, lat, user_id, sort):
             't_restaraunt.f_network_name,(ACOS(COS(RADIANS(@lat))'
             '*COS(RADIANS(t_restaraunt.f_latitude))*COS(RADIANS(t_restaraunt.f_longitude)-RADIANS(@lng))+SIN(RADIANS(@lat))'
             '*SIN(RADIANS(t_restaraunt.f_latitude)))*6371)'
-            'AS distance_in_km FROM t_restaraunt HAVING distance_in_km <' + str(USER.MAXDISTANCE) + ' LIMIT 13000',
+            'AS distance_in_km FROM t_restaraunt HAVING distance_in_km < 5000 LIMIT 13000',
             as_dict=True)
     except:
         # We failed - get long with it
