@@ -159,11 +159,11 @@ def parse_ingrs_id(query):
         return []
 
 
-def check_for_morph(morph):
+def check_for_morph(st):
     BROKEN_WORDS = [{"лука": "лук"}]
     for item in BROKEN_WORDS:
         for k,v  in item.iteritems():
-            if k == morph:
+            if k == st:
                 return v
     return []
 
@@ -172,16 +172,16 @@ def normalize_words(ingrs_list):
     # Do we have ingrs list ?
     if len(ingrs_list) == 0:
         return None
-    morph = pymorphy2.MorphAnalyzer()
+    morpher = pymorphy2.MorphAnalyzer()
     result = []
     for ingr in ingrs_list:
         # lets get normal form of the word
         try:
             try:
                 # bad  library design it will send exception if it doesnt know word
-                try_morph = morph.parse(ingr.encode('utf-8'))[0].normal_form
+                try_morph = morpher.parse(ingr.encode('utf-8'))[0].normal_form
             except UnicodeDecodeError:
-                try_morph = morph.parse(ingr.decode('utf-8'))[0].normal_form
+                try_morph = morpher.parse(ingr.decode('utf-8'))[0].normal_form
             # check if we got unmorphed word
             bad_morph = check_for_morph(try_morph)
             if len(bad_morph):
