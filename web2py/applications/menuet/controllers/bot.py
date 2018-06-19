@@ -212,13 +212,11 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
             create_result_obj(item, rest1k, result, weight, search_score)
             continue
 
-
-
         # lets try search word by word until fail
         # lets try search via regex in full string
         if len(clean_query) == 0:
             return []
-        #lets try find via OR (abc|dce)
+        # lets try find via OR (abc|dce)
         compile = re.compile("(\b" + "\b|\b".join(clean_query) + "\b)")
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
             create_result_obj(item, rest1k, result, weight, 40)
@@ -577,7 +575,7 @@ def weighted_search(query, lng, lat, user_id, sort):
             't_restaraunt.f_network_name,(ACOS(COS(RADIANS(@lat))'
             '*COS(RADIANS(t_restaraunt.f_latitude))*COS(RADIANS(t_restaraunt.f_longitude)-RADIANS(@lng))+SIN(RADIANS(@lat))'
             '*SIN(RADIANS(t_restaraunt.f_latitude)))*6371)'
-            'AS distance_in_km FROM t_restaraunt HAVING distance_in_km < 50000 LIMIT 15000',
+            'AS distance_in_km FROM t_restaraunt HAVING distance_in_km <' + str(USER.MAXDISTANCE) + ' LIMIT 13000',
             as_dict=True)
     except:
         # We failed - get long with it
