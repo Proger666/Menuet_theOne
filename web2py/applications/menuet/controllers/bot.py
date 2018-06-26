@@ -1,12 +1,12 @@
 # -*- coding:utf8 -*-
 # !/usr/bin/env python
-import datetime
 import os
 import re
 import uuid
+import datetime
+import time
 
 import jsonpickle
-import pymorphy2
 
 
 ##### GLOBAL PARAMETERS ####
@@ -94,6 +94,19 @@ def sort_result(r, sort):
     return r
 
 
+def clean_if_stale(cache_items, user_id):
+    try:
+        lifetime =  30#seconds
+        for item in cache_items:
+         if item['user_id'] == user_id:
+            if int(float(time.time())) - int(float(item["time_created"])) > lifetime:
+                path = 'applications/menuet/cache/cache_' + str(user_id)
+                # delete stale cache
+                os.remove(path)
+    except WindowsError:
+        logger.info("Cache not found")
+    return cache_items
+
 def get_from_cache(user_id, count, query, sort):
     try:
         master_file = open('applications/menuet/cache/cache_master', 'r+')
@@ -109,7 +122,9 @@ def get_from_cache(user_id, count, query, sort):
     except Exception as e:
         logger.error("we broke cache" + str(e) + str(e.message))
         return {'msg': 'none'}
-    if len(cache_items) == 0:
+
+    cache_items=clean_if_stale(cache_items, user_id)
+    if cache_items is None or len(cache_items) == 0:
         return {'msg': 'none'}
 
     try:
@@ -217,7 +232,8 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         if len(clean_query) == 0:
             return []
         # lets try find via OR (abc|dce)
-        compile =re.compile("|".join(map(lambda x: "((\s|^)"+x+"\S*?\s)|(\S*?"+x+"(\s|$))", clean_query)))
+        compile = re.compile(r"\b%s\b".join(clean_query))
+        #re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
             create_result_obj(item, rest1k, result, weight, 40)
 
@@ -285,12 +301,6 @@ def query_cleanUp(query):
     # encode to utf-8
     query = query.encode('utf-8')
     return query
-
-
-
-
-
-
 
 
 def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
@@ -501,7 +511,7 @@ def write_to_cache(user_id, weighted_result, query):
         with open('applications/menuet/cache/cache_master', mode='r+') as feedsjson:
             feedsjson.seek(0)
             entry = {"user_id": user_id,
-                     "time": str(datetime.datetime.now()),
+                     "time_created": str(time.time()),
                      "last_query": query}
             try:
                 feeds = simplejson.load(feedsjson)
