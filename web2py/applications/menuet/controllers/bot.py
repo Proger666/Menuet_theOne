@@ -234,21 +234,21 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
             if len(clean_query) == 0:
                 return []
             # lets try find via OR (abc|dce)
-            str = ""
+            regex_str = ""
             # [кура]
             try:
                 for query in clean_query:
                     if len(clean_query) > 1:
-                        str = str + r"\b" + query + r"\b|"
+                        regex_str = regex_str + r"\b" + query + r"\b|"
                     else:
-                        str = r"\b" + query + r"\b"
+                        regex_str = r"\b" + query + r"\b"
                 if len(clean_query) > 1:
-                    str = str[:-1]
+                    regex_str = regex_str[:-1]
             except Exception as e:
                 logger.warning("We got exception: %s", str(e))
-            str = "(" + str + ")"
-            logger.warning("we got regular as %s", str)
-            compile = re.compile(str)
+            regex_str = "(" + regex_str + ")"
+            logger.warning("we got regular as %s", regex_str)
+            compile = re.compile(regex_str)
             # re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
             if compile.search(item.item_name.lower().encode('utf-8')) is not None:
                 create_result_obj(item, rest1k, result, weight, 40)
