@@ -248,7 +248,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
                 logger.warning("We got exception: %s", str(e))
             regex_str = "(" + regex_str + ")"
             logger.warning("we got regular as %s", regex_str)
-            compile = re.compile(regex_str)
+            compile = re.compile(regex_str, re.I + re.U)
             # re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
             logger.warning("current item to analyze %s", str(item.item_name.lower().encode('utf-8')))
             if compile.search(item.item_name.lower().encode('utf-8')) is not None:
