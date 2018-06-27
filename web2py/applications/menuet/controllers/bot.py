@@ -189,71 +189,75 @@ def get_STD_portion_price_item(item_id):
 
 
 def search_by_name(query, weight, rest1k, rests_item, query_id):
-    # search by exact match fast fail if found
-    # result obj
-    tag_search = []
-    result = []
-    exact_match = False
-
-    # lets get our
-    clean_query = [x for x in query.split() if
-                   pos(x) not in ["NUMR", 'NPRO', "PREP", "CONJ", "INTJ", "COMP", "PRTF", "GRND", "ADVB", "PRCL"]]
-    # Lets parse tags
-    start = datetime.datetime.now()
     try:
-        tag_search = [x for x in query.split() if pos(x) in ["NOUN", 'ADJF']]
-        tag_search = normalize_words(tag_search)
-        _tag_ids = db(db.t_item_tag.f_name.belongs(tag_search)).select(db.t_item_tag.id)
-    except:
-        _tag_ids = []
-        logger.warning("We failed to get NOUN from query %s", query_id)
-    tags_time = datetime.datetime.now() - start
-    logger.warning("we are pased tags in %s", tags_time)
+        # search by exact match fast fail if found
+        # result obj
+        tag_search = []
+        result = []
+        exact_match = False
 
-    for item in rests_item:
-        search_score = 0
-        item = Storage(item)
-        # remove excessive spaces
-        # тыквенный суп
-        # exact match
-        if re.sub(' +', ' ', item.item_name.lower().encode('utf-8')) == query:
-            search_score = 100
-        # do we have matched tags?
-        for tag in _tag_ids:
-            tag_regex = re.compile(str(tag.id))
-            if tag_regex.search(item.item_tags) is not None:
-                search_score += 70
-        # if we found anything create result and move to the next item
-        if search_score != 0:
-            create_result_obj(item, rest1k, result, weight, search_score)
-            continue
-
-        # lets try search word by word until fail
-        # lets try search via regex in full string
-        if len(clean_query) == 0:
-            return []
-        # lets try find via OR (abc|dce)
-        str = ""
-        # [кура]
+        # lets get our
+        clean_query = [x for x in query.split() if
+                       pos(x) not in ["NUMR", 'NPRO', "PREP", "CONJ", "INTJ", "COMP", "PRTF", "GRND", "ADVB", "PRCL"]]
+        # Lets parse tags
+        start = datetime.datetime.now()
         try:
-            for query in clean_query:
-                if len(clean_query) > 1:
-                    str = str + r"\b" + query + r"\b|"
-                else:
-                    str = r"\b" + query + r"\b"
-            if len(clean_query) > 1:
-                str = str[:-1]
-        except Exception as e:
-            logger.warning("We got exception: %s", str(e))
-        str = "(" + str + ")"
-        logger.warning("we got regular as %s", str)
-        compile = re.compile(str)
-        # re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
-        if compile.search(item.item_name.lower().encode('utf-8')) is not None:
-            create_result_obj(item, rest1k, result, weight, 40)
+            tag_search = [x for x in query.split() if pos(x) in ["NOUN", 'ADJF']]
+            tag_search = normalize_words(tag_search)
+            _tag_ids = db(db.t_item_tag.f_name.belongs(tag_search)).select(db.t_item_tag.id)
+        except:
+            _tag_ids = []
+            logger.warning("We failed to get NOUN from query %s", query_id)
+        tags_time = datetime.datetime.now() - start
+        logger.warning("we are pased tags in %s", tags_time)
 
-        item_time = datetime.datetime.now() - start
-        logger.info("we processed item in in %s", item_time)
+        for item in rests_item:
+            search_score = 0
+            item = Storage(item)
+            # remove excessive spaces
+            # тыквенный суп
+            # exact match
+            if re.sub(' +', ' ', item.item_name.lower().encode('utf-8')) == query:
+                search_score = 100
+            # do we have matched tags?
+            for tag in _tag_ids:
+                tag_regex = re.compile(str(tag.id))
+                if tag_regex.search(item.item_tags) is not None:
+                    search_score += 70
+            # if we found anything create result and move to the next item
+            if search_score != 0:
+                create_result_obj(item, rest1k, result, weight, search_score)
+                continue
+
+            # lets try search word by word until fail
+            # lets try search via regex in full string
+            if len(clean_query) == 0:
+                return []
+            # lets try find via OR (abc|dce)
+            str = ""
+            # [кура]
+            try:
+                for query in clean_query:
+                    if len(clean_query) > 1:
+                        str = str + r"\b" + query + r"\b|"
+                    else:
+                        str = r"\b" + query + r"\b"
+                if len(clean_query) > 1:
+                    str = str[:-1]
+            except Exception as e:
+                logger.warning("We got exception: %s", str(e))
+            str = "(" + str + ")"
+            logger.warning("we got regular as %s", str)
+            compile = re.compile(str)
+            # re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
+            if compile.search(item.item_name.lower().encode('utf-8')) is not None:
+                create_result_obj(item, rest1k, result, weight, 40)
+
+            item_time = datetime.datetime.now() - start
+            logger.info("we processed item in in %s", item_time)
+    except Exception as e:
+        logger.warning("We got exception: %s", str(e))
+
     return result
 
 
