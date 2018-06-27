@@ -239,13 +239,14 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
             try:
                 for query in clean_query:
                     if len(clean_query) > 1:
-                        regex_str = regex_str + "\b" + query + "\b|"
+                        regex_str = regex_str + r"\b" + query + r"\b|"
                     else:
-                        regex_str = "\b" + query + "\b"
+                        regex_str = r"\b" + query + r"\b"
                 if len(clean_query) > 1:
                     regex_str = regex_str[:-1]
             except Exception as e:
                 logger.warning("We got exception: %s", str(e))
+
             regex_str = "(" + regex_str + ")"
             logger.warning("we got regular as %s", regex_str)
             compile = re.compile(regex_str, re.I + re.U)
