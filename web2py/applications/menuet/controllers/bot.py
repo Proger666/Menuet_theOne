@@ -233,14 +233,16 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
             return []
         # lets try find via OR (abc|dce)
         str = ""
+        # [кура]
         for query in clean_query:
             if len(clean_query) > 1:
-                str =  str + r"\b"+query+"\b|"
+                str =  str + r"\b"+query+r"\b|"
             else:
-                str = str + r"\b" + query + "\b"
+                str = r"\b" + query + r"\b"
         if len(clean_query) > 1:
             str = str[:-1]
         str = "(" + str + ")"
+        logger.warning("we got regular as %s", str)
         compile = re.compile(str)
         #re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
