@@ -96,16 +96,17 @@ def sort_result(r, sort):
 
 def clean_if_stale(cache_items, user_id):
     try:
-        lifetime =  30#seconds
+        lifetime = 30  # seconds
         for item in cache_items:
-         if item['user_id'] == user_id:
-            if int(float(time.time())) - int(float(item["time_created"])) > lifetime:
-                path = 'applications/menuet/cache/cache_' + str(user_id)
-                # delete stale cache
-                os.remove(path)
+            if item['user_id'] == user_id:
+                if int(float(time.time())) - int(float(item["time_created"])) > lifetime:
+                    path = 'applications/menuet/cache/cache_' + str(user_id)
+                    # delete stale cache
+                    os.remove(path)
     except WindowsError:
         logger.info("Cache not found")
     return cache_items
+
 
 def get_from_cache(user_id, count, query, sort):
     try:
@@ -123,7 +124,7 @@ def get_from_cache(user_id, count, query, sort):
         logger.error("we broke cache" + str(e) + str(e.message))
         return {'msg': 'none'}
 
-    cache_items=clean_if_stale(cache_items, user_id)
+    cache_items = clean_if_stale(cache_items, user_id)
     if cache_items is None or len(cache_items) == 0:
         return {'msg': 'none'}
 
@@ -234,17 +235,20 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         # lets try find via OR (abc|dce)
         str = ""
         # [кура]
-        for query in clean_query:
+        try:
+            for query in clean_query:
+                if len(clean_query) > 1:
+                    str = str + r"\b" + query + r"\b|"
+                else:
+                    str = r"\b" + query + r"\b"
             if len(clean_query) > 1:
-                str =  str + r"\b"+query+r"\b|"
-            else:
-                str = r"\b" + query + r"\b"
-        if len(clean_query) > 1:
-            str = str[:-1]
+                str = str[:-1]
+        except Exception as e:
+            logger.warning("We got exception: %s", str(e))
         str = "(" + str + ")"
         logger.warning("we got regular as %s", str)
         compile = re.compile(str)
-        #re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
+        # re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
             create_result_obj(item, rest1k, result, weight, 40)
 
