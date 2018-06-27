@@ -239,9 +239,9 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
             try:
                 for query in clean_query:
                     if len(clean_query) > 1:
-                        regex_str = regex_str + r"\b" + query + r"\b|"
+                        regex_str = regex_str + "\\b" + query + "\\b|"
                     else:
-                        regex_str = r"\b" + query + r"\b"
+                        regex_str = "\\b" + query + "\\b"
                 if len(clean_query) > 1:
                     regex_str = regex_str[:-1]
             except Exception as e:
