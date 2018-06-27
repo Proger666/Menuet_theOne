@@ -250,7 +250,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
             logger.warning("we got regular as %s", regex_str)
             compile = re.compile(regex_str)
             # re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
-            if compile.search(item.item_name.lower().encode('utf-8')) is not None:
+            if compile.search(item.item_name.lower()) is not None:
                 create_result_obj(item, rest1k, result, weight, 40)
 
             item_time = datetime.datetime.now() - start
