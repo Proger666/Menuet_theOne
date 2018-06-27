@@ -232,7 +232,16 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
         if len(clean_query) == 0:
             return []
         # lets try find via OR (abc|dce)
-        compile = re.compile(r"\b%s\b".join(clean_query))
+        str = ""
+        for query in clean_query:
+            if len(clean_query) > 1:
+                str =  str + r"\b"+query+"\b|"
+            else:
+                str = str + r"\b" + query + "\b"
+        if len(clean_query) > 1:
+            str = str[:-1]
+        str = "(" + str + ")"
+        compile = re.compile(str)
         #re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
         if compile.search(item.item_name.lower().encode('utf-8')) is not None:
             create_result_obj(item, rest1k, result, weight, 40)
