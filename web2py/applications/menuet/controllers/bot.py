@@ -244,7 +244,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
                     if len(clean_query) > 1:
                         regex_str = regex_str + ur'\b' + query + ur'\b|'
                     else:
-                        regex_str = query
+                        regex_str = ur'\b' + query + ur'\b'
                 if len(clean_query) > 1:
                     regex_str = regex_str[:-1]
             except IOError:
@@ -390,7 +390,7 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
         for item in rests_item:
             item = Storage(item)
             if item.item_id in results_id:
-                create_result_obj(item, rest1k, result_final, weight, 50)
+                create_result_obj(item, rest1k, result_final, weight, 40)
                 break
         # we created result by_ingr and added it to resulted array
 
