@@ -1,10 +1,10 @@
 # -*- coding:utf8 -*-
 # !/usr/bin/env python
+import datetime
 import os
 import re
-import uuid
-import datetime
 import time
+import uuid
 
 import jsonpickle
 
@@ -189,6 +189,9 @@ def get_STD_portion_price_item(item_id):
 
 
 def search_by_name(query, weight, rest1k, rests_item, query_id):
+    '''Search by name in items'''
+    # utf-8 only
+    query = query.decode('utf-8')
     try:
         # search by exact match fast fail if found
         # result obj
@@ -209,7 +212,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
             _tag_ids = []
             logger.warning("We failed to get NOUN from query %s", query_id)
         tags_time = datetime.datetime.now() - start
-        logger.warning("we are pased tags in %s", tags_time)
+        logger.warning("we are parsed tags in %s", tags_time)
 
         for item in rests_item:
             search_score = 0
@@ -217,7 +220,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
             # remove excessive spaces
             # тыквенный суп
             # exact match
-            if re.sub(' +', ' ', item.item_name.lower().encode('utf-8')) == query:
+            if re.sub(' +', ' ', item.item_name.lower()) == query:
                 search_score = 100
             # do we have matched tags?
             for tag in _tag_ids:
@@ -241,19 +244,18 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
                     if len(clean_query) > 1:
                         regex_str = regex_str + ur'\b' + query + ur'\b|'
                     else:
-                        regex_str = ur'\b' + query + ur'\b''
+                        regex_str = query
                 if len(clean_query) > 1:
                     regex_str = regex_str[:-1]
-            except Exception as e:
-                logger.warning("We got exception: %s", str(e))
-
-            regex_str = "(" + regex_str + ")"
-            logger.warning("we got regular as %s", regex_str)
-            compile = re.compile(regex_str, re.I + re.U)
+            except IOError:
+                logger.warning("We got exception:")
+            regex_str = u"(" + regex_str + u")"
+            logger.info("we got regular as %s", regex_str)
+            compile = re.compile(regex_str, re.U | re.I)
             # re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
-            logger.warning("current item to analyze %s", str(item.item_name.lower().encode('utf-8')))
-            if compile.search(item.item_name.lower().encode('utf-8')) is not None:
-                create_result_obj(item, rest1k, result, weight, 40)
+            logger.info("current item to analyze %s", str(item.item_name.lower().encode('utf-8')))
+            if compile.search(item.item_name.lower()) is not None:
+                create_result_obj(item, rest1k, result, weight, 50)
 
             item_time = datetime.datetime.now() - start
             logger.info("we processed item in in %s", item_time)

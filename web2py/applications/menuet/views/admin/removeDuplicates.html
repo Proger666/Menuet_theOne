@@ -1,0 +1,23 @@
+<div class="col-sm-4">
+    <div class="card-block">
+        <div class="card-header">
+            <label class="font-weight-bold">Bulk search and add tags</label>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+            </div>
+        </div>
+        <div class="card-footer">
+            <input value="Find duplicate TAGS" type="button" class="btn btn-primary" onclick="do_remove_dup()">
+        </div>
+    </div>
+
+</div>
+
+<script type="application/javascript">
+    function do_remove_dup() {
+        var item = document.getElementById("search_for");
+        var DTO = {"item": item};
+        send_to_beck('/menuet/admin/rem_dupp', DTO)
+    }
+</script>

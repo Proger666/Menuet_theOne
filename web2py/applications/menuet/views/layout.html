@@ -40,11 +40,14 @@
 
     <link rel="stylesheet" href="{{=URL('static', 'css/sb/1/dist/css/sb-admin-2.css')}}"/>
 
-    <link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/css/suggestions.min.css" type="text/css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/css/suggestions.min.css" type="text/css"
+          rel="stylesheet"/>
     <!--[if lt IE 10]>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
 <![endif]-->
     <script src="{{=URL('static','js/modernizr-2.8.3.min.js')}}"></script>
+    <script src="{{=URL('static','js/rest-tools.js')}}"></script>
+
     <!-- Favicons -->
 {{include 'web2py_ajax.html'}} <!-- this includes jquery.js, calendar.js/.css and web2py.js -->
 {{block head}}{{end}}

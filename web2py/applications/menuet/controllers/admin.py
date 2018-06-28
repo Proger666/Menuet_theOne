@@ -45,6 +45,30 @@ def db_operations():
 
 
 @auth.requires_membership('admin')
+def rem_dupp():
+    '''Remove duplicate TAGS and reassign them to items'''
+    # lets find all duplicate tags as dict
+    duplicates = db.executesql('SELECT id,t_item_tag.f_name '
+                               'FROM t_item_tag '
+                               'INNER JOIN (SELECT f_name '
+                               'FROM t_item_tag '
+                               'GROUP BY f_name '
+                               'HAVING count(id) > 1 )dup '
+                               'ON t_item_tag.f_name = dup.f_name', as_dict=True)
+    # now get items and change their tag something with lowest ID
+    last_tag = duplicates[0]['id']
+    items_to_modify = []
+    for tag in duplicates:
+        if tag == last_tag:
+            items_to_modify = db(db.t_item.f_tags.belongs(tag.id)).select()
+            # now rebind to new tag
+            for item in items_to_modify:
+                tags = [x for x in item.f_tags if x != 
+
+                db(db.t_item.id == item.id).update(f_tags=tags)
+
+
+@auth.requires_membership('admin')
 def add_tags():
     # TODO: add sanity check
     try:
@@ -62,7 +86,7 @@ def add_tags():
         for string in search_for:
             # lets search items based on iput string
             # case insensistive
-            items_to_modify = db(db.t_item.f_name.ilike("%" + string.decode('utf-8') + "%")).select()
+            items_to_modify = db(db.t_item.f_name.ilike("%" + string + "%")).select()
             # result is ROWS
             # add tags to searched item
             if items_to_modify is not None:
