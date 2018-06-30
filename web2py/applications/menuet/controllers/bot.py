@@ -103,7 +103,7 @@ def clean_if_stale(cache_items, user_id):
                     path = 'applications/menuet/cache/cache_' + str(user_id)
                     # delete stale cache
                     os.remove(path)
-    except WindowsError:
+    except Exception:
         logger.info("Cache not found")
     return cache_items
 
