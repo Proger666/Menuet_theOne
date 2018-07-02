@@ -146,6 +146,7 @@ def fill_net():
                            (db.t_rest_menu.t_menu == db.t_menu.id) &
                            (db.t_restaraunt.id == rest_id)).select()
             for item in _old_menu:
+                logger.error("MENU GETTING OLD")
                 item.t_menu.f_current = False
                 item.t_menu.update_record()
             # let's add network to rest

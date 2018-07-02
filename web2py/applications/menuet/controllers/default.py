@@ -447,6 +447,7 @@ def save_menu():
                            (db.t_menu.f_type.belongs(request.vars.menu['type'])) &
                            (db.t_menu.f_name == menu_name)).select()
             for item in _old_menu:
+                logger.error("MENU GETTING OLD")
                 item.f_current = False
                 item.update_record()
 
@@ -466,6 +467,7 @@ def save_menu():
                            (db.t_rest_menu.t_menu == db.t_menu.id) &
                            (db.t_menu.f_type.belongs(request.vars.menu['type']))).select()
             for item in _old_menu:
+                logger.error("MENU GETTING OLLLLDDDD")
                 item.t_menu.f_current = False
                 item.t_menu.update_record()
 
