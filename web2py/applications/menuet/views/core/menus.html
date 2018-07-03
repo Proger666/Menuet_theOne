@@ -35,7 +35,7 @@
                            {{if not menu.active:}}class="btn btn-secondary" disabled
                     {{else:}}
                            class="btn btn-primary"{{pass}} >
-                    <input type="submit" class="btn btn-inverse" value="On/Off" onclick="dis_enable_menu(this)">
+                    <input type="submit" class="btn btn-inverse" value="On/Off" onclick="dis_enable_menu(this,'{{=menu.active}}')">
                 </div>
             </div>
 
@@ -47,9 +47,7 @@
 
 </div>
 <script>
-    function dis_enable_menu(element) {
-
-        var state ='{{=menu.active}}';
+    function dis_enable_menu(element, state) {
         var menu = {'id': element.parentElement.id, 'state':state};
 
         var DTO = {'menu': menu};
