@@ -9,8 +9,12 @@ def get_network_sugg(q):
     if q != None:
         result = []
         rows = db(db.t_network.f_syn.like('%' + q.encode('utf-8') + '%')).select()
-        if rows is None:
-            rows = db(db.t_network.f_name.like('%' + q.encode('utf-8') + '%')).select()
+        for row in rows:
+            result.append({
+                'id': row.id,
+                'unrestricted_value': row.f_name,
+                'value': row.f_name})
+        rows = db(db.t_network.f_name.like('%' + q.encode('utf-8') + '%')).select()
         for row in rows:
             result.append({
                 'id': row.id,
