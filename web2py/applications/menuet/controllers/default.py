@@ -2,6 +2,8 @@
 ### required - do no delete
 from __future__ import print_function
 
+from threading import Thread
+
 import concurrent.futures
 
 from time import gmtime, strftime
@@ -42,12 +44,17 @@ def download_url(url):
 
 
 def jsn_menu():
-    if 'file' in request.vars:
+    if 'file' in request.vars and request.vars.file is not "":
+
         data = file.read(request.vars.file.file.file)
         jsn_obj = simplejson.loads(data,encoding='cp1251')
-
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-              executor.map(lambda x:commit_to_db(x), jsn_obj)
+        logger.warning("items to update %s", len(jsn_obj))
+        for item in jsn_obj:
+            thread = Thread(target= commit_to_db(item))
+            thread.start()
+        # with concurrent.futures.ProcessPoolExecutor() as executor:
+        #
+        #      executor.map(commit_to_db, jsn_obj)
     return locals()
 
 
