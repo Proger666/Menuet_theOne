@@ -74,7 +74,7 @@ def commit_to_db(item):
         net = False
     else:
         net = True
-    logger.warning("We are ready to commit item: id %s, name %s, network: %s ", (_f_q_id,_name.lower(),_f_network_name))
+    logger.warning("We are ready to commit item: id %s, name %s, network: %s ", _f_q_id,_name.lower(),_f_network_name)
     db.t_restaraunt.update_or_insert(db.t_restaraunt.f_q_id==_f_q_id,f_network_name=_f_network_name,
                                      f_public_phone=_f_public_phone,f_q_id=_f_q_id, f_name=_name.lower(),
                                      f_is_network=net, f_type=_f_type, f_active=True,
