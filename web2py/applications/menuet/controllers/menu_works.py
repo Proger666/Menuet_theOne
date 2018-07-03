@@ -129,8 +129,8 @@ def dis_enab_menu():
     state = False if request.vars.menu['state'] == 'True' else True
     if request.vars.menu is None:
         return ajax_error("oy wey")
-    logger.warning("We make %s menu %s", state, menu_id)
     db(db.t_menu.id == menu_id).update(f_current=state)
+    logger.warning("We make %s menu %s", state, menu_id)
     return ajax_success("Job done")
 
 
