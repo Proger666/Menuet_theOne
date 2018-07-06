@@ -5,6 +5,8 @@
 <h2>{{=A("Update Database via JSON from data.mos.ru", _href=URL('default','jsn_menu'))}}</h2>
 <h2>{{=A("shkololo rest", _href=URL('core','rest'))}}</h2>
 <h2>{{=A("Users mgmt", _href=URL('default','users_m'))}}</h2>
+<h2>{{=A("Last modified menus", _href=URL('admin','last_chg'))}}</h2>
+
 
 <div class="col-sd-3">
     <div class="card">
@@ -51,7 +53,8 @@
                 <b>DB operations</b>
             </div>
             <div class="card-block">
-                <input type="button" onclick="window.location='{{=URL('admin', 'db_operations')}}'" class="btn btn-danger" value="Bulk DB operations">
+                <input type="button" onclick="window.location='{{=URL('admin', 'db_operations')}}'"
+                       class="btn btn-danger" value="Bulk DB operations">
                 <button class="btn btn-primary" onclick="do_parse_ingr()" type="button">
                     <i class="" id="parse_icon"></i>Parse ingrs and add them to the items
                 </button>
@@ -69,8 +72,8 @@
     </div>
 </div>
 <script type="application/javascript">
-   function do_ingr_to_normal(){
-       var from_ingr = document.getElementById('from_ingr').value;
+    function do_ingr_to_normal() {
+        var from_ingr = document.getElementById('from_ingr').value;
         var DTO = {'job': 'ingrs_normal', 'from_ingr': from_ingr};
         var data = JSON.stringify(DTO);
         $("#parse_icon_normal").addClass('fa fa-spinner fa-spin');
@@ -93,7 +96,7 @@
 
             }
         });
-   }
+    }
 </script>
 <script type="application/javascript">
     function do_parse_ingr() {

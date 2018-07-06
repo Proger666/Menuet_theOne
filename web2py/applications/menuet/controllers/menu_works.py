@@ -181,14 +181,18 @@ def fill_net():
 
 @auth.requires_login()
 def delete_menu_item():
-    # Delete menu item from
+    # Delete  item from menu
     try:
         item = request.vars.get('data_id')
+        m_id = request.vars.get('m_id')
         if item != None:
             # Check for exist item in t_menu
             check_exist = db(db.t_item.id == item).count()
             if check_exist > 0:
                 db(db.t_item.id == item).delete()
+                db(db.t_menu.id == m_id).update(f_items_count=db.t_menu.f_items_count - 1)
+                logger.warning("we deleted item with ID:%s initiated by user %s", item, auth.user.username)
+                return ajax_success("Job done")
     except:
         logger.warn('Failure in item delete ' + logUser_and_request())
         return {}
@@ -209,8 +213,6 @@ def find_item_tags_id(tags_name):
 @auth.requires_login()
 def save_item():
     start = datetime.datetime.now()
-    # Create storage class for item
-    item = Storage()
     # lets get our item from request or get None
     item_source = request.vars.get('item', None)
 
@@ -272,6 +274,9 @@ def save_item():
 
             _tmp_obj._new_menu_item_id = db.t_menu_item.insert(t_menu=item_source.m_id,
                                                                t_item=_tmp_obj.item_id)
+            # let's modify item count in menu
+            db(db.t_menu.id == item_source.m_id).update(f_items_count=db.t_menu.f_items_count + 1)
+            logger.info("we added new item %s to %s menu by %s user", item_source.name.lower(), item_source.m_id, auth.user.username)
 
 
         elif item_source.change_factor == 'edit':
@@ -281,8 +286,7 @@ def save_item():
             db(db.t_item.id == int(item_source.id.encode('utf-8'))).update(f_name=item_source.name.encode('utf-8'),
                                                                            f_desc=item_source.desc.encode('utf-8'),
                                                                            f_cal=item_source.cal.encode('utf-8'),
-                                                                           f_tags=find_item_tags_id(
-                                                                               item_source.tags_name),
+                                                                           f_tags=_new_tags,
                                                                            f_weight=int(
                                                                                item_source.weight.encode('utf-8')),
                                                                            f_recipe=_tmp_obj.recipe_id,
@@ -290,6 +294,11 @@ def save_item():
             # change portions
             _tmp_obj.item_id = item_source.id.encode('utf-8')
             stich_portions_to_prices(_tmp_obj, item_source)
+            # let's modify item count in menu
+            db(db.t_menu.id == item_source.m_id).update(f_items_count=db.t_menu.f_items_count + 0)
+            logger.info("we edited item %s to %s menu by %s user", item_source.name.lower(), item_source.m_id,
+                        auth.user.username)
+
         else:
             logger.error('Failed to save item ' + logUser_and_request())
             return ajax_error("We failed to save item :(")

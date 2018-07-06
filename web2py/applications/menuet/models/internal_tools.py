@@ -95,9 +95,9 @@ def getItems_for_menu(menu_id):
     '''That's one should return items with ALL context (ingrs, rest, etc)'''
     # TODO: redesing to PyDAL
     items = db.executesql(
-        'SELECT item_desc,item_unit,item_tags,item_id,item_name, item_price, ingr_id, group_concat(concat(ingr_id)) AS ingrs_ids, group_concat(concat(ingr_name)) AS ingrs_names '
+        'SELECT item_modified, item_desc,item_unit,item_tags,item_id,item_name, item_price, ingr_id, group_concat(concat(ingr_id)) AS ingrs_ids, group_concat(concat(ingr_name)) AS ingrs_names '
         'FROM('
-        'SELECT t_item.f_desc AS item_desc,  t_item.f_tags AS item_tags, t_item.f_unit AS item_unit, t_item.id AS item_id,t_item.f_name AS item_name,'
+        'SELECT t_item.modified_on as item_modified, t_item.f_desc AS item_desc,  t_item.f_tags AS item_tags, t_item.f_unit AS item_unit, t_item.id AS item_id,t_item.f_name AS item_name,'
         ' t_item_prices.f_price AS item_price,'
         ' t_ingredient.id AS ingr_id, t_ingredient.f_name AS ingr_name '
         'FROM  t_item '
@@ -112,7 +112,8 @@ def getItems_for_menu(menu_id):
         'ON itm.id = item_id '
         'inner JOIN t_menu ON t_menu.id =' + menu_id + ' '
                                                        'INNER JOIN t_menu_item ON t_menu_item.t_menu = t_menu.id AND itm.id = t_menu_item.t_item '
-                                                       'GROUP BY itm.id', as_dict=True)
+                                                       'GROUP BY itm.id '
+                                                       'order by item_modified', as_dict=True)
     return items
 
 

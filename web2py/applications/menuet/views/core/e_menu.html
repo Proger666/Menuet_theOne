@@ -53,6 +53,9 @@
                         Цена
                     </th>
                     <th class="text-center">
+                        Изменен
+                    </th>
+                    <th class="text-center">
                         -
                     </th>
                     <th class="text-center">
@@ -80,6 +83,9 @@
                     {{=item_p["portion_size"]}} : <b> {{=item_p["portion_price"]}}</b> <i
                             class="fas fa-ruble-sign"></i><br>
                     {{pass}}
+                    </td>
+                    <td style="white-space: nowrap">
+                        {{=item.modified}}
                     </td>
                     <td>
                         <button class="btn btn-primary" value="Поправить" title="Изменить элемент" type="button"
@@ -150,7 +156,7 @@
             return;
         }
         if (confirm('Вы действительно хотите удалить блюдо?')) {
-            var temp = {"data_id": id};
+            var temp = {"data_id": id, "m_id": '{{=request.vars.m_id}}'};
             var datas = JSON.stringify(temp);
             $.ajax({
                 type: 'POST',

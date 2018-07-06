@@ -1,7 +1,35 @@
 from gluon.contrib import simplejson
 from gluon.contrib.simplejson import JSONDecodeError
 
+@auth.requires_membership('admin')
+def last_chg():
+    '''Returns last modified menus for users'''
+    # get all users from db
+    users = db(db.auth_user.id > 0).select()
+    # Get modified menus
+    users_items = []
+    for user in users:
+        user_item = Storage()
+        user_item.u_name = user.username
+        # users n menus
+        # TODO:redesign
+        db_menus = db.executesql('SELECT t_menu.f_name as menu_name, t_menu.id as menu_id, t_menu.modified_on as modified,'
+                                 't_menu.modified_by, '
+                                 't_restaraunt.id as rest_id FROM t_menu '
+                                    'inner join t_rest_menu on t_rest_menu.t_menu = t_menu.id '
+                                    'inner join t_restaraunt on t_restaraunt.id = t_rest_menu.t_rest '
+                                    'where t_menu.modified_by ='+str(user.id)+' and t_menu.f_current = "T" ', as_dict=True)
+        user_item.changed_menus = []
+        for user_menu in db_menus:
+            item = Storage()
+            item.modified_date = user_menu['modified']
+            item.link =str(URL('core', 'e_menu', vars=dict(m_id=user_menu['menu_id'],r_id=user_menu['rest_id'])))
+            item.menu_name= user_menu['menu_name']
+            user_item.changed_menus.append(item)
+        users_items.append(user_item)
+    return locals()
 
+@auth.requires_membership('admin')
 def parse_items_ingrs():
     '''Do various tasks with ingrs and items'''
     # Should parse ingredients from item's name and attach them to item
@@ -44,31 +72,31 @@ def db_operations():
     return locals()
 
 
-@auth.requires_membership('admin')
-def rem_dupp():
-    '''Remove duplicate TAGS and reassign them to items'''
-    # lets find all duplicate tags as dict
-    duplicates = db.executesql('SELECT id,t_item_tag.f_name '
-                               'FROM t_item_tag '
-                               'INNER JOIN (SELECT f_name '
-                               'FROM t_item_tag '
-                               'GROUP BY f_name '
-                               'HAVING count(id) > 1 )dup '
-                               'ON t_item_tag.f_name = dup.f_name', as_dict=True)
-    # now get items and change their tag something with lowest ID
-    last_tag = duplicates[0]['id']
-    items_to_modify = []
-    for tag in duplicates:
-        if tag == last_tag:
-            items_to_modify = db(db.t_item.f_tags.belongs(tag.id)).select()
-            # now rebind to new tag
-            for item in items_to_modify:
-                tags = [x for x in item.f_tags if x != 
+# @auth.requires_membership('admin')
+# def rem_dupp():
+#     '''Remove duplicate TAGS and reassign them to items'''
+#     # lets find all duplicate tags as dict
+#     duplicates = db.executesql('SELECT id,t_item_tag.f_name '
+#                                'FROM t_item_tag '
+#                                'INNER JOIN (SELECT f_name '
+#                                'FROM t_item_tag '
+#                                'GROUP BY f_name '
+#                                'HAVING count(id) > 1 )dup '
+#                                'ON t_item_tag.f_name = dup.f_name', as_dict=True)
+#     # now get items and change their tag something with lowest ID
+#     last_tag = duplicates[0]['id']
+#     items_to_modify = []
+#     for tag in duplicates:
+#         if tag == last_tag:
+#             items_to_modify = db(db.t_item.f_tags.belongs(tag.id)).select()
+#             # now rebind to new tag
+#             for item in items_to_modify:
+#                 tags = [x for x in item.f_tags if x !=
+#
+#                         db(db.t_item.id == item.id).update(f_tags=tags)
 
-                db(db.t_item.id == item.id).update(f_tags=tags)
 
 
-@auth.requires_membership('admin')
 def add_tags():
     # TODO: add sanity check
     try:

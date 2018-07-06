@@ -256,6 +256,7 @@ def e_menu():
                 item.ingrs = menu_item.get('ingrs_names', "").split(",") if menu_item.get('ingrs_names', "") is not None else []
                 item.tags = get_tags_for_item(menu_item['item_tags'].split("|"))
                 item.portions = []
+                item.modified = menu_item['item_modified']
                 # get portions name from DB
                 _portions = db(t_item_prices.f_item == item.id).select(t_item_prices.f_price, t_item_prices.f_portion)
                 if _portions != None:
@@ -269,6 +270,7 @@ def e_menu():
                 end2 = datetime.datetime.now() - start
                 menu_items.append(item)
                 logger.info('We add new menu item in %s', str(end2))
+
             tags = db.t_menu[menu_id].f_tags
             end3 = datetime.datetime.now() - start
             logger.info("we loaded menu list in %s ", str(end3))
