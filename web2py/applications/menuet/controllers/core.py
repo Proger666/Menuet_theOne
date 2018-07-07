@@ -254,18 +254,21 @@ def e_menu():
                 item.desc = ' '.join(menu_item.get('item_desc', "").split()[:4]) if check_exist(
                     menu_item.get('item_desc', "")) else ""  + "..."# ограничиваем 4 словами вывод
                 item.ingrs = menu_item.get('ingrs_names', "").split(",") if menu_item.get('ingrs_names', "") is not None else []
+                start = datetime.datetime.now()
                 item.tags = get_tags_for_item(menu_item['item_tags'].split("|"))
                 end2 = datetime.datetime.now() - start
                 logger.info('tags fetched from db in %s', str(end2))
                 item.portions = []
                 item.modified = menu_item['item_modified']
                 # get portions name from DB
+                start = datetime.datetime.now()
                 _portions = db(t_item_prices.f_item == item.id).select(t_item_prices.f_price, t_item_prices.f_portion)
                 end2 = datetime.datetime.now() - start
                 logger.info('portions fetched from db in %s', str(end2))
                 if _portions != None:
                     # fill array with price and portion name
                     for step in _portions:
+                        start = datetime.datetime.now()
                         portion = db.t_portion[step.f_portion].f_name
                         item.portions.append({'portion_size': portion, "portion_price": step.f_price})
                         end2 = datetime.datetime.now() - start
