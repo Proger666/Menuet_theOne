@@ -259,16 +259,20 @@ def e_menu():
                 item.modified = menu_item['item_modified']
                 # get portions name from DB
                 _portions = db(t_item_prices.f_item == item.id).select(t_item_prices.f_price, t_item_prices.f_portion)
+                end2 = datetime.datetime.now() - start
+                logger.info('portions fetched from db in %s', str(end2))
                 if _portions != None:
                     # fill array with price and portion name
                     for step in _portions:
                         portion = db.t_portion[step.f_portion].f_name
                         item.portions.append({'portion_size': portion, "portion_price": step.f_price})
+                        end2 = datetime.datetime.now() - start
+                        logger.info('portions added in %s', str(end2))
                 else:
                     logger.warn('No portions in request ' + logUser_and_request())
                     return {}
-                end2 = datetime.datetime.now() - start
                 menu_items.append(item)
+                end2 = datetime.datetime.now() - start
                 logger.info('We add new menu item in %s', str(end2))
 
             tags = db.t_menu[menu_id].f_tags
