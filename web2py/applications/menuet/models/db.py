@@ -101,7 +101,7 @@ auth.define_tables(username=True, signature=True)
 import logging
 
 logger = logging.getLogger("web2py.app.menuet")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 
 def logUser_and_request():
