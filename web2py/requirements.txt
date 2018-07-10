@@ -2,3 +2,4 @@ jsonpickle > 1.0
 pandas
 pymorphy2
 requests
+memory_profiler

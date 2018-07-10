@@ -5,7 +5,8 @@ import os
 import re
 import time
 import uuid
-
+import objgraph
+from memory_profiler import profile
 import jsonpickle
 
 
@@ -187,7 +188,7 @@ def get_STD_portion_price_item(item_id):
             if step.f_portion == 1:
                 return step.f_price
 
-
+@profile
 def search_by_name(query, weight, rest1k, rests_item, query_id):
     '''Search by name in items'''
     # utf-8 only
@@ -325,7 +326,7 @@ def query_cleanUp(query):
     query = query.encode('utf-8')
     return query
 
-
+@profile
 def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
     start = datetime.datetime.now()
     # result will be stored as row
@@ -547,7 +548,7 @@ def write_to_cache(user_id, weighted_result, query):
             return True
     return None
 
-
+@profile
 def weighted_search(query, lng, lat, user_id, sort):
     start_all = datetime.datetime.now()
     raw_weights = {'ingr': 1, 'item': 2, 'tag': 3}
@@ -644,7 +645,7 @@ def weighted_search(query, lng, lat, user_id, sort):
     logger.warning("We got %s results in our search in %s, for query: %s", len(weighted_result), str(end_all), query_id)
     return weighted_result
 
-
+@profile
 def get_food_with_loc(vars):
     if len(vars) < 1:
         logger.error("failed to get food for user, vars not supplied")
@@ -679,13 +680,14 @@ def get_food_with_loc(vars):
         # write result to cache
         write_to_cache(vars.user_id, weighted_result, vars.query)
         # give control to cache
+        del weighted_result
         result = get_from_cache(vars.user_id, count, vars.query, None)
         if result['msg'] == 'ok':
             return result
 
     return []
 
-
+@profile
 @request.restful()
 def api():
     def POST(*args, **vars):
