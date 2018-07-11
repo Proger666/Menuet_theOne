@@ -598,6 +598,10 @@ def weighted_search(query, lng, lat, user_id, sort):
                                                                                                          'f_network_name'] != 6)]
 
     _tmp_rests_id = [x['rest_id'] for x in rest1k]
+
+    if len(_tmp_rests_id) == 0:
+        logger.info("Nothing found for query %s", query_id)
+        return []
     # menus = db((db.t_menu.f_current == True)
     #            & ((db.t_restaraunt.id.belongs(_tmp_rests_id)) & (m_t_m_rest_menu))).select(
     #     db.t_menu.id)
