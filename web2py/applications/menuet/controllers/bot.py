@@ -281,8 +281,7 @@ def add_item(candidate_list, item, search_score, weight):
 
 def create_result_obj(rest1k, candidate_list):
     start = datetime.datetime.now()
-    rest = None
-    if candidate_list[1] is None:
+    if len(candidate_list) < 2 :
         return []
     # first item is ids, remove it from the list
     for item in candidate_list[1:]:
