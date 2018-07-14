@@ -5,11 +5,14 @@ import os
 import re
 import time
 import uuid
+
 import jsonpickle
+
 
 ##### GLOBAL PARAMETERS ####
 class USER:
     MAXDISTANCE = 500
+    CACHE_LIFETIME = 60  # in seconds
 
 
 ######## todo: redesign ####
@@ -94,10 +97,9 @@ def sort_result(r, sort):
 
 def clean_if_stale(cache_items, user_id):
     try:
-        lifetime = 30  # seconds
         for item in cache_items:
             if item['user_id'] == user_id:
-                if int(float(time.time())) - int(float(item["time_created"])) > lifetime:
+                if int(float(time.time())) - int(float(item["time_created"])) > USER.CACHE_LIFETIME:
                     path = 'applications/menuet/cache/cache_' + str(user_id)
                     # delete stale cache
                     os.remove(path)
@@ -185,9 +187,15 @@ def get_STD_portion_price_item(item_id):
             if step.f_portion == 1:
                 return step.f_price
 
+
 def search_by_name(query, weight, rest1k, rests_item, query_id):
     '''Search by name in items'''
     # utf-8 only
+    # setup
+    candidate = Storage()
+    candidate.ids = []
+    candidate_list = [candidate]
+    #
     query = query.decode('utf-8')
     try:
         # search by exact match fast fail if found
@@ -226,7 +234,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
                     search_score += 70
             # if we found anything create result and move to the next item
             if search_score != 0:
-                create_result_obj(item, rest1k, result, weight, search_score)
+                add_item(candidate_list, item, search_score, weight)
                 continue
 
             # lets try search word by word until fail
@@ -252,28 +260,44 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
             # re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
             logger.info("current item to analyze %s", str(item.item_name.lower().encode('utf-8')))
             if compile.search(item.item_name.lower()) is not None:
-                create_result_obj(item, rest1k, result, weight, 50)
+                add_item(candidate_list, item, 50, weight)
 
             item_time = datetime.datetime.now() - start
             logger.info("we processed item in in %s", item_time)
     except Exception as e:
         logger.warning("We got exception: %s", str(e))
 
-    return result
+    return candidate_list
 
 
-def create_result_obj(item, rest1k, result, weight, search_score):
+def add_item(candidate_list, item, search_score, weight):
+    candidate = Storage()
+    candidate.item = item
+    candidate.score = search_score
+    candidate.weight = weight
+    candidate_list[0].ids.append(str(item.item_id))
+    candidate_list.append(candidate)
+
+
+def create_result_obj(rest1k, candidate_list):
     start = datetime.datetime.now()
     rest = None
-    if item.rest_name is None:
-        net_name = db.t_network[item.f_network]
-        item.rest_name = "Сеть:" + str(net_name.f_name)
-        for key, value in rest1k.iteritems():
-            if value['f_network_name'] == net_name.id:
-                rest = value
-                break
-    else:
-        rest = rest1k[item.rest_id]
+    if candidate_list[1] is None:
+        return []
+    # first item is ids, remove it from the list
+    for item in candidate_list[1:]:
+
+        #get information about restaraunt for item
+
+        if item.item.rest_name is None:
+            net_name = db.t_network[item.item.f_network]
+            item.item.rest_name = "Сеть:" + str(net_name.f_name)
+            for key, value in rest1k.iteritems():
+                if value['f_network_name'] == net_name.id:
+                    item.item.rest = value
+                    break
+        else:
+            item.item.rest = rest1k[item.item.rest_id]
 
     item_time = datetime.datetime.now() - start
     logger.warning("we ready to create result in %s", item_time)
@@ -283,7 +307,8 @@ def create_result_obj(item, rest1k, result, weight, search_score):
     item_info = db.executesql(
         'SELECT item_id,item_name, item_price, ingr_id, group_concat(concat(ingr_id)) AS ingrs_ids, group_concat(concat(ingr_name)) AS ingrs_names '
         'FROM('
-        'SELECT t_item.id AS item_id,t_item.f_name AS item_name, t_item_prices.f_price AS item_price, t_ingredient.id AS ingr_id, t_ingredient.f_name AS ingr_name '
+        'SELECT t_item.id AS item_id,t_item.f_name AS item_name, t_item_prices.f_price AS item_price,'
+        ' t_ingredient.id AS ingr_id, t_ingredient.f_name AS ingr_name '
         'FROM  t_item '
         'LEFT OUTER JOIN t_item_prices ON t_item_prices.f_item = t_item.id AND t_item_prices.f_portion = "1" '
         'LEFT OUTER JOIN t_recipe ON t_recipe.id = t_item.f_recipe '
@@ -291,30 +316,40 @@ def create_result_obj(item, rest1k, result, weight, search_score):
         'LEFT OUTER JOIN t_step ON t_step.id = t_step_ing.t_step '
         'LEFT OUTER JOIN t_ingredient ON t_ingredient.id = t_step.f_ingr '
         ') AS ingrs '
-        'JOIN (SELECT * FROM t_item ) AS itm '
-        'ON itm.id = item_id '
-        'GROUP BY itm.id', as_dict=True)
-    try:
-        item_ingrs_dict = {'id': (map(int,
-                                      filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['ingrs_ids'].encode(
-                                          'utf-8').split(","))),
-                           'name': (filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['ingrs_names'].encode(
-                               'utf-8')).split(",")}
-    except AttributeError:
-        item_ingrs_dict = {'id': [], 'name': []}
-    result.append(result_object(item.item_id, item.item_name,
-                                item.rest_id,
-                                filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['item_price'], 0,
-                                item.menu_id,
-                                weight, rest.get('rest_name'),
-                                rest.get('rest_addr', 'Не знаем'), rest.get('distance_in_km', 0),
-                                item.get('rest_phone', 'Не знаем'),
-                                rest.get('f4sqr') if rest.get(
-                                    'f4sqr') is not None else 'https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5',
-                                item_ingrs_dict, rest.get('rest_long', '55'),
-                                rest.get('rest_lat', '35'), search_score))
+        'JOIN (SELECT * FROM t_item WHERE t_item.id IN(' + ",".join(candidate_list[0].ids) + ')) AS itm '
+                                                                                             'ON itm.id = item_id '
+                                                                                             'GROUP BY itm.id',
+        as_dict=True)
+    # now we got info for all items as list
+    # remove items ids, we dont need them anymore
+    candidate_list = candidate_list[1:]
+    # let's try to fill our resulting array
+    result = []
+    for item in candidate_list:
+        source_item = item
+        item = item.item
+
+        try:
+            id = (map(int,filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['ingrs_ids'].encode('utf-8').split(",")))
+            name = (filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['ingrs_names'].encode('utf-8')).split(",")
+            item_ingrs_dict = {'id': id,'name': name}
+        except AttributeError:
+            item_ingrs_dict = {'id': [], 'name': []}
+
+        result.append(result_object(item.item_id, item.item_name,
+                                        item.rest_id,
+                                        filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['item_price'], 0,
+                                        item.menu_id,
+                                        source_item.weight, item.rest.get('rest_name'),
+                                        item.rest.get('rest_addr', 'Не знаем'), item.rest.get('distance_in_km', 0),
+                                        item.get('rest_phone', 'Не знаем'),
+                                        item.rest.get('f4sqr') if item.rest.get(
+                                            'f4sqr') is not None else 'https://ru.foursquare.com/v/%D1%88%D0%B8%D0%BA%D0%B0%D1%80%D0%B8/5852d5d10a3d540a0d7aa7a5',
+                                        item_ingrs_dict, item.rest.get('rest_long', '55'),
+                                        item.rest.get('rest_lat', '35'), source_item.score))
     item_time = datetime.datetime.now() - start
     logger.warning("we added result for query in in %s", item_time)
+    return result
 
 
 def query_cleanUp(query):
@@ -324,9 +359,14 @@ def query_cleanUp(query):
 
 
 def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
+    ## Set up
+
+    candidate = Storage()
+    candidate_list = by_name
+
+    ###
     start = datetime.datetime.now()
     # result will be stored as row
-    result_final = by_name
 
     # lets try to get all ingrs ID from query
     ingrs_id = parse_ingrs_id(query)
@@ -381,23 +421,23 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
         # Lets filter items ID that we already have in by_name result
         # lets get all item_id from by_name list
         if len(by_name) > 0:
-            by_name_ids = [x.item_id for x in by_name]
-            results_id = [x for x in results_id if x not in by_name_ids]
+            results_id = [x for x in results_id if x not in candidate_list[0].ids]
         # now turn it to ROWS
         for item in rests_item:
             item = Storage(item)
             if item.item_id in results_id:
-                create_result_obj(item, rest1k, result_final, weight, 40)
-                break
+                add_item(candidate_list,item,40,weight)
+
         # we created result by_ingr and added it to resulted array
 
+    # let's populate ingredients info and other staff:
+    result_final = create_result_obj(rest1k, candidate_list)
     # add score if we found ingrs in items
     for item in result_final:
         for ingr in ingrs_id:
             if ingr in item.item_ingrs["id"]:
                 item.search_score += 100
 
-    result_final = by_name
     end = datetime.datetime.now() - start
     logger.warning('search by ingr concluded in ' + str(end))
     return result_final
@@ -471,30 +511,29 @@ def create_result(by_ingr, networks_ids, sort):
 
     resulting_array = sorted(by_ingr, key=bySearch_key, reverse=True)
 
-    try:
-        # for element in by_name + by_ingr:
-        #     # check if it's duplicate
-        #     if element is not None:
-        #         if element not in resulting_array:
-        #             resulting_array.append(element)
-        # for element in by_ingr + by_name:
-        #     # check if
-        #     if len(element) > 0:
-        #         if not is_exist(element, resulting_array):
-        #             # fetach rest info for item
-        #             _rest = get_rest_for_item(element["item"]["id"], networks_ids)
-        #             resulting_array.append({"item": element["item"]["f_name"],
-        #                                     "ingrs": ",".join(get_ingrs_for_item(element["item"]["id"])),
-        #                                     "cost": get_price_for_item(element["item"]["id"]),
-        #                                     "rest_name": _rest.f_name,
-        #                                     "rest_addr": _rest.f_address,
-        #                                     "weight": element["weight"]})
-        # # Let's sort this shit now
-        # # create ordered dict to remember dict order
-        # od = OrderedDict
-        by_ingr = 1
-    except AssertionError:
-        logger.error("DB ERROR!!!! we failed to create result in create_result, " + str(e) + str(e.message))
+    # try:
+    #     # for element in by_name + by_ingr:
+    #     #     # check if it's duplicate
+    #     #     if element is not None:
+    #     #         if element not in resulting_array:
+    #     #             resulting_array.append(element)
+    #     # for element in by_ingr + by_name:
+    #     #     # check if
+    #     #     if len(element) > 0:
+    #     #         if not is_exist(element, resulting_array):
+    #     #             # fetach rest info for item
+    #     #             _rest = get_rest_for_item(element["item"]["id"], networks_ids)
+    #     #             resulting_array.append({"item": element["item"]["f_name"],
+    #     #                                     "ingrs": ",".join(get_ingrs_for_item(element["item"]["id"])),
+    #     #                                     "cost": get_price_for_item(element["item"]["id"]),
+    #     #                                     "rest_name": _rest.f_name,
+    #     #                                     "rest_addr": _rest.f_address,
+    #     #                                     "weight": element["weight"]})
+    #     # # Let's sort this shit now
+    #     # # create ordered dict to remember dict order
+    #     # od = OrderedDict
+    # except AssertionError:
+    #     logger.error("DB ERROR!!!! we failed to create result in create_result, " + str(e) + str(e.message))
     end = datetime.datetime.now() - start
     logger.warning('create_result concluded in ' + str(end))
     return resulting_array
@@ -543,6 +582,7 @@ def write_to_cache(user_id, weighted_result, query):
             simplejson.dump(feeds, feedsjson)
             return True
     return None
+
 
 def weighted_search(query, lng, lat, user_id, sort):
     start_all = datetime.datetime.now()
@@ -644,6 +684,7 @@ def weighted_search(query, lng, lat, user_id, sort):
     logger.warning("We got %s results in our search in %s, for query: %s", len(weighted_result), str(end_all), query_id)
     return weighted_result
 
+
 def get_food_with_loc(vars):
     if len(vars) < 1:
         logger.error("failed to get food for user, vars not supplied")
@@ -684,6 +725,7 @@ def get_food_with_loc(vars):
             return result
 
     return []
+
 
 @request.restful()
 def api():
