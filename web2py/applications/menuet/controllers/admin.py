@@ -1,6 +1,7 @@
 from gluon.contrib import simplejson
 from gluon.contrib.simplejson import JSONDecodeError
 
+
 @auth.requires_membership('admin')
 def last_chg():
     '''Returns last modified menus for users'''
@@ -13,21 +14,25 @@ def last_chg():
         user_item.u_name = user.username
         # users n menus
         # TODO:redesign
-        db_menus = db.executesql('SELECT t_menu.f_name as menu_name, t_menu.id as menu_id, t_menu.modified_on as modified,'
-                                 't_menu.modified_by, '
-                                 't_restaraunt.id as rest_id FROM t_menu '
-                                    'inner join t_rest_menu on t_rest_menu.t_menu = t_menu.id '
-                                    'inner join t_restaraunt on t_restaraunt.id = t_rest_menu.t_rest '
-                                    'where t_menu.modified_by ='+str(user.id)+' and t_menu.f_current = "T" ', as_dict=True)
+        db_menus = db.executesql(
+            'SELECT t_menu.f_name AS menu_name, t_menu.modified_by AS modified, t_menu.id AS menu_id, t_restaraunt.id as rest_id FROM t_menu '
+            'inner JOIN t_rest_menu ON t_rest_menu.t_menu = t_menu.id '
+            'inner JOIN t_restaraunt ON t_restaraunt.id = t_rest_menu.t_rest AND t_menu.modified_by ='+str(user.id), as_dict=True)
+
+        db_menus = db_menus + db.executesql(
+            'select t_menu.f_name AS menu_name, t_menu.modified_by AS modified, t_menu.id AS menu_id, t_restaraunt.id as rest_id FROM t_menu '
+            'inner JOIN t_restaraunt ON t_restaraunt.id = t_menu.f_network AND t_menu.modified_by ='+str(user.id),as_dict=True)
+
         user_item.changed_menus = []
         for user_menu in db_menus:
             item = Storage()
             item.modified_date = user_menu['modified']
-            item.link =str(URL('core', 'e_menu', vars=dict(m_id=user_menu['menu_id'],r_id=user_menu['rest_id'])))
-            item.menu_name= user_menu['menu_name']
+            item.link = str(URL('core', 'e_menu', vars=dict(m_id=user_menu['menu_id'], r_id=user_menu['rest_id'])))
+            item.menu_name = user_menu['menu_name']
             user_item.changed_menus.append(item)
         users_items.append(user_item)
     return locals()
+
 
 @auth.requires_membership('admin')
 def parse_items_ingrs():
@@ -94,7 +99,6 @@ def db_operations():
 #                 tags = [x for x in item.f_tags if x !=
 #
 #                         db(db.t_item.id == item.id).update(f_tags=tags)
-
 
 
 def add_tags():
