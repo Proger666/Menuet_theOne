@@ -478,6 +478,8 @@ def save_menu():
             for item in _old_menu:
                 logger.error("MENU GETTING OLLLLDDDD")
                 item.t_menu.f_current = False
+                logger.info("Menu has been disabled by %s with request %s", auth.user, str(request))
+
                 item.t_menu.update_record()
 
             # set menu name its typed name or TYPE as name

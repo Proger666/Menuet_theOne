@@ -131,6 +131,7 @@ def dis_enab_menu():
         return ajax_error("oy wey")
     db(db.t_menu.id == menu_id).update(f_current=state)
     logger.warning("We make %s menu %s", state, menu_id)
+    logger.info("Menu has been disabled by %s with request %s", auth.user, str(request))
     return ajax_success("Job done")
 
 
@@ -155,6 +156,7 @@ def fill_net():
             for item in _old_menu:
                 logger.error("MENU GETTING OLD")
                 item.t_menu.f_current = False
+                logger.info("Menu has been disabled by %s with request %s", auth.user, str(request))
                 item.t_menu.update_record()
             # let's add network to rest
             _row = db.t_restaraunt[rest_id]
