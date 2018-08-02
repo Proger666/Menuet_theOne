@@ -619,7 +619,7 @@ def weighted_search(query, lng, lat, user_id, sort):
             '*SIN(RADIANS(t_restaraunt.f_latitude)))*6371)'
             'AS distance_in_km FROM t_restaraunt HAVING distance_in_km < 5000 LIMIT 13000',
             as_dict=True)
-    except:
+    except IOError:
         # We failed - get long with it
         logger.error("ALARMA! Database error in location calculation")
         rest1k = db(db.t_restaraunt.id > 0).select()
