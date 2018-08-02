@@ -669,6 +669,7 @@ def weighted_search(query, lng, lat, user_id, sort):
         _f_rest1k[item.get('rest_id', 0)] = item
 
     # we expect RESULT object
+    logger.warning("started to search by name for query:%s", query_id)
     by_name = search_by_name(query, raw_weights['item'], _f_rest1k, rests_item, query_id)
     end = datetime.datetime.now() - start
     logger.warning("We got %s results by name in %s, for query: %s", len(by_name), str(end), query_id)
