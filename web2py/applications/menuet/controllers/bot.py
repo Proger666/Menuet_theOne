@@ -609,6 +609,7 @@ def weighted_search(query, lng, lat, user_id, sort):
     try:
         #### Try to calculate location
         ## TODO: redesign
+        logger.warning("started to query db for rests in range for query:%s", query_id)
         db.executesql('SET @lat =' + str(lat))
         db.executesql('SET @lng = ' + str(lng))
         rest1k = db.executesql(
@@ -646,6 +647,7 @@ def weighted_search(query, lng, lat, user_id, sort):
     # menus_id += [x.id for x in db(db.t_menu.f_network.belongs(_tmp_nets)).select()]
 
     # TODO:redesign
+    logger.warning("started to query db for rests_item for query:%s", query_id)
     rests_item = db.executesql(
         "SELECT t_menu.id AS menu_id, ifnull(t_restaraunt.id,5) AS rest_id,t_restaraunt.f_name AS rest_name,"
         "t_restaraunt.f_address AS rest_address,t_item.id AS item_id,t_item.f_tags AS item_tags,t_item.f_name AS item_name, "
