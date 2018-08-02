@@ -226,12 +226,12 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
             # тыквенный суп
             # exact match
             if re.sub(' +', ' ', item.item_name.lower()) == query:
-                search_score = 100
+                search_score = 200
             # do we have matched tags?
             for tag in _tag_ids:
                 tag_regex = re.compile(str(tag.id))
                 if tag_regex.search(item.item_tags) is not None:
-                    search_score += 70
+                    search_score += 50
             # if we found anything create result and move to the next item
             if search_score != 0:
                 add_item(candidate_list, item, search_score, weight)
@@ -260,7 +260,7 @@ def search_by_name(query, weight, rest1k, rests_item, query_id):
             # re.compile("".join(map((lambda x: "((\\s | ^){x}\\S * ?\\s)|(\\S*?{x}(\\s | $))".format(x=x)), clean_query)))
             logger.info("current item to analyze %s", str(item.item_name.lower().encode('utf-8')))
             if compile.search(item.item_name.lower()) is not None:
-                add_item(candidate_list, item, 50, weight)
+                add_item(candidate_list, item, 100, weight)
 
             item_time = datetime.datetime.now() - start
             logger.info("we processed item in in %s", item_time)
@@ -425,7 +425,7 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
         for item in rests_item:
             item = Storage(item)
             if item.item_id in results_id:
-                add_item(candidate_list,item,40,weight)
+                add_item(candidate_list,item,100,weight)
 
         # we created result by_ingr and added it to resulted array
 
@@ -435,7 +435,7 @@ def search_by_ingr(query, weight, rest1k, rests_item, by_name, query_id):
     for item in result_final:
         for ingr in ingrs_id:
             if ingr in item.item_ingrs["id"]:
-                item.search_score += 100
+                item.search_score += 50
 
     end = datetime.datetime.now() - start
     logger.warning('search by ingr concluded in ' + str(end))
