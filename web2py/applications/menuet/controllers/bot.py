@@ -327,6 +327,7 @@ def create_result_obj(rest1k, candidate_list):
     for item in candidate_list:
         source_item = item
         item = item.item
+        logger.warning("item is %s", str(item))
 
         try:
             id = (map(int,filter(lambda x: x['item_id'] == item.item_id, item_info)[0]['ingrs_ids'].encode('utf-8').split(",")))
